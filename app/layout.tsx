@@ -1,5 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
+
+// Yalnızca logo başlığında kullanılır; next/font derleme sırasında indirip siteyle birlikte sunar.
+const displayFont = Stack_Sans_Notch({
+  subsets: ["latin", "latin-ext"],
+  weight: "700",
+  variable: "--font-stack-notch",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Harita Avcısı",
@@ -17,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="tr">
+    <html className={displayFont.variable} lang="tr">
       <body>{children}</body>
     </html>
   );

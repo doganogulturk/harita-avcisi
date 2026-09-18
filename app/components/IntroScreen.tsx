@@ -191,7 +191,22 @@ export function IntroScreen({
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-cyan-950/10 sm:p-10 short:p-5 lg:p-14">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl short:text-3xl lg:text-6xl">Harita Avcısı</h1>
+            <h1 className="flex items-center gap-3 lg:gap-4">
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 sm:h-14 sm:w-14 short:h-9 short:w-9 short:rounded-xl lg:h-16 lg:w-16"
+              >
+                {/* Nişangah: "avcı" ve haritada bir yeri hedefleme. */}
+                <svg className="h-7 w-7 sm:h-9 sm:w-9 short:h-6 short:w-6 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={2} viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="7" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                  <circle cx="12" cy="12" fill="currentColor" r="1.5" stroke="none" />
+                </svg>
+              </span>
+              <span className="font-display text-4xl leading-none font-bold tracking-[-0.03em] text-slate-900 sm:text-5xl short:text-3xl lg:text-6xl">
+                harita <span className="text-cyan-700">avcısı</span>
+              </span>
+            </h1>
             <p className="mt-3 text-lg text-slate-600 short:mt-1 short:text-base">Sorulan ili, ülkeyi ya da bayrağı haritada bul.</p>
           </div>
           <PlayerBadge onSignOut={onSignOut} player={player} />
@@ -251,7 +266,7 @@ export function IntroScreen({
               </ModeCard>
 
               {kind === "ranked" ? (
-                <ModeCard isReady={isWorldReady} mapMode="world" subtitle="Ülke adıyla ya da bayrağıyla" title="Dünya">
+                <ModeCard isReady={isWorldReady} mapMode="world" subtitle="Ülke adıyla veya bayrağıyla" title="Dünya">
                   <PlayButton
                     badge={countryCount("normal")}
                     badgeLabel={`${countryCount("normal")} ülke`}

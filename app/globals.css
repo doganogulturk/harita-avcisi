@@ -3,6 +3,10 @@
 /* Yatay telefon gibi alçak ekranlar: giriş ekranı boşlukları sıkılaştırılır. */
 @custom-variant short (@media (max-height: 30rem));
 
+@theme inline {
+  --font-display: var(--font-stack-notch), ui-sans-serif, system-ui, sans-serif;
+}
+
 html,
 body {
   overscroll-behavior: none;
