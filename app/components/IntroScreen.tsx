@@ -1,8 +1,21 @@
-import { useState } from "react";
+import Image from "next/image";
+import { useState, useSyncExternalStore } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
-import { choiceLabel, FLAG_CHOICE, GAME_DURATION_SECONDS, type GameMode, type PlayChoice, type Player, type QuestionPrompt } from "@/lib/game";
+import {
+  choiceLabel,
+  FLAG_CHOICE,
+  flagUrl,
+  GAME_DURATION_SECONDS,
+  MAP_URLS,
+  QUESTIONS_PER_ROUND,
+  type GameMode,
+  type PlayChoice,
+  type PlayKind,
+  type Player,
+  type QuestionPrompt,
+} from "@/lib/game";
 import { provinces } from "@/lib/turkish-plates";
 import { CONTINENTS, countriesIn, countryCount } from "@/lib/world-countries";
 
@@ -20,28 +33,133 @@ type IntroScreenProps = {
   onSignOut: () => void;
 };
 
+const KIND_OPTIONS: { id: PlayKind; label: string; summary: string }[] = [
+  { id: "ranked", label: "Yarış", summary: `${QUESTIONS_PER_ROUND} soru · ${GAME_DURATION_SECONDS} saniye · Eşit puanda hızlı olan önde` },
+  { id: "practice", label: "Antrenman", summary: "Giriş yok, süre yok · Sen bitirene kadar sürer · Sıralamaya kaydedilmez" },
+];
+
+/** Bayrak turunun rozeti: sayı yerine küçük bir bayrak. */
+const FLAG_BADGE = (
+  <Image
+    alt=""
+    className="block h-4 w-auto rounded-[3px] shadow-sm ring-2 ring-white"
+    height={16}
+    src={flagUrl("tr")}
+    unoptimized
+    width={21}
+  />
+);
+
 const PROMPT_OPTIONS: { id: QuestionPrompt; label: string }[] = [
   { id: "name", label: "İsim" },
   { id: "flag", label: "Bayrak" },
 ];
 
-const RULES = [
-  { title: "10 soru", detail: "Her turda rastgele 10 konum sorulur." },
-  { title: `${GAME_DURATION_SECONDS} saniye`, detail: "Süre biterse tur olduğu yerde kapanır." },
-  { title: "Hız önemli", detail: "Eşit puanda daha hızlı biten üst sırada yer alır." },
-];
+/**
+ * Seçili sekme tarayıcıda hatırlanır; antrenmandan ana menüye dönen oyuncu yine Antrenman'ı görür.
+ * Sunucuda her zaman "Yarış" çizildiği için hidrasyon uyuşmazlığı olmaz. Depolama kullanılamıyorsa
+ * seçim yalnızca sayfa açık kaldığı sürece bellekte tutulur.
+ */
+const KIND_STORAGE_KEY = "harita-avcisi:intro-kind";
+const kindListeners = new Set<() => void>();
+let kindInMemory: PlayKind = "ranked";
 
-function ModeCard({ badge, children, detail, isReady, title }: { badge: string; children: React.ReactNode; detail: string; isReady: boolean; title: string }) {
+function readKind(): PlayKind {
+  try {
+    const stored = localStorage.getItem(KIND_STORAGE_KEY);
+    if (stored === "ranked" || stored === "practice") return stored;
+  } catch {
+    // Depolama kapalı; bellekteki değer kullanılır.
+  }
+  return kindInMemory;
+}
+
+function writeKind(kind: PlayKind) {
+  kindInMemory = kind;
+  try {
+    localStorage.setItem(KIND_STORAGE_KEY, kind);
+  } catch {
+    // Depolama kapalı; seçim bu sayfa yaşamı boyunca bellekte kalır.
+  }
+  kindListeners.forEach((listener) => listener());
+}
+
+function subscribeKind(listener: () => void) {
+  kindListeners.add(listener);
+  return () => {
+    kindListeners.delete(listener);
+  };
+}
+
+/** Başlıktaki Yarış / Antrenman ve Dünya kartındaki İsim / Bayrak seçicisi. */
+function Segmented<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  size = "md",
+  tone,
+}: {
+  label: string;
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  size?: "sm" | "md";
+  tone: "cyan" | "amber";
+}) {
+  const active = tone === "cyan" ? "bg-cyan-600 text-white shadow-sm" : "bg-amber-100 text-amber-800";
+  const ring = tone === "cyan" ? "focus-visible:ring-cyan-300" : "focus-visible:ring-amber-300";
+  const padding = size === "md" ? "px-6 py-2 text-sm lg:text-base" : "px-3 py-1 text-xs";
   return (
-    <div className="group flex flex-col rounded-2xl border-2 border-slate-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-950/10">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-lg font-bold text-slate-800 transition-colors group-hover:text-cyan-800">{title}</span>
-        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-500 transition-colors group-hover:bg-cyan-100 group-hover:text-cyan-700">
-          {badge}
-        </span>
+    <div aria-label={label} className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5" role="radiogroup">
+      {options.map((option) => (
+        <button
+          aria-checked={value === option.id}
+          className={`rounded-full font-bold transition focus-visible:ring-2 focus-visible:outline-none ${padding} ${ring} ${value === option.id ? active : "text-slate-500 hover:text-slate-800"}`}
+          key={option.id}
+          onClick={() => onChange(option.id)}
+          role="radio"
+          type="button"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ModeCard({
+  aside,
+  children,
+  isReady,
+  mapMode,
+  subtitle,
+  title,
+}: {
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+  isReady: boolean;
+  mapMode: GameMode;
+  subtitle: string;
+  title: string;
+}) {
+  return (
+    <div className="group relative isolate flex min-h-[13rem] flex-col overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-6 transition-all short:min-h-0 short:p-5 lg:p-8 duration-200 hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-950/10">
+      {/* Başlık ile tuşlar arasında silik harita silüeti. SVG'lerde dolgu rengi olmadığı için resim olarak siyah çizilir; opaklıkla soldurulur. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-6 top-20 bottom-16 -z-10 bg-contain bg-center bg-no-repeat opacity-[0.07] transition-opacity duration-200 group-hover:opacity-[0.11] lg:inset-x-10 lg:top-28 lg:bottom-24"
+        style={{ backgroundImage: `url(${MAP_URLS[mapMode]})` }}
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-2xl font-bold text-slate-800 transition-colors group-hover:text-cyan-800 short:text-xl lg:text-3xl">{title}</p>
+          <p className="mt-0.5 text-sm text-slate-500 lg:text-base">{subtitle}</p>
+        </div>
+        {aside}
       </div>
-      <p className="mt-2 text-sm text-slate-600">{detail}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-2">{children}</div>
+      {/* Tuşlar kartın dibine yaslanır; kart yüksekliği ekranla büyüdükçe silüete yer açılır. */}
+      <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-3 pt-8 short:pt-5 lg:gap-x-3">{children}</div>
       {!isReady && <p className="mt-2 text-xs text-slate-400">Harita hazırlanıyor...</p>}
     </div>
   );
@@ -62,36 +180,25 @@ export function IntroScreen({
 }: IntroScreenProps) {
   const isTurkeyReady = readyModes.includes("turkey");
   const isWorldReady = readyModes.includes("world");
-  // Antrenmanda soru tipi bölgeden bağımsız seçilir; Türkiye'de bayrak olmadığı için yalnızca isimle oynanır.
+  const kind = useSyncExternalStore(subscribeKind, readKind, () => "ranked" as const);
+  // Antrenmanda soru tipi yalnızca Dünya'da seçilir; Türkiye'de bayrak yok.
   const [practicePrompt, setPracticePrompt] = useState<QuestionPrompt>("name");
   const practiceWorld = (choice: Omit<PlayChoice, "kind" | "mode" | "prompt">) =>
     onPlay({ kind: "practice", mode: "world", prompt: practicePrompt, ...choice });
 
   return (
-    <section className="my-auto w-full">
-      <div className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-cyan-950/10 sm:p-10">
+    <section className="flex w-full flex-1 flex-col">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-cyan-950/10 sm:p-10 short:p-5 lg:p-14">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Harita Avcısı</h1>
-            <p className="mt-3 max-w-xl text-slate-600">
-              Sorulan şehri ya da ülkeyi harita üzerinde bulmaya çalışıyorsun. Doğru bildiğin her konum bir puan; tur bitince skorun
-              sıralamaya işleniyor.
-            </p>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl short:text-3xl lg:text-6xl">Harita Avcısı</h1>
+            <p className="mt-3 text-lg text-slate-600 short:mt-1 short:text-base">Sorulan ili, ülkeyi ya da bayrağı haritada bul.</p>
           </div>
           <PlayerBadge onSignOut={onSignOut} player={player} />
         </div>
 
-        <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-          {RULES.map((rule) => (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" key={rule.title}>
-              <dt className="text-sm font-bold text-slate-800">{rule.title}</dt>
-              <dd className="mt-0.5 text-xs text-slate-500">{rule.detail}</dd>
-            </div>
-          ))}
-        </dl>
-
         {pendingChoice && !player ? (
-          <div className="mt-8">
+          <div className="mt-7">
             <AuthPanel
               authError={authError}
               choiceLabel={choiceLabel(pendingChoice)}
@@ -104,7 +211,7 @@ export function IntroScreen({
           </div>
         ) : pendingChoice ? (
           // Google girişinden dönüldü: seçim korundu, ama zamanlı turu kullanıcı hazırken başlatıyoruz.
-          <div className="mt-8 rounded-2xl border-2 border-cyan-200 bg-cyan-50/60 p-5 sm:p-6">
+          <div className="mt-7 rounded-2xl border-2 border-cyan-200 bg-cyan-50/60 p-5 sm:p-6">
             <p className="text-lg font-bold text-slate-900">
               Giriş tamam — <span className="text-cyan-700">{choiceLabel(pendingChoice)}</span> turun hazır
             </p>
@@ -127,72 +234,87 @@ export function IntroScreen({
           </div>
         ) : (
           <>
-            <p className="mt-8 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Yarış · Sıralamaya girer</p>
-            <div className="mt-3 grid items-stretch gap-3 sm:grid-cols-2">
-              <ModeCard badge={`${provinces.length} il`} detail="81 il arasından rastgele gelen şehri haritada bul." isReady={isTurkeyReady} title="Türkiye">
-                <PlayButton disabled={!isTurkeyReady} label="Oyna" onClick={() => onPlay({ kind: "ranked", mode: "turkey", difficulty: "normal" })} />
-              </ModeCard>
-
-              <ModeCard
-                badge={`${countryCount("hard")} ülke`}
-                detail="Soruda gelen ülkenin ya da bayrağın dünya haritasındaki yerini seç."
-                isReady={isWorldReady}
-                title="Dünya"
-              >
-                <PlayButton disabled={!isWorldReady} label="Normal" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })} />
-                <PlayButton disabled={!isWorldReady} label="Zor" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })} tone="red" />
-                <PlayButton disabled={!isWorldReady} label="Bayrak" onClick={() => onPlay(FLAG_CHOICE)} tone="red" />
-                <span className="w-full text-xs text-slate-400">
-                  Normal: Sadece çok bilinen ülkeler. Zor: {countryCount("hard")} ülkenin tamamı. Bayrak: {countryCount("hard")} ülkenin
-                  bayrağı, ayrı sıralama.
-                </span>
-              </ModeCard>
+            <div className="mt-8 flex flex-col items-start gap-2.5 short:mt-4 lg:mt-10">
+              <Segmented label="Oyun türü" onChange={writeKind} options={KIND_OPTIONS} tone="cyan" value={kind} />
+              <p className="text-sm text-slate-500">{KIND_OPTIONS.find((option) => option.id === kind)?.summary}</p>
             </div>
 
-            <p className="mt-8 text-xs font-semibold tracking-[0.2em] text-amber-700 uppercase">Antrenman · Giriş gerekmez</p>
-            <div className="mt-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-5">
-              <p className="text-sm text-slate-600">
-                Süre yok, soru sınırı yok: sen bitirene kadar sorular gelmeye devam eder. Sonuçlar sıralamaya kaydedilmez.
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-500">Soru</span>
-                <div className="flex rounded-full border border-slate-200 bg-white p-0.5" role="radiogroup" aria-label="Soru tipi">
-                  {PROMPT_OPTIONS.map((option) => (
-                    <button
-                      aria-checked={practicePrompt === option.id}
-                      className={`rounded-full px-3 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none ${practicePrompt === option.id ? "bg-amber-100 text-amber-800" : "text-slate-500 hover:text-slate-800"}`}
-                      key={option.id}
-                      onClick={() => setPracticePrompt(option.id)}
-                      role="radio"
-                      type="button"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {practicePrompt === "name" && (
-                  <PlayButton disabled={!isTurkeyReady} label="Türkiye" onClick={() => onPlay({ kind: "practice", mode: "turkey", difficulty: "normal" })} />
-                )}
-                <PlayButton disabled={!isWorldReady} label="Dünya · Normal" onClick={() => practiceWorld({ difficulty: "normal" })} />
-                <PlayButton disabled={!isWorldReady} label="Dünya · Tümü" onClick={() => practiceWorld({ difficulty: "hard" })} tone="red" />
-              </div>
-              <p className="mt-5 text-xs font-semibold text-slate-500">Kıta seç</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {CONTINENTS.map((continent) => (
-                  <button
-                    className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-amber-400 hover:text-amber-800 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none disabled:cursor-wait disabled:opacity-50"
+            <div className="mt-6 grid flex-1 items-stretch gap-4 sm:grid-cols-2 short:mt-4 short:gap-3 lg:mt-8 lg:gap-6">
+              <ModeCard isReady={isTurkeyReady} mapMode="turkey" subtitle="İl adıyla" title="Türkiye">
+                <PlayButton
+                  badge={provinces.length}
+                  badgeLabel={`${provinces.length} il`}
+                  disabled={!isTurkeyReady}
+                  label="Oyna"
+                  onClick={() => onPlay({ kind, mode: "turkey", difficulty: "normal" })}
+                />
+              </ModeCard>
+
+              {kind === "ranked" ? (
+                <ModeCard isReady={isWorldReady} mapMode="world" subtitle="Ülke adıyla ya da bayrağıyla" title="Dünya">
+                  <PlayButton
+                    badge={countryCount("normal")}
+                    badgeLabel={`${countryCount("normal")} ülke`}
                     disabled={!isWorldReady}
-                    key={continent.id}
-                    onClick={() => practiceWorld({ difficulty: "hard", continent: continent.id })}
-                    type="button"
-                  >
-                    {continent.label}
-                    <span className="ml-1.5 text-xs font-semibold text-slate-400">{countriesIn(continent.id).length}</span>
-                  </button>
-                ))}
-              </div>
+                    label="Normal"
+                    onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })}
+                  />
+                  <PlayButton
+                    badge={countryCount("hard")}
+                    badgeLabel={`${countryCount("hard")} ülke`}
+                    disabled={!isWorldReady}
+                    label="Zor"
+                    onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })}
+                    tone="red"
+                  />
+                  <PlayButton
+                    badge={FLAG_BADGE}
+                    badgeLabel={`${countryCount("hard")} ülkenin bayrağı`}
+                    disabled={!isWorldReady}
+                    label="Bayrak"
+                    onClick={() => onPlay(FLAG_CHOICE)}
+                    tone="red"
+                  />
+                </ModeCard>
+              ) : (
+                <ModeCard
+                  aside={<Segmented label="Soru tipi" onChange={setPracticePrompt} options={PROMPT_OPTIONS} size="sm" tone="amber" value={practicePrompt} />}
+                  isReady={isWorldReady}
+                  mapMode="world"
+                  subtitle="Tüm dünya ya da tek kıta"
+                  title="Dünya"
+                >
+                  <PlayButton
+                    badge={countryCount("normal")}
+                    badgeLabel={`${countryCount("normal")} ülke`}
+                    disabled={!isWorldReady}
+                    label="Normal"
+                    onClick={() => practiceWorld({ difficulty: "normal" })}
+                  />
+                  <PlayButton
+                    badge={countryCount("hard")}
+                    badgeLabel={`${countryCount("hard")} ülke`}
+                    disabled={!isWorldReady}
+                    label="Tümü"
+                    onClick={() => practiceWorld({ difficulty: "hard" })}
+                    tone="red"
+                  />
+                  <div className="flex w-full flex-wrap items-center gap-1.5 pt-1">
+                    {CONTINENTS.map((continent) => (
+                      <button
+                        className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-amber-400 hover:text-amber-800 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none disabled:cursor-wait disabled:opacity-50"
+                        disabled={!isWorldReady}
+                        key={continent.id}
+                        onClick={() => practiceWorld({ difficulty: "hard", continent: continent.id })}
+                        type="button"
+                      >
+                        {continent.label}
+                        <span className="ml-1 font-semibold text-slate-400">{countriesIn(continent.id).length}</span>
+                      </button>
+                    ))}
+                  </div>
+                </ModeCard>
+              )}
             </div>
           </>
         )}
