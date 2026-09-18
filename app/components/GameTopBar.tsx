@@ -1,6 +1,7 @@
+import Image from "next/image";
 import { PlayerBadge } from "./PlayerBadge";
 import { RoundControls } from "./RoundControls";
-import { choiceLabel, formatTime, GAME_DURATION_SECONDS, questionName, type AnswerState, type PlayChoice, type Player, type Question } from "@/lib/game";
+import { choiceLabel, flagUrl, formatTime, GAME_DURATION_SECONDS, isFlagChoice, questionName, type AnswerState, type PlayChoice, type Player, type Question } from "@/lib/game";
 
 type GameTopBarProps = {
   player: Player | null;
@@ -49,9 +50,27 @@ export function GameTopBar({
         </div>
 
         <div className="flex min-w-0 items-center justify-center gap-2 lg:gap-3">
-          <h1 className="truncate text-center text-xl leading-tight font-bold tracking-tight text-cyan-700 lg:text-3xl">
-            {question && questionName(question)}
-          </h1>
+          {question && isFlagChoice(choice) && "code" in question ? (
+            <>
+              <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
+              {/* Yeni soruda eski bayrak bir an bile görünmesin diye her ülke için ayrı öğe. */}
+              <Image
+                alt="Sorulan ülkenin bayrağı"
+                className="h-9 w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm lg:h-11"
+                height={44}
+                key={question.code}
+                src={flagUrl(question.code)}
+                unoptimized
+                width={59}
+              />
+              {/* Adı cevaptan sonra göster; oyuncu yanlış bildiği bayrağı da öğrensin. */}
+              {answerState && <span className="truncate text-base font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
+            </>
+          ) : (
+            <h1 className="truncate text-center text-xl leading-tight font-bold tracking-tight text-cyan-700 lg:text-3xl">
+              {question && questionName(question)}
+            </h1>
+          )}
           {answerState && (
             <span className="shrink-0 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-cyan-800 lg:text-xs">
               Sonraki: {remainingQuestionSeconds} sn

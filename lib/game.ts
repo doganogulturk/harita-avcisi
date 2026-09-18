@@ -21,16 +21,31 @@ export type LeaderboardEntry = {
  */
 export type PlayKind = "ranked" | "practice";
 
+/** Soruda ülkenin adı mı yoksa bayrağı mı gösterilir. Bayrak yalnızca dünya haritasında kullanılır. */
+export type QuestionPrompt = "name" | "flag";
+
 /**
  * Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır.
  * `continent` yalnızca dünya antrenmanında kullanılır; o kıtanın tüm ülkeleri sorulur.
+ * `prompt` verilmezse soru ülke/il adıyla sorulur.
  */
-export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent };
+export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent; prompt?: QuestionPrompt };
 
-export function choiceLabel({ kind, mode, difficulty, continent }: PlayChoice): string {
+export function isFlagChoice(choice: PlayChoice): boolean {
+  return choice.mode === "world" && choice.prompt === "flag";
+}
+
+export function choiceLabel(choice: PlayChoice): string {
+  const { kind, mode, difficulty, continent } = choice;
+  if (kind === "ranked" && isFlagChoice(choice)) return "Bayrak";
   const map =
     mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
-  return kind === "practice" ? `Antrenman · ${map}` : map;
+  const label = isFlagChoice(choice) ? `${map} · Bayrak` : map;
+  return kind === "practice" ? `Antrenman · ${label}` : label;
+}
+
+export function flagUrl(countryCode: string): string {
+  return `/flags/${countryCode}.svg`;
 }
 
 export const GAME_DURATION_MS = 120000;
@@ -51,22 +66,34 @@ export const MAP_LABELS: Record<GameMode, string> = {
 
 export const GAME_MODES: GameMode[] = ["turkey", "world"];
 
-/** Her oynanış türünün kendi sıralaması var; Zor turlar Normal'lerle yarışmaz. */
-export type BoardId = "turkey" | "world" | "world-hard";
+/** Her oynanış türünün kendi sıralaması var; Zor turlar Normal'lerle, bayrak turları isimli turlarla yarışmaz. */
+export type BoardId = "turkey" | "world" | "world-hard" | "world-flags";
 
-export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: WorldDifficulty }[] = [
+/** Veritabanındaki `variant` sütunu. Bayrak turları 179 ülkenin tamamından sorulur. */
+export type BoardVariant = WorldDifficulty | "flags";
+
+export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: BoardVariant }[] = [
   { id: "turkey", label: "Türkiye", mode: "turkey", variant: "normal" },
   { id: "world", label: "Dünya", mode: "world", variant: "normal" },
   { id: "world-hard", label: "Dünya · Zor", mode: "world", variant: "hard" },
+  { id: "world-flags", label: "Bayrak", mode: "world", variant: "flags" },
 ];
 
-export function choiceForBoard(board: { mode: GameMode; variant: WorldDifficulty }): PlayChoice {
+export const FLAG_CHOICE: PlayChoice = { kind: "ranked", mode: "world", difficulty: "hard", prompt: "flag" };
+
+export function choiceForBoard(board: { mode: GameMode; variant: BoardVariant }): PlayChoice {
+  if (board.variant === "flags") return FLAG_CHOICE;
   return { kind: "ranked", mode: board.mode, difficulty: board.variant };
 }
 
-export function boardIdFor({ mode, difficulty }: PlayChoice): BoardId {
-  if (mode === "turkey") return "turkey";
-  return difficulty === "hard" ? "world-hard" : "world";
+export function boardVariantFor(choice: PlayChoice): BoardVariant {
+  return isFlagChoice(choice) ? "flags" : choice.difficulty;
+}
+
+export function boardIdFor(choice: PlayChoice): BoardId {
+  if (choice.mode === "turkey") return "turkey";
+  if (isFlagChoice(choice)) return "world-flags";
+  return choice.difficulty === "hard" ? "world-hard" : "world";
 }
 
 export const LOCATION_SELECTOR: Record<GameMode, string> = {

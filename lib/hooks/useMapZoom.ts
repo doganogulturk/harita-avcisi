@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-
 import { type MapBox } from "@/lib/world-countries";
 
 type ViewBox = MapBox;
@@ -48,6 +47,8 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
   const baseViewBox = useRef<ViewBox | null>(null);
   const homeViewBox = useRef<ViewBox | null>(null);
   const viewBox = useRef<ViewBox | null>(null);
+  /** Doğru cevabı göstermek için görünüm otomatik kaydırıldıysa, kaydırmadan önceki görünüm. */
+  const viewBeforeReveal = useRef<ViewBox | null>(null);
   const dragDistance = useRef(0);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -71,6 +72,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
   }, []);
 
   const reset = useCallback(() => {
+    viewBeforeReveal.current = null;
     const home = homeViewBox.current ?? baseViewBox.current;
     if (home) applyViewBox(home);
   }, [applyViewBox]);
@@ -90,6 +92,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
         box.x >= view.x && box.y >= view.y && box.x + box.width <= view.x + view.width && box.y + box.height <= view.y + view.height;
       if (isVisible) return;
 
+      viewBeforeReveal.current ??= view;
       if (box.width <= view.width && box.height <= view.height) {
         applyViewBox({ ...view, x: box.x + box.width / 2 - view.width / 2, y: box.y + box.height / 2 - view.height / 2 });
       } else {
@@ -99,11 +102,19 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     [applyViewBox],
   );
 
+  /** ensureVisible'ın kaydırdığı görünümü geri alır; oyuncu arada kendisi oynattıysa dokunmaz. */
+  const restoreAfterReveal = useCallback(() => {
+    const previous = viewBeforeReveal.current;
+    viewBeforeReveal.current = null;
+    if (previous) applyViewBox(previous);
+  }, [applyViewBox]);
+
   /** Görünümün merkezini sabit tutarak yakınlaştırır. */
   const zoomBy = useCallback(
     (factor: number) => {
       const view = viewBox.current;
       if (!view) return;
+      viewBeforeReveal.current = null;
       const width = view.width / factor;
       applyViewBox({
         x: view.x + (view.width - width) / 2,
@@ -125,6 +136,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     const base = baseViewBox.current;
     homeViewBox.current = base && homeView ? fitToAspect(homeView, base) : null;
     const home = homeViewBox.current ?? base;
+    viewBeforeReveal.current = null;
     if (!home) return setZoom(1);
     applyViewBox(home);
     // Açılış kutusu harita kenarına taşıyorsa applyViewBox onu içeri kaydırır; "evde mi" kontrolü
@@ -147,6 +159,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
 
       const pointer = toUserSpace(svg, event.clientX, event.clientY);
       if (!pointer) return;
+      viewBeforeReveal.current = null;
       const width = clamp(view.width * Math.exp(event.deltaY * 0.002), base.width / MAX_ZOOM, base.width);
       const ratio = width / view.width;
 
@@ -182,6 +195,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
 
     const userToScreen = svg.getScreenCTM();
     if (!userToScreen) return;
+    viewBeforeReveal.current = null;
     event.currentTarget.setPointerCapture(event.pointerId);
     applyViewBox({ ...view, x: view.x - deltaX / userToScreen.a, y: view.y - deltaY / userToScreen.d });
   };
@@ -200,6 +214,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     zoomOut: () => zoomBy(1 / BUTTON_ZOOM_STEP),
     reset,
     ensureVisible,
+    restoreAfterReveal,
     /** Sürükleme sonrası gelen tıklamanın seçim sayılmaması için. */
     wasDragged: () => dragDistance.current > DRAG_THRESHOLD_PX,
     panHandlers: { onPointerDown: startPan, onPointerMove: movePan, onPointerUp: endPan, onPointerCancel: endPan },

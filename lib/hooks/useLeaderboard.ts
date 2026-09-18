@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
-import { BOARDS, boardIdFor, LEADERBOARD_LIMIT, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
+import { BOARDS, boardIdFor, boardVariantFor, LEADERBOARD_LIMIT, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
 
 type FinishedRound = {
   player: Player | null;
@@ -15,14 +15,15 @@ type FinishedRound = {
 
 export type Leaderboards = Record<BoardId, LeaderboardEntry[]>;
 
-const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], world: [], "world-hard": [] };
+const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], world: [], "world-hard": [], "world-flags": [] };
 
-/** Tur bitince sonucu kaydeder, üç sıralamayı da çeker ve realtime güncellemelere abone olur. */
+/** Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur. */
 export function useLeaderboard({ player, isFinished, choice, score, durationMs, bestStreak }: FinishedRound) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards>(EMPTY_LEADERBOARDS);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
-  const { mode, difficulty } = choice;
+  const { mode } = choice;
+  const variant = boardVariantFor(choice);
 
   useEffect(() => {
     if (!isFinished || !player) return;
@@ -63,7 +64,7 @@ export function useLeaderboard({ player, isFinished, choice, score, durationMs, 
         display_name: player.name,
         avatar_url: player.avatarUrl,
         game_mode: mode,
-        variant: difficulty,
+        variant,
         score,
         duration_ms: durationMs,
         best_streak: bestStreak,
@@ -84,7 +85,7 @@ export function useLeaderboard({ player, isFinished, choice, score, durationMs, 
       isActive = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [bestStreak, difficulty, durationMs, isFinished, mode, player, score]);
+  }, [bestStreak, durationMs, isFinished, mode, player, score, variant]);
 
   const resetLeaderboards = () => {
     setLeaderboards(EMPTY_LEADERBOARDS);

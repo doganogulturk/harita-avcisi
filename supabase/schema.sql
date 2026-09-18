@@ -4,7 +4,7 @@ create table if not exists public.game_results (
   display_name text not null default 'Oyuncu',
   avatar_url text,
   game_mode text not null default 'turkey' check (game_mode in ('turkey', 'world')),
-  variant text not null default 'normal' check (variant in ('normal', 'hard')),
+  variant text not null default 'normal' check (variant in ('normal', 'hard', 'flags')),
   score smallint not null check (score between 0 and 10),
   duration_ms integer not null check (duration_ms >= 0),
   best_streak smallint not null check (best_streak between 0 and 10),
@@ -48,9 +48,10 @@ alter table public.game_results
   drop constraint if exists game_results_game_mode_check,
   add constraint game_results_game_mode_check check (game_mode in ('turkey', 'world'));
 
+-- 'flags': bayrakla sorulan dünya turları; ayrı bir sıralamada yer alır.
 alter table public.game_results
   drop constraint if exists game_results_variant_check,
-  add constraint game_results_variant_check check (variant in ('normal', 'hard'));
+  add constraint game_results_variant_check check (variant in ('normal', 'hard', 'flags'));
 
 create index if not exists game_results_user_id_game_mode_variant_score_idx
 on public.game_results (user_id, game_mode, variant, score desc, duration_ms asc, best_streak desc, created_at asc);

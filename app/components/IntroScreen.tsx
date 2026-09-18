@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
-import { choiceLabel, GAME_DURATION_SECONDS, type GameMode, type PlayChoice, type Player } from "@/lib/game";
+import { choiceLabel, FLAG_CHOICE, GAME_DURATION_SECONDS, type GameMode, type PlayChoice, type Player, type QuestionPrompt } from "@/lib/game";
 import { provinces } from "@/lib/turkish-plates";
 import { CONTINENTS, countriesIn, countryCount } from "@/lib/world-countries";
 
@@ -18,6 +19,11 @@ type IntroScreenProps = {
   onGuestSignIn: (name: string) => void;
   onSignOut: () => void;
 };
+
+const PROMPT_OPTIONS: { id: QuestionPrompt; label: string }[] = [
+  { id: "name", label: "İsim" },
+  { id: "flag", label: "Bayrak" },
+];
 
 const RULES = [
   { title: "10 soru", detail: "Her turda rastgele 10 konum sorulur." },
@@ -56,6 +62,10 @@ export function IntroScreen({
 }: IntroScreenProps) {
   const isTurkeyReady = readyModes.includes("turkey");
   const isWorldReady = readyModes.includes("world");
+  // Antrenmanda soru tipi bölgeden bağımsız seçilir; Türkiye'de bayrak olmadığı için yalnızca isimle oynanır.
+  const [practicePrompt, setPracticePrompt] = useState<QuestionPrompt>("name");
+  const practiceWorld = (choice: Omit<PlayChoice, "kind" | "mode" | "prompt">) =>
+    onPlay({ kind: "practice", mode: "world", prompt: practicePrompt, ...choice });
 
   return (
     <section className="my-auto w-full">
@@ -125,14 +135,16 @@ export function IntroScreen({
 
               <ModeCard
                 badge={`${countryCount("hard")} ülke`}
-                detail="Soruda gelen ülkenin dünya haritasındaki yerini seç."
+                detail="Soruda gelen ülkenin ya da bayrağın dünya haritasındaki yerini seç."
                 isReady={isWorldReady}
                 title="Dünya"
               >
                 <PlayButton disabled={!isWorldReady} label="Normal" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })} />
                 <PlayButton disabled={!isWorldReady} label="Zor" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })} tone="red" />
+                <PlayButton disabled={!isWorldReady} label="Bayrak" onClick={() => onPlay(FLAG_CHOICE)} tone="red" />
                 <span className="w-full text-xs text-slate-400">
-                  Normal: Sadece çok bilinen ülkeler. Zor: {countryCount("hard")} ülkenin tamamı.
+                  Normal: Sadece çok bilinen ülkeler. Zor: {countryCount("hard")} ülkenin tamamı. Bayrak: {countryCount("hard")} ülkenin
+                  bayrağı, ayrı sıralama.
                 </span>
               </ModeCard>
             </div>
@@ -142,10 +154,29 @@ export function IntroScreen({
               <p className="text-sm text-slate-600">
                 Süre yok, soru sınırı yok: sen bitirene kadar sorular gelmeye devam eder. Sonuçlar sıralamaya kaydedilmez.
               </p>
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-500">Soru</span>
+                <div className="flex rounded-full border border-slate-200 bg-white p-0.5" role="radiogroup" aria-label="Soru tipi">
+                  {PROMPT_OPTIONS.map((option) => (
+                    <button
+                      aria-checked={practicePrompt === option.id}
+                      className={`rounded-full px-3 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none ${practicePrompt === option.id ? "bg-amber-100 text-amber-800" : "text-slate-500 hover:text-slate-800"}`}
+                      key={option.id}
+                      onClick={() => setPracticePrompt(option.id)}
+                      role="radio"
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <PlayButton disabled={!isTurkeyReady} label="Türkiye" onClick={() => onPlay({ kind: "practice", mode: "turkey", difficulty: "normal" })} />
-                <PlayButton disabled={!isWorldReady} label="Dünya · Normal" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "normal" })} />
-                <PlayButton disabled={!isWorldReady} label="Dünya · Tümü" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "hard" })} tone="red" />
+                {practicePrompt === "name" && (
+                  <PlayButton disabled={!isTurkeyReady} label="Türkiye" onClick={() => onPlay({ kind: "practice", mode: "turkey", difficulty: "normal" })} />
+                )}
+                <PlayButton disabled={!isWorldReady} label="Dünya · Normal" onClick={() => practiceWorld({ difficulty: "normal" })} />
+                <PlayButton disabled={!isWorldReady} label="Dünya · Tümü" onClick={() => practiceWorld({ difficulty: "hard" })} tone="red" />
               </div>
               <p className="mt-5 text-xs font-semibold text-slate-500">Kıta seç</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -154,7 +185,7 @@ export function IntroScreen({
                     className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-amber-400 hover:text-amber-800 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none disabled:cursor-wait disabled:opacity-50"
                     disabled={!isWorldReady}
                     key={continent.id}
-                    onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "hard", continent: continent.id })}
+                    onClick={() => practiceWorld({ difficulty: "hard", continent: continent.id })}
                     type="button"
                   >
                     {continent.label}

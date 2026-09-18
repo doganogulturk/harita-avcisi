@@ -16,6 +16,8 @@ import { commonCountries, continentInfo, continentLocationIds, countries, countr
 import {
   boardIdFor,
   correctLocationId,
+  flagUrl,
+  isFlagChoice,
   GAME_DURATION_MS,
   GAME_DURATION_SECONDS,
   GAME_MODES,
@@ -155,6 +157,14 @@ export default function Home() {
     const timer = window.setInterval(updateRemaining, 250);
     return () => window.clearInterval(timer);
   }, [isPractice, isRoundComplete, phase]);
+
+  // Bayrak turlarında sıradaki bayrak önceden indirilir; yarışta bayrağın yüklenmesi süreden yemesin.
+  useEffect(() => {
+    if (phase !== "playing" || !isFlagChoice(choice)) return;
+    questions.slice(questionIndex, questionIndex + 2).forEach((question) => {
+      if ("code" in question) new window.Image().src = flagUrl(question.code);
+    });
+  }, [choice, phase, questionIndex, questions]);
 
   // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
   useEffect(() => {

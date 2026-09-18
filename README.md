@@ -2,11 +2,11 @@
 
 Türkiye illeri ve dünya ülkeleri için 10 soruluk, süre sınırlı harita bulma oyunu. Soru olarak gelen il ya da ülkeyi harita üzerinde bulmanız isteniyor; tur sonunda skorunuz kaydediliyor ve canlı sıralamada görünüyor.
 
-- **Üç tur türü:** Türkiye il haritası (81 il), Dünya · Normal (58 tanınmış ülke) ve Dünya · Zor (179 ülkenin tamamı)
+- **Dört tur türü:** Türkiye il haritası (81 il), Dünya · Normal (58 tanınmış ülke), Dünya · Zor (179 ülkenin tamamı) ve Bayrak (179 ülkenin bayrağı gösterilir, ülke haritada bulunur)
 - **Tur başına 10 soru, toplam 120 saniye;** her cevaptan sonra 3 saniye doğru cevap gösterilir
-- **Antrenman:** giriş gerektirmez, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu bitirene kadar devam eder. Sonuçlar kaydedilmez
+- **Antrenman:** giriş gerektirmez, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu bitirene kadar devam eder. Sorular isimle ya da bayrakla sorulabilir. Sonuçlar kaydedilmez
 - **Kıta antrenmanı:** Afrika, Amerika, Asya ve Avrupa. Harita seçilen kıtaya yakınlaşarak açılır, kıta dışındaki ülkeler soluk ve tıklanamaz olur. İki kıtaya yayılan ülkeler (Türkiye, Rusya, Kazakistan, Kafkasya, Kıbrıs) iki kıtada da sorulur
-- **Sıralama:** her tur türünün ayrı sıralaması var (Zor turlar Normal'lerle yarışmaz); önce puan, eşitlikte süre, sonra en uzun doğru serisi
+- **Sıralama:** her tur türünün ayrı sıralaması var (Zor turlar Normal'lerle, bayrak turları isimli turlarla yarışmaz); önce puan, eşitlikte süre, sonra en uzun doğru serisi
 - **Yatay mobil düzen:** dikey modda kullanıcıdan cihazı çevirmesi istenir
 - **Giriş:** Google ile oturum ya da isim girerek misafir oturumu
 
@@ -35,17 +35,19 @@ lib/
   shuffle.ts          Fisher-Yates karıştırma
   supabase.ts         Supabase istemcisi (env yoksa null döner)
 public/maps/          turkey.svg, world.svg
+public/flags/         179 ülkenin 4:3 bayrakları (<iso>.svg)
 supabase/schema.sql   Tablo, RLS politikaları, leaderboard view'i, realtime
 ```
 
 ### Haritalar
 
-Haritalar `public/maps/` altında yerel olarak tutulur; çalışma zamanında dış bir CDN'e istek yapılmaz.
+Haritalar `public/maps/`, bayraklar `public/flags/` altında yerel olarak tutulur; çalışma zamanında dış bir CDN'e istek yapılmaz.
 
 | Dosya | Kaynak | Lisans |
 | --- | --- | --- |
 | `turkey.svg` | [dnomak/svg-turkiye-haritasi](https://github.com/dnomak/svg-turkiye-haritasi) | MIT |
 | `world.svg` | [flekschas/simple-world-map](https://github.com/flekschas/simple-world-map) | CC BY-SA 3.0 |
+| `flags/*.svg` | [lipis/flag-icons](https://github.com/lipis/flag-icons) 7.5.0 | MIT |
 
 Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasında ISO 3166-1 alpha-2 `id` değeri üzerinden eşleştirilir.
 

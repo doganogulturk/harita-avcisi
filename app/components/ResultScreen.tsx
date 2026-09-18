@@ -1,7 +1,7 @@
 import { Leaderboard } from "./Leaderboard";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
-import { choiceLabel, formatTime, type BoardId, type PlayChoice, type Player } from "@/lib/game";
+import { choiceLabel, FLAG_CHOICE, formatTime, type BoardId, type PlayChoice, type Player } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
 
 type ResultScreenProps = {
@@ -96,6 +96,7 @@ export function ResultScreen({
             <PlayButton label="Türkiye" onClick={() => onPlay({ kind: "ranked", mode: "turkey", difficulty: "normal" })} />
             <PlayButton label="Dünya" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })} />
             <PlayButton label="Dünya · Zor" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })} tone="red" />
+            <PlayButton label="Bayrak" onClick={() => onPlay(FLAG_CHOICE)} tone="red" />
             <HomeLink onClick={onHome} />
           </div>
         </div>

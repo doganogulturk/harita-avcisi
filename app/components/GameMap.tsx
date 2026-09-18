@@ -44,7 +44,7 @@ export function GameMap({
   onSelect,
 }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, wasDragged, panHandlers } = useMapZoom(
+  const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, wasDragged, panHandlers } = useMapZoom(
     containerRef,
     mapMarkup,
     homeView,
@@ -66,6 +66,8 @@ export function GameMap({
     const container = containerRef.current;
     if (!container || !question) return;
     const correctLocation = correctLocationId(question);
+    // Yeni soruya geçildi: doğru cevap için kaydırılan görünüm oyuncunun bıraktığı yere döner.
+    if (answerState === null) restoreAfterReveal();
     container.querySelectorAll<SVGGraphicsElement>(LOCATION_SELECTOR[mode]).forEach((location) => {
       const locationId = locationIdOf(location, mode);
       const isCorrect = isSameLocation(mode, locationId, correctLocation);
@@ -73,7 +75,7 @@ export function GameMap({
       location.classList.toggle("map-incorrect", answerState === "incorrect" && isSameLocation(mode, locationId, selectedLocation));
       if (answerState !== null && isCorrect) ensureVisible(location);
     });
-  }, [answerState, ensureVisible, mapMarkup, mode, question, selectedLocation]);
+  }, [answerState, ensureVisible, mapMarkup, mode, question, restoreAfterReveal, selectedLocation]);
 
   const selectFromEvent = (target: EventTarget) => {
     const location = (target as Element).closest<SVGElement>(LOCATION_SELECTOR[mode]);
