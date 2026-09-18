@@ -11,6 +11,7 @@ import {
   type GameMode,
   type Question,
 } from "@/lib/game";
+import { type MapBox } from "@/lib/world-countries";
 
 type GameMapProps = {
   mode: GameMode;
@@ -20,15 +21,46 @@ type GameMapProps = {
   question: Question | undefined;
   answerState: AnswerState;
   selectedLocation: string | null;
+  /** Verilirse yalnızca bu konumlar seçilebilir; diğerleri soluk ve tıklanamaz görünür (kıta antrenmanı). */
+  activeLocationIds?: ReadonlySet<string> | null;
+  /** Haritanın açılış görünümü; verilmezse haritanın tamamı. */
+  homeView?: MapBox | null;
   onSelect: (locationId: string) => void;
 };
 
 const ZOOM_BUTTON_CLASS =
   "flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-lg font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40";
 
-export function GameMap({ mode, mapMarkup, mapError, isInteractive, question, answerState, selectedLocation, onSelect }: GameMapProps) {
+export function GameMap({
+  mode,
+  mapMarkup,
+  mapError,
+  isInteractive,
+  question,
+  answerState,
+  selectedLocation,
+  activeLocationIds = null,
+  homeView = null,
+  onSelect,
+}: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { zoom, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, wasDragged, panHandlers } = useMapZoom(containerRef, mapMarkup);
+  const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, wasDragged, panHandlers } = useMapZoom(
+    containerRef,
+    mapMarkup,
+    homeView,
+  );
+
+  // Harita işaretlemesi turlar arasında aynı DOM'da kalabildiği için sınıf her iki yönde de güncellenir.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.querySelectorAll<SVGGraphicsElement>(LOCATION_SELECTOR[mode]).forEach((location) => {
+      const locationId = locationIdOf(location, mode);
+      const isInactive = activeLocationIds !== null && (locationId === undefined || !activeLocationIds.has(locationId));
+      location.classList.toggle("map-inactive", isInactive);
+      location.setAttribute("tabindex", isInactive ? "-1" : "0");
+    });
+  }, [activeLocationIds, mapMarkup, mode]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -80,7 +112,7 @@ export function GameMap({ mode, mapMarkup, mapError, isInteractive, question, an
       />
 
       <div className="absolute right-3 bottom-3 flex flex-col items-end gap-1.5">
-        {zoom > 1.01 && (
+        {!isAtHome && (
           <button
             className="rounded-lg border border-slate-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none"
             onClick={reset}

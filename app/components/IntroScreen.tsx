@@ -3,7 +3,7 @@ import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
 import { choiceLabel, GAME_DURATION_SECONDS, type GameMode, type PlayChoice, type Player } from "@/lib/game";
 import { provinces } from "@/lib/turkish-plates";
-import { countryCount } from "@/lib/world-countries";
+import { CONTINENTS, countriesIn, countryCount } from "@/lib/world-countries";
 
 type IntroScreenProps = {
   player: Player | null;
@@ -146,6 +146,21 @@ export function IntroScreen({
                 <PlayButton disabled={!isTurkeyReady} label="Türkiye" onClick={() => onPlay({ kind: "practice", mode: "turkey", difficulty: "normal" })} />
                 <PlayButton disabled={!isWorldReady} label="Dünya · Normal" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "normal" })} />
                 <PlayButton disabled={!isWorldReady} label="Dünya · Tümü" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "hard" })} tone="red" />
+              </div>
+              <p className="mt-5 text-xs font-semibold text-slate-500">Kıta seç</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {CONTINENTS.map((continent) => (
+                  <button
+                    className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-amber-400 hover:text-amber-800 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none disabled:cursor-wait disabled:opacity-50"
+                    disabled={!isWorldReady}
+                    key={continent.id}
+                    onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "hard", continent: continent.id })}
+                    type="button"
+                  >
+                    {continent.label}
+                    <span className="ml-1.5 text-xs font-semibold text-slate-400">{countriesIn(continent.id).length}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </>

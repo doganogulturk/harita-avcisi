@@ -47,12 +47,35 @@ body {
   transition: fill 160ms ease, stroke 160ms ease, opacity 160ms ease;
 }
 
+/* Birden çok parçalı ülkeler <g> içinde. vector-effect kalıtılmaz; renkler g'den kalıtılsın diye
+   parçalara yalnızca bu özellik verilir. */
+.map [data-country-code] path {
+  vector-effect: non-scaling-stroke;
+}
+
 .map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):hover path,
 .map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):focus path,
 .map [data-country-code]:not(.map-correct):not(.map-incorrect):hover,
 .map [data-country-code]:not(.map-correct):not(.map-incorrect):focus {
   fill: #67e8f9;
   stroke: #0891b2;
+}
+
+/* Haritada olup oyunda karşılığı olmayan bölgeler; stil verilmezse SVG varsayılanıyla siyah dolar. */
+.map path[id^="_"],
+.map #guney-kibris path {
+  fill: #f1f5f9;
+  stroke: #cbd5e1;
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Kıta antrenmanında seçilen kıtanın dışında kalan ülkeler: yön bulmak için görünür, ama tıklanamaz. */
+.map .map-inactive {
+  fill: #f8fafc;
+  stroke: #cbd5e1;
+  cursor: default;
+  pointer-events: none;
 }
 
 .map g.map-correct path,

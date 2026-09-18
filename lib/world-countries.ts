@@ -196,3 +196,56 @@ export const commonCountries = countries.filter((country) => country.tier === "c
 export function countryCount(difficulty: WorldDifficulty): number {
   return difficulty === "hard" ? countries.length : commonCountries.length;
 }
+
+export type Continent = "europe" | "asia" | "africa" | "america";
+
+/**
+ * Kıta başına ülke kodları. İki kıtaya yayılan ülkeler (Türkiye, Rusya, Kazakistan, Kafkasya, Kıbrıs)
+ * hem Avrupa'da hem Asya'da sorulur. Amerika tek kıta olarak sorulur; Orta Amerika ve Karayipler dahildir.
+ * Okyanusya'nın haritada yalnızca 6 ülkesi olduğu için kıta seçeneği yoktur; bu ülkeler yalnızca dünya
+ * turlarında sorulur.
+ */
+const CONTINENT_MEMBERS: Record<Continent, string> = {
+  europe:
+    "al at by be ba bg hr cz dk ee fi fr de gr hu is ie it lv lt lu mt md me nl mk no pl pt ro rs sk si es se ch ua gb " +
+    "tr ru kz az ge am cy",
+  asia:
+    "af bd bt bn kh cn in id ir iq il jp jo kw kg la lb my mv mn mm np kp om pk ph qa sa sg kr lk sy tw tj th tm ae uz vn ye " +
+    "tr ru kz az ge am cy",
+  africa:
+    "dz ao bj bw bf bi cv cm cf td km cg cd dj eg gq er sz et ga gm gh gn gw ci ke ls lr ly mg mw ml mr mu ma mz na ne ng " +
+    "rw st sn sc sl so za ss sd tz tg tn ug zm zw",
+  america: "us ca mx gl bs bz cr cu dm do sv gt ht hn jm ni pa pr lc vc tt ar bo br cl co ec fk gy py pe sr uy ve",
+};
+
+export type MapBox = { x: number; y: number; width: number; height: number };
+
+/**
+ * Giriş ekranında bu sırayla (alfabetik) listelenir.
+ * Kıta antrenmanında haritanın açılış görünümü, public/maps/world.svg koordinatlarıyla.
+ * Ülke kutularından türetilmedi: Fransa, Portekiz ve Norveç gibi ülkelerin şekilleri
+ * denizaşırı topraklarını da içerdiği için kutu kıtanın çok dışına taşıyor.
+ */
+export const CONTINENTS: { id: Continent; label: string; view: MapBox }[] = [
+  { id: "africa", label: "Afrika", view: { x: 345, y: 430, width: 205, height: 195 } },
+  { id: "america", label: "Amerika", view: { x: 30, y: 250, width: 365, height: 445 } },
+  { id: "asia", label: "Asya", view: { x: 460, y: 300, width: 330, height: 265 } },
+  { id: "europe", label: "Avrupa", view: { x: 355, y: 322, width: 165, height: 123 } },
+];
+
+const continentCodes = {} as Record<Continent, ReadonlySet<string>>;
+for (const [continent, codes] of Object.entries(CONTINENT_MEMBERS) as [Continent, string][]) {
+  continentCodes[continent] = new Set(codes.split(" "));
+}
+
+export function continentLocationIds(continent: Continent): ReadonlySet<string> {
+  return continentCodes[continent];
+}
+
+export function countriesIn(continent: Continent): Country[] {
+  return countries.filter((country) => continentCodes[continent].has(country.code));
+}
+
+export function continentInfo(continent: Continent) {
+  return CONTINENTS.find((option) => option.id === continent)!;
+}

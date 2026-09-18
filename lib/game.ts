@@ -1,5 +1,5 @@
 import { type Province } from "@/lib/turkish-plates";
-import { type Country, type WorldDifficulty } from "@/lib/world-countries";
+import { continentInfo, type Continent, type Country, type WorldDifficulty } from "@/lib/world-countries";
 
 export type AnswerState = "correct" | "incorrect" | null;
 export type GameMode = "turkey" | "world";
@@ -21,11 +21,15 @@ export type LeaderboardEntry = {
  */
 export type PlayKind = "ranked" | "practice";
 
-/** Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır. */
-export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty };
+/**
+ * Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır.
+ * `continent` yalnızca dünya antrenmanında kullanılır; o kıtanın tüm ülkeleri sorulur.
+ */
+export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent };
 
-export function choiceLabel({ kind, mode, difficulty }: PlayChoice): string {
-  const map = mode === "turkey" ? "Türkiye" : difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
+export function choiceLabel({ kind, mode, difficulty, continent }: PlayChoice): string {
+  const map =
+    mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
   return kind === "practice" ? `Antrenman · ${map}` : map;
 }
 

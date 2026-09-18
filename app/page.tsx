@@ -12,7 +12,7 @@ import { usePlayer } from "@/lib/hooks/usePlayer";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
-import { commonCountries, countries } from "@/lib/world-countries";
+import { commonCountries, continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
 import {
   boardIdFor,
   correctLocationId,
@@ -56,8 +56,9 @@ function writePendingChoice(choice: PlayChoice | null) {
   }
 }
 
-function poolFor({ mode, difficulty }: PlayChoice): Question[] {
+function poolFor({ mode, difficulty, continent }: PlayChoice): Question[] {
   if (mode === "turkey") return provinces;
+  if (continent) return countriesIn(continent);
   return difficulty === "hard" ? countries : commonCountries;
 }
 
@@ -80,6 +81,7 @@ export default function Home() {
   const [choice, setChoice] = useState<PlayChoice>(DEFAULT_CHOICE);
   const mode = choice.mode;
   const isPractice = choice.kind === "practice";
+  const continent = mode === "world" ? choice.continent : undefined;
   const [phase, setPhase] = useState<GamePhase>("ready");
   const [questions, setQuestions] = useState<Question[]>(() => roundFor(DEFAULT_CHOICE));
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -348,7 +350,9 @@ export default function Home() {
               score={score}
             />
             <GameMap
+              activeLocationIds={continent ? continentLocationIds(continent) : null}
               answerState={answerState}
+              homeView={continent ? continentInfo(continent).view : null}
               isInteractive
               mapError={mapError}
               mapMarkup={mapMarkup}

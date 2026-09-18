@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
-type ViewBox = { x: number; y: number; width: number; height: number };
+import { type MapBox } from "@/lib/world-countries";
+
+type ViewBox = MapBox;
 
 const MAX_ZOOM = 8;
 const BUTTON_ZOOM_STEP = 1.6;
@@ -28,17 +30,28 @@ function parseViewBox(svg: SVGSVGElement): ViewBox | null {
   return { x, y, width, height };
 }
 
+/** Kutuyu ortalayarak, haritanın en-boy oranına genişletir; böylece kutunun tamamı görünür. */
+function fitToAspect(box: ViewBox, base: ViewBox): ViewBox {
+  const ratio = base.height / base.width;
+  const width = Math.max(box.width, box.height / ratio);
+  const height = width * ratio;
+  return { x: box.x + (box.width - width) / 2, y: box.y + (box.height - height) / 2, width, height };
+}
+
 /**
  * Gömülü SVG haritanın viewBox'ını değiştirerek yalnızca haritayı yakınlaştırır.
  * Sayfanın kendisi etkilenmez; kaydırma sınırları haritanın dışına taşmaz.
+ * `homeView` verilirse (ör. kıta antrenmanı) harita o bölgeyle açılır ve "Sıfırla" oraya döner.
  */
-export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMarkup: string | null) {
+export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMarkup: string | null, homeView: MapBox | null = null) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const baseViewBox = useRef<ViewBox | null>(null);
+  const homeViewBox = useRef<ViewBox | null>(null);
   const viewBox = useRef<ViewBox | null>(null);
   const dragDistance = useRef(0);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [isAtHome, setIsAtHome] = useState(true);
 
   const applyViewBox = useCallback((next: ViewBox) => {
     const base = baseViewBox.current;
@@ -53,10 +66,13 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     viewBox.current = { x, y, width, height };
     svg.setAttribute("viewBox", `${x} ${y} ${width} ${height}`);
     setZoom(base.width / width);
+    const home = homeViewBox.current ?? base;
+    setIsAtHome(Math.abs(home.width - width) < 0.01 && Math.abs(home.x - x) < 0.01 && Math.abs(home.y - y) < 0.01);
   }, []);
 
   const reset = useCallback(() => {
-    if (baseViewBox.current) applyViewBox(baseViewBox.current);
+    const home = homeViewBox.current ?? baseViewBox.current;
+    if (home) applyViewBox(home);
   }, [applyViewBox]);
 
   /**
@@ -99,14 +115,23 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     [applyViewBox],
   );
 
-  // Harita değiştiğinde temel viewBox'ı yeniden okur ve yakınlaştırmayı sıfırlar.
+  // Harita ya da açılış bölgesi değiştiğinde temel viewBox'ı yeniden okur ve açılış görünümüne döner.
+  // Önbellekteki işaretleme aynı kaldığında React SVG'yi yeniden yazmaz; temel viewBox bu yüzden
+  // ilk okumada saklanır, sonraki turlarda değişmiş viewBox özniteliğinden okunmaz.
   useEffect(() => {
     const svg = containerRef.current?.querySelector("svg") ?? null;
+    if (svg !== svgRef.current) baseViewBox.current = svg ? parseViewBox(svg) : null;
     svgRef.current = svg;
-    baseViewBox.current = svg ? parseViewBox(svg) : null;
-    if (baseViewBox.current) applyViewBox(baseViewBox.current);
-    else setZoom(1);
-  }, [applyViewBox, containerRef, mapMarkup]);
+    const base = baseViewBox.current;
+    homeViewBox.current = base && homeView ? fitToAspect(homeView, base) : null;
+    const home = homeViewBox.current ?? base;
+    if (!home) return setZoom(1);
+    applyViewBox(home);
+    // Açılış kutusu harita kenarına taşıyorsa applyViewBox onu içeri kaydırır; "evde mi" kontrolü
+    // kaydırılmış haliyle yapılmalı.
+    if (homeViewBox.current && viewBox.current) homeViewBox.current = { ...viewBox.current };
+    setIsAtHome(true);
+  }, [applyViewBox, containerRef, homeView, mapMarkup]);
 
   // Tekerlek olayı pasif olmayan bir dinleyici gerektirir; aksi halde sayfa kaymasını engelleyemeyiz.
   useEffect(() => {
@@ -168,6 +193,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
 
   return {
     zoom,
+    isAtHome,
     canZoomIn: zoom < MAX_ZOOM - 0.01,
     canZoomOut: zoom > 1.01,
     zoomIn: () => zoomBy(BUTTON_ZOOM_STEP),

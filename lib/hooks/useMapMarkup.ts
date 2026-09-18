@@ -56,19 +56,23 @@ export function useMapMarkup(mode: GameMode) {
   // Önbellek render sırasında okunur; yükleme bittiğinde aşağıdaki sayaç yeniden çizimi tetikler.
   const [, setLoadCount] = useState(0);
   const [failedMode, setFailedMode] = useState<GameMode | null>(null);
+  const mapMarkup = markupCache.get(mode) ?? null;
+  const isCached = mapMarkup !== null;
 
+  // Yalnızca moda değil önbellek durumuna da bağlı: geliştirmede hot reload modülü yeniden
+  // çalıştırıp önbelleği boşaltınca, mod aynı kalsa bile harita yeniden yüklenir.
   useEffect(() => {
-    if (markupCache.has(mode)) return;
+    if (isCached) return;
     let isActive = true;
     loadMapMarkup(mode).then(
       () => { if (isActive) setLoadCount((count) => count + 1); },
       () => { if (isActive) setFailedMode(mode); },
     );
     return () => { isActive = false; };
-  }, [mode]);
+  }, [isCached, mode]);
 
   return {
-    mapMarkup: markupCache.get(mode) ?? null,
+    mapMarkup,
     mapError: failedMode === mode ? "Harita yüklenemedi. Lütfen sayfayı yenileyin." : null,
   };
 }
