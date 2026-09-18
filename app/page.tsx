@@ -112,9 +112,12 @@ export default function Home() {
     return () => { isActive = false; };
   }, []);
 
-  // Turun toplam süresini geri sayar ve süre dolunca turu bitirir.
+  const isRoundComplete = answers.length === questions.length;
+
+  // Turun toplam süresini geri sayar ve süre dolunca turu bitirir. Son soru cevaplandığında
+  // durur; aksi halde son cevabın ardından geçen gösterim süresi, kaydedilen süreyi ezebilir.
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || isRoundComplete) return;
     const updateRemaining = () => {
       const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
       const remainingSeconds = Math.max(0, Math.ceil((GAME_DURATION_MS - elapsedMs) / 1000));
@@ -127,7 +130,7 @@ export default function Home() {
     updateRemaining();
     const timer = window.setInterval(updateRemaining, 250);
     return () => window.clearInterval(timer);
-  }, [phase]);
+  }, [isRoundComplete, phase]);
 
   // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
   useEffect(() => {

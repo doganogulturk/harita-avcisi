@@ -2,9 +2,9 @@
 
 Türkiye illeri ve dünya ülkeleri için 10 soruluk, süre sınırlı harita bulma oyunu. Soru olarak gelen il ya da ülkeyi harita üzerinde bulmanız isteniyor; tur sonunda skorunuz kaydediliyor ve canlı sıralamada görünüyor.
 
-- **İki mod:** Türkiye il haritası (81 il) ve dünya haritası (58 ülke)
+- **Üç tur türü:** Türkiye il haritası (81 il), Dünya · Normal (58 tanınmış ülke) ve Dünya · Zor (179 ülkenin tamamı)
 - **Tur başına 10 soru, toplam 120 saniye;** her cevaptan sonra 3 saniye doğru cevap gösterilir
-- **Sıralama:** önce puan, eşitlikte süre, sonra en uzun doğru serisi
+- **Sıralama:** her tur türünün ayrı sıralaması var (Zor turlar Normal'lerle yarışmaz); önce puan, eşitlikte süre, sonra en uzun doğru serisi
 - **Yatay mobil düzen:** dikey modda kullanıcıdan cihazı çevirmesi istenir
 - **Giriş:** Google ile oturum ya da isim girerek misafir oturumu
 
@@ -29,7 +29,7 @@ lib/
   game.ts             Ortak tipler, sabitler ve yardımcılar
   hooks/              usePlayer, useMapMarkup, useLeaderboard
   turkish-plates.ts   81 il + plaka kodu
-  world-countries.ts  58 ülke + ISO kodu
+  world-countries.ts  179 ülke + ISO kodu; "common" olanlar Normal, tamamı Zor havuzu
   shuffle.ts          Fisher-Yates karıştırma
   supabase.ts         Supabase istemcisi (env yoksa null döner)
 public/maps/          turkey.svg, world.svg
@@ -62,7 +62,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 
 ### Veri modeli
 
-Sonuçlar `game_results` tablosuna yazılır; RLS politikaları herkesin sıralamayı okumasına ama yalnızca kendi sonucunu yazmasına izin verir. Sıralama, oyuncu ve mod başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
+Sonuçlar `game_results` tablosuna yazılır; RLS politikaları oturum açmış her kullanıcının (misafir oturumu dahil) sıralamayı okumasına ama yalnızca kendi sonucunu yazmasına izin verir. Sıralama, oyuncu, mod ve zorluk (`variant`) başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
 
 ## Vercel ile yayınlama
 
