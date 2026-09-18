@@ -4,6 +4,7 @@ Türkiye illeri ve dünya ülkeleri için 10 soruluk, süre sınırlı harita bu
 
 - **Üç tur türü:** Türkiye il haritası (81 il), Dünya · Normal (58 tanınmış ülke) ve Dünya · Zor (179 ülkenin tamamı)
 - **Tur başına 10 soru, toplam 120 saniye;** her cevaptan sonra 3 saniye doğru cevap gösterilir
+- **Antrenman:** giriş gerektirmez, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu bitirene kadar devam eder. Sonuçlar kaydedilmez
 - **Sıralama:** her tur türünün ayrı sıralaması var (Zor turlar Normal'lerle yarışmaz); önce puan, eşitlikte süre, sonra en uzun doğru serisi
 - **Yatay mobil düzen:** dikey modda kullanıcıdan cihazı çevirmesi istenir
 - **Giriş:** Google ile oturum ya da isim girerek misafir oturumu

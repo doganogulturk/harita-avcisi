@@ -15,18 +15,25 @@ export type LeaderboardEntry = {
   best_streak: number;
 };
 
-/** Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır. */
-export type PlayChoice = { mode: GameMode; difficulty: WorldDifficulty };
+/**
+ * "ranked": 10 soruluk, süreli, sıralamaya kaydedilen tur; giriş gerektirir.
+ * "practice": girişsiz, süresiz, oyuncu bitirene kadar süren ve kaydedilmeyen antrenman.
+ */
+export type PlayKind = "ranked" | "practice";
 
-export function choiceLabel({ mode, difficulty }: PlayChoice): string {
-  if (mode === "turkey") return "Türkiye";
-  return difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
+/** Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır. */
+export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty };
+
+export function choiceLabel({ kind, mode, difficulty }: PlayChoice): string {
+  const map = mode === "turkey" ? "Türkiye" : difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
+  return kind === "practice" ? `Antrenman · ${map}` : map;
 }
 
 export const GAME_DURATION_MS = 120000;
 export const GAME_DURATION_SECONDS = GAME_DURATION_MS / 1000;
 export const QUESTION_TRANSITION_MS = 3000;
 export const LEADERBOARD_LIMIT = 50;
+export const QUESTIONS_PER_ROUND = 10;
 
 export const MAP_URLS: Record<GameMode, string> = {
   turkey: "/maps/turkey.svg",
@@ -50,7 +57,7 @@ export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: Worl
 ];
 
 export function choiceForBoard(board: { mode: GameMode; variant: WorldDifficulty }): PlayChoice {
-  return { mode: board.mode, difficulty: board.variant };
+  return { kind: "ranked", mode: board.mode, difficulty: board.variant };
 }
 
 export function boardIdFor({ mode, difficulty }: PlayChoice): BoardId {

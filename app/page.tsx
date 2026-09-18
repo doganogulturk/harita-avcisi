@@ -10,8 +10,9 @@ import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { getSupabaseClient } from "@/lib/supabase";
-import { createRound } from "@/lib/turkish-plates";
-import { createWorldRound } from "@/lib/world-countries";
+import { shuffle } from "@/lib/shuffle";
+import { provinces } from "@/lib/turkish-plates";
+import { commonCountries, countries } from "@/lib/world-countries";
 import {
   boardIdFor,
   correctLocationId,
@@ -20,6 +21,7 @@ import {
   GAME_MODES,
   isSameLocation,
   QUESTION_TRANSITION_MS,
+  QUESTIONS_PER_ROUND,
   type AnswerState,
   type BoardId,
   type GameMode,
@@ -38,7 +40,8 @@ const PENDING_CHOICE_KEY = "harita-avcisi:pending-choice";
 function readPendingChoice(): PlayChoice | null {
   try {
     const raw = sessionStorage.getItem(PENDING_CHOICE_KEY);
-    return raw ? (JSON.parse(raw) as PlayChoice) : null;
+    // Eski sürümlerin kaydettiği seçimde `kind` yok; o zamanlar yalnızca sıralamalı tur vardı.
+    return raw ? { kind: "ranked", ...(JSON.parse(raw) as Omit<PlayChoice, "kind">) } : null;
   } catch {
     return null;
   }
@@ -53,15 +56,32 @@ function writePendingChoice(choice: PlayChoice | null) {
   }
 }
 
-function roundFor({ mode, difficulty }: PlayChoice): Question[] {
-  return mode === "turkey" ? createRound() : createWorldRound(difficulty);
+function poolFor({ mode, difficulty }: PlayChoice): Question[] {
+  if (mode === "turkey") return provinces;
+  return difficulty === "hard" ? countries : commonCountries;
 }
 
+/** Sıralamalı tur 10 soru sorar; antrenman tüm havuzu sırayla dolaşır. */
+function roundFor(choice: PlayChoice): Question[] {
+  const shuffled = shuffle(poolFor(choice));
+  return choice.kind === "practice" ? shuffled : shuffled.slice(0, QUESTIONS_PER_ROUND);
+}
+
+/** Antrenmanda havuz bitince yeniden karıştırılır; yeni turun ilk sorusu az önce sorulanla aynı olmaz. */
+function nextPracticeCycle(choice: PlayChoice, lastQuestion: Question): Question[] {
+  const next = shuffle(poolFor(choice));
+  if (next.length > 1 && correctLocationId(next[0]) === correctLocationId(lastQuestion)) next.push(next.shift()!);
+  return next;
+}
+
+const DEFAULT_CHOICE: PlayChoice = { kind: "ranked", mode: "turkey", difficulty: "normal" };
+
 export default function Home() {
-  const [choice, setChoice] = useState<PlayChoice>({ mode: "turkey", difficulty: "normal" });
+  const [choice, setChoice] = useState<PlayChoice>(DEFAULT_CHOICE);
   const mode = choice.mode;
+  const isPractice = choice.kind === "practice";
   const [phase, setPhase] = useState<GamePhase>("ready");
-  const [questions, setQuestions] = useState<Question[]>(() => roundFor({ mode: "turkey", difficulty: "normal" }));
+  const [questions, setQuestions] = useState<Question[]>(() => roundFor(DEFAULT_CHOICE));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerState[]>([]);
   const [answerState, setAnswerState] = useState<AnswerState>(null);
@@ -88,7 +108,8 @@ export default function Home() {
   const { mapMarkup, mapError } = useMapMarkup(mode);
   const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId } = useLeaderboard({
     player,
-    isFinished: phase === "finished",
+    // Antrenman turları kaydedilmez.
+    isFinished: phase === "finished" && !isPractice,
     choice,
     score,
     durationMs: completionDurationMs,
@@ -116,8 +137,9 @@ export default function Home() {
 
   // Turun toplam süresini geri sayar ve süre dolunca turu bitirir. Son soru cevaplandığında
   // durur; aksi halde son cevabın ardından geçen gösterim süresi, kaydedilen süreyi ezebilir.
+  // Antrenmanın süre sınırı yoktur.
   useEffect(() => {
-    if (phase !== "playing" || isRoundComplete) return;
+    if (phase !== "playing" || isRoundComplete || isPractice) return;
     const updateRemaining = () => {
       const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
       const remainingSeconds = Math.max(0, Math.ceil((GAME_DURATION_MS - elapsedMs) / 1000));
@@ -130,7 +152,7 @@ export default function Home() {
     updateRemaining();
     const timer = window.setInterval(updateRemaining, 250);
     return () => window.clearInterval(timer);
-  }, [isRoundComplete, phase]);
+  }, [isPractice, isRoundComplete, phase]);
 
   // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
   useEffect(() => {
@@ -142,8 +164,11 @@ export default function Home() {
     );
     const timer = window.setTimeout(() => {
       if (questionIndex === questions.length - 1) {
-        setPhase("finished");
-        return;
+        if (!isPractice) {
+          setPhase("finished");
+          return;
+        }
+        setQuestions((current) => [...current, ...nextPracticeCycle(choice, current[current.length - 1])]);
       }
       setQuestionIndex((currentIndex) => currentIndex + 1);
       setAnswerState(null);
@@ -154,7 +179,7 @@ export default function Home() {
       window.clearInterval(countdown);
       window.clearTimeout(timer);
     };
-  }, [answerState, phase, questionIndex, questions.length]);
+  }, [answerState, choice, isPractice, phase, questionIndex, questions.length]);
 
   function startGame(nextChoice: PlayChoice) {
     setChoice(nextChoice);
@@ -176,15 +201,29 @@ export default function Home() {
     setPhase("playing");
   }
 
-  /** Giriş yapılmışsa tur hemen başlar; yapılmamışsa seçim saklanıp giriş adımı açılır. */
+  /**
+   * Antrenman ve giriş yapılmış oyuncunun turu hemen başlar; sıralamalı turda giriş
+   * yapılmamışsa seçim saklanıp giriş adımı açılır.
+   */
   function play(choice: PlayChoice) {
-    if (player) {
+    if (player || choice.kind === "practice") {
       startGame(choice);
       return;
     }
     setAuthError(null);
     setPendingChoice(choice);
     writePendingChoice(choice);
+  }
+
+  function finishPractice() {
+    const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
+    setCompletionDurationMs(Math.round(elapsedMs));
+    setPhase("finished");
+  }
+
+  function goHome() {
+    setPhase("ready");
+    setAuthError(null);
   }
 
   function cancelPendingChoice() {
@@ -239,7 +278,7 @@ export default function Home() {
     if (phase !== "playing" || !currentQuestion || answerState) return;
     const isCorrect = isSameLocation(mode, locationId, correctLocationId(currentQuestion));
 
-    if (questionIndex === questions.length - 1) {
+    if (!isPractice && questionIndex === questions.length - 1) {
       const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
       setCompletionDurationMs(Math.round(Math.min(GAME_DURATION_MS, elapsedMs)));
     }
@@ -276,12 +315,15 @@ export default function Home() {
           />
         ) : phase === "finished" ? (
           <ResultScreen
+            answeredCount={answers.length}
             bestStreak={bestStreak}
+            choice={choice}
             durationMs={completionDurationMs}
             boardId={boardId}
             leaderboardError={leaderboardError}
             leaderboards={leaderboards}
             onBoardChange={setBoardId}
+            onHome={goHome}
             onPlay={play}
             onSignOut={signOut}
             playedBoardId={playedBoardId}
@@ -295,6 +337,7 @@ export default function Home() {
               answers={answers}
               answerState={answerState}
               choice={choice}
+              onFinishPractice={finishPractice}
               onPlay={play}
               onSignOut={signOut}
               player={player}

@@ -117,10 +117,10 @@ export function IntroScreen({
           </div>
         ) : (
           <>
-            <p className="mt-8 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Harita seç</p>
+            <p className="mt-8 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Yarış · Sıralamaya girer</p>
             <div className="mt-3 grid items-stretch gap-3 sm:grid-cols-2">
               <ModeCard badge={`${provinces.length} il`} detail="81 il arasından rastgele gelen şehri haritada bul." isReady={isTurkeyReady} title="Türkiye">
-                <PlayButton disabled={!isTurkeyReady} label="Oyna" onClick={() => onPlay({ mode: "turkey", difficulty: "normal" })} />
+                <PlayButton disabled={!isTurkeyReady} label="Oyna" onClick={() => onPlay({ kind: "ranked", mode: "turkey", difficulty: "normal" })} />
               </ModeCard>
 
               <ModeCard
@@ -129,12 +129,24 @@ export function IntroScreen({
                 isReady={isWorldReady}
                 title="Dünya"
               >
-                <PlayButton disabled={!isWorldReady} label="Normal" onClick={() => onPlay({ mode: "world", difficulty: "normal" })} />
-                <PlayButton disabled={!isWorldReady} label="Zor" onClick={() => onPlay({ mode: "world", difficulty: "hard" })} tone="red" />
+                <PlayButton disabled={!isWorldReady} label="Normal" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })} />
+                <PlayButton disabled={!isWorldReady} label="Zor" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })} tone="red" />
                 <span className="w-full text-xs text-slate-400">
                   Normal: Sadece çok bilinen ülkeler. Zor: {countryCount("hard")} ülkenin tamamı.
                 </span>
               </ModeCard>
+            </div>
+
+            <p className="mt-8 text-xs font-semibold tracking-[0.2em] text-amber-700 uppercase">Antrenman · Giriş gerekmez</p>
+            <div className="mt-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-5">
+              <p className="text-sm text-slate-600">
+                Süre yok, soru sınırı yok: sen bitirene kadar sorular gelmeye devam eder. Sonuçlar sıralamaya kaydedilmez.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <PlayButton disabled={!isTurkeyReady} label="Türkiye" onClick={() => onPlay({ kind: "practice", mode: "turkey", difficulty: "normal" })} />
+                <PlayButton disabled={!isWorldReady} label="Dünya · Normal" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "normal" })} />
+                <PlayButton disabled={!isWorldReady} label="Dünya · Tümü" onClick={() => onPlay({ kind: "practice", mode: "world", difficulty: "hard" })} tone="red" />
+              </div>
             </div>
           </>
         )}

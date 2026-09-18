@@ -1,5 +1,3 @@
-import { shuffle } from "./shuffle";
-
 export type Province = {
   city: string;
   plate: number;
@@ -34,7 +32,3 @@ export const provinces: Province[] = [
   { city: "Iğdır", plate: 76 }, { city: "Yalova", plate: 77 }, { city: "Karabük", plate: 78 },
   { city: "Kilis", plate: 79 }, { city: "Osmaniye", plate: 80 }, { city: "Düzce", plate: 81 },
 ];
-
-export function createRound(): Province[] {
-  return shuffle(provinces).slice(0, 10);
-}

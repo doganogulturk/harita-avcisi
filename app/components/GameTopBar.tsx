@@ -1,6 +1,6 @@
 import { PlayerBadge } from "./PlayerBadge";
 import { RoundControls } from "./RoundControls";
-import { formatTime, GAME_DURATION_SECONDS, questionName, type AnswerState, type PlayChoice, type Player, type Question } from "@/lib/game";
+import { choiceLabel, formatTime, GAME_DURATION_SECONDS, questionName, type AnswerState, type PlayChoice, type Player, type Question } from "@/lib/game";
 
 type GameTopBarProps = {
   player: Player | null;
@@ -13,6 +13,7 @@ type GameTopBarProps = {
   remainingGameSeconds: number;
   score: number;
   onPlay: (choice: PlayChoice) => void;
+  onFinishPractice: () => void;
   onSignOut: () => void;
 };
 
@@ -34,8 +35,11 @@ export function GameTopBar({
   remainingQuestionSeconds,
   remainingGameSeconds,
   score,
+  onFinishPractice,
   onSignOut,
 }: GameTopBarProps) {
+  const isPractice = choice.kind === "practice";
+
   return (
     <header className="shrink-0 border-b border-slate-200 bg-white">
       {/* Üç sütun: soru adı, yanlardaki içerik ne kadar geniş olursa olsun tam ortada kalır. */}
@@ -55,42 +59,63 @@ export function GameTopBar({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 lg:gap-5">
-          <div aria-label="Soru ilerlemesi" className="hidden shrink-0 items-center gap-1 md:flex">
-            {Array.from({ length: questionCount }, (_, index) => (
-              <span
-                className={`h-2 w-3 rounded-full lg:w-4 ${answers[index] === "correct" ? "bg-emerald-500" : answers[index] === "incorrect" ? "bg-rose-500" : "bg-slate-200"}`}
-                key={index}
-              />
-            ))}
+        {isPractice ? (
+          <div className="flex items-center justify-end gap-3 lg:gap-5">
+            <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase md:inline lg:text-xs">
+              {choiceLabel(choice)}
+            </span>
+            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title="Doğru / cevaplanan">
+              {score}
+              <span className="text-slate-400">/{answers.length}</span>
+            </p>
+            <button
+              className="shrink-0 rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-sm"
+              onClick={onFinishPractice}
+              type="button"
+            >
+              Bitir
+            </button>
           </div>
+        ) : (
+          <div className="flex items-center justify-end gap-3 lg:gap-5">
+            <div aria-label="Soru ilerlemesi" className="hidden shrink-0 items-center gap-1 md:flex">
+              {Array.from({ length: questionCount }, (_, index) => (
+                <span
+                  className={`h-2 w-3 rounded-full lg:w-4 ${answers[index] === "correct" ? "bg-emerald-500" : answers[index] === "incorrect" ? "bg-rose-500" : "bg-slate-200"}`}
+                  key={index}
+                />
+              ))}
+            </div>
 
-          <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl">
-            {score}
-            <span className="text-slate-400">/{questionCount}</span>
-          </p>
+            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl">
+              {score}
+              <span className="text-slate-400">/{questionCount}</span>
+            </p>
 
-          <p className={`shrink-0 text-sm font-bold tabular-nums lg:text-xl ${timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"])}`}>
-            {formatTime(remainingGameSeconds)}
-          </p>
+            <p className={`shrink-0 text-sm font-bold tabular-nums lg:text-xl ${timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"])}`}>
+              {formatTime(remainingGameSeconds)}
+            </p>
 
-          <RoundControls choice={choice} onPlay={onPlay} />
-        </div>
+            <RoundControls choice={choice} onPlay={onPlay} />
+          </div>
+        )}
       </div>
 
-      <div
-        aria-label="Kalan süre"
-        aria-valuemax={GAME_DURATION_SECONDS}
-        aria-valuemin={0}
-        aria-valuenow={remainingGameSeconds}
-        className="h-1 w-full bg-slate-100"
-        role="progressbar"
-      >
+      {!isPractice && (
         <div
-          className={`h-full transition-[width] duration-300 ease-linear ${timeTone(remainingGameSeconds, ["bg-rose-500", "bg-amber-500", "bg-cyan-500"])}`}
-          style={{ width: `${(remainingGameSeconds / GAME_DURATION_SECONDS) * 100}%` }}
-        />
-      </div>
+          aria-label="Kalan süre"
+          aria-valuemax={GAME_DURATION_SECONDS}
+          aria-valuemin={0}
+          aria-valuenow={remainingGameSeconds}
+          className="h-1 w-full bg-slate-100"
+          role="progressbar"
+        >
+          <div
+            className={`h-full transition-[width] duration-300 ease-linear ${timeTone(remainingGameSeconds, ["bg-rose-500", "bg-amber-500", "bg-cyan-500"])}`}
+            style={{ width: `${(remainingGameSeconds / GAME_DURATION_SECONDS) * 100}%` }}
+          />
+        </div>
+      )}
     </header>
   );
 }

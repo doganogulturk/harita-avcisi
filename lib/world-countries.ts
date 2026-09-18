@@ -1,5 +1,3 @@
-import { shuffle } from "./shuffle";
-
 export type CountryTier = "common" | "rare";
 export type WorldDifficulty = "normal" | "hard";
 
@@ -197,8 +195,4 @@ export const commonCountries = countries.filter((country) => country.tier === "c
 
 export function countryCount(difficulty: WorldDifficulty): number {
   return difficulty === "hard" ? countries.length : commonCountries.length;
-}
-
-export function createWorldRound(difficulty: WorldDifficulty): Country[] {
-  return shuffle(difficulty === "hard" ? countries : commonCountries).slice(0, 10);
 }
