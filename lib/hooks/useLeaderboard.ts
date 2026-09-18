@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { BOARDS, boardIdFor, boardVariantFor, LEADERBOARD_LIMIT, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
 
 type FinishedRound = {
   player: Player | null;
+  /** Her yeni turda artan kimlik; aynı tur sonucunun iki kez kaydedilmesini önler. */
+  roundId: number;
   isFinished: boolean;
   choice: PlayChoice;
   score: number;
@@ -17,10 +19,15 @@ export type Leaderboards = Record<BoardId, LeaderboardEntry[]>;
 
 const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], world: [], "world-hard": [], "world-flags": [] };
 
+// Supabase aynı adlı kanalı yeniden kullanır; kapanmakta olan eski kanala dinleyici eklenmesin diye her abonelik ayrı adla açılır.
+let channelSequence = 0;
+
 /** Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur. */
-export function useLeaderboard({ player, isFinished, choice, score, durationMs, bestStreak }: FinishedRound) {
+export function useLeaderboard({ player, roundId, isFinished, choice, score, durationMs, bestStreak }: FinishedRound) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards>(EMPTY_LEADERBOARDS);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  // Effect yeniden çalışsa da (StrictMode, oturum yenilenmesi) tur başına tek kayıt; yeniden çalışan effect aynı kaydı bekler.
+  const save = useRef<{ roundId: number; succeeded: Promise<boolean> } | null>(null);
 
   const { mode } = choice;
   const variant = boardVariantFor(choice);
@@ -59,23 +66,30 @@ export function useLeaderboard({ player, isFinished, choice, score, durationMs, 
     };
 
     const saveResultAndLoadLeaderboards = async () => {
-      const { error } = await supabase.from("game_results").insert({
-        user_id: player.id,
-        display_name: player.name,
-        avatar_url: player.avatarUrl,
-        game_mode: mode,
-        variant,
-        score,
-        duration_ms: durationMs,
-        best_streak: bestStreak,
-      });
-      if (error) {
-        if (isActive) setLeaderboardError("Skor kaydedilemedi. Lütfen tekrar deneyin.");
+      if (save.current?.roundId !== roundId) {
+        const insert = supabase.from("game_results").insert({
+          user_id: player.id,
+          display_name: player.name,
+          avatar_url: player.avatarUrl,
+          game_mode: mode,
+          variant,
+          score,
+          duration_ms: durationMs,
+          best_streak: bestStreak,
+        });
+        save.current = { roundId, succeeded: Promise.resolve(insert).then(({ error }) => !error) };
+      }
+      const succeeded = await save.current.succeeded;
+      if (!isActive) return;
+      if (!succeeded) {
+        setLeaderboardError("Skor kaydedilemedi. Lütfen tekrar deneyin.");
         return;
       }
       await loadLeaderboards();
+      // Beklerken effect temizlendiyse abone olunmaz; aksi halde temizlikten sonra açılan kanal hiç kapanmaz.
+      if (!isActive) return;
       channel = supabase
-        .channel("live-leaderboard")
+        .channel(`live-leaderboard-${++channelSequence}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "game_results" }, () => { void loadLeaderboards(); })
         .subscribe();
     };
@@ -85,7 +99,7 @@ export function useLeaderboard({ player, isFinished, choice, score, durationMs, 
       isActive = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [bestStreak, durationMs, isFinished, mode, player, score, variant]);
+  }, [bestStreak, durationMs, isFinished, mode, player, roundId, score, variant]);
 
   const resetLeaderboards = () => {
     setLeaderboards(EMPTY_LEADERBOARDS);

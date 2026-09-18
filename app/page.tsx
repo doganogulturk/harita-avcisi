@@ -97,6 +97,7 @@ export default function Home() {
   const [remainingGameSeconds, setRemainingGameSeconds] = useState(GAME_DURATION_SECONDS);
   const [remainingQuestionSeconds, setRemainingQuestionSeconds] = useState(QUESTION_TRANSITION_SECONDS);
   const gameStartedAt = useRef<number | null>(null);
+  const [roundId, setRoundId] = useState(0);
 
   const [pendingChoice, setPendingChoice] = useState<PlayChoice | null>(null);
   // Google girişinden dönüldüğünde, giriş öncesi seçilen tur geri alınır.
@@ -112,6 +113,7 @@ export default function Home() {
   const { mapMarkup, mapError } = useMapMarkup(mode);
   const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId } = useLeaderboard({
     player,
+    roundId,
     // Antrenman turları kaydedilmez.
     isFinished: phase === "finished" && !isPractice,
     choice,
@@ -207,6 +209,7 @@ export default function Home() {
     setRemainingGameSeconds(GAME_DURATION_SECONDS);
     setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
     gameStartedAt.current = performance.now();
+    setRoundId((current) => current + 1);
     setBoardId(boardIdFor(nextChoice));
     setPendingChoice(null);
     resetLeaderboards();
