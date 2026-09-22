@@ -151,3 +151,113 @@ body {
     animation: none;
   }
 }
+
+/* Giriş ekranı, adım 2: seçilen kapsamı gösteren canlı dünya haritası. Oyun haritasından
+   farklı olarak tıklanamaz ve yalnızca "kapsama giriyor / girmiyor" ayrımını anlatır. */
+.map-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map-preview svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map-preview [data-country-code],
+.map-preview g[data-plakakodu] path,
+.map-preview path[id^="_"],
+.map-preview #guney-kibris path {
+  fill: #e8edf3;
+  stroke: #cbd5e1;
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
+  transition: fill 320ms ease, stroke 320ms ease;
+}
+
+.map-preview [data-country-code] path {
+  vector-effect: non-scaling-stroke;
+}
+
+.map-preview .scope-active,
+.map-preview g.scope-active path {
+  fill: #cffafe;
+  stroke: #0891b2;
+}
+
+/* Giriş animasyonu: oyunun adı ekranın ortasında belirir (nişangah hedefe kilitlenir, ad soldan
+   açılır), sonra bu açılış katmanı çekilirken arkadaki seçim ekranı netleşir. Sayfa yaşamı boyunca
+   bir kez oynar; kapsayıcıda data-intro yoksa hiç çalışmaz. */
+@keyframes intro-lock {
+  from {
+    opacity: 0;
+    transform: scale(2.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes intro-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 -12% 0 0);
+  }
+}
+
+@keyframes intro-focus {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+/* Açılış katmanı, adı bir an okunacak kadar durduktan sonra çekilir. */
+@keyframes intro-curtain {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4%);
+  }
+}
+
+[data-intro] .intro-lock {
+  animation: intro-lock 680ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+
+[data-intro] .intro-reveal {
+  animation: intro-reveal 620ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+}
+
+[data-intro] .intro-curtain {
+  animation: intro-curtain 520ms cubic-bezier(0.4, 0, 1, 1) 1300ms both;
+}
+
+[data-intro] .intro-focus {
+  animation: intro-focus 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--intro-delay, 0ms) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-intro] .intro-lock,
+  [data-intro] .intro-reveal,
+  [data-intro] .intro-curtain,
+  [data-intro] .intro-focus {
+    animation: none;
+  }
+}

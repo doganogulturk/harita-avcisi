@@ -15,8 +15,29 @@ type GameTopBarProps = {
   score: number;
   onPlay: (choice: PlayChoice) => void;
   onFinishPractice: () => void;
+  onExit: () => void;
   onSignOut: () => void;
 };
+
+/**
+ * Turu bırakıp ana menüye döner. Yanlışlıkla başlatılan bir tur için tek çıkış yolunun
+ * süreyi beklemek ya da 10 soruyu oynamak olmaması gerekiyor; onay sorulmaz.
+ */
+function ExitButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      aria-label="Turu bırak ve ana menüye dön"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
+      onClick={onClick}
+      title="Ana menü · Bu turun skoru kaydedilmez"
+      type="button"
+    >
+      <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+        <path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
 
 function timeTone(remainingGameSeconds: number, tones: [danger: string, warning: string, calm: string]) {
   if (remainingGameSeconds <= 10) return tones[0];
@@ -37,6 +58,7 @@ export function GameTopBar({
   remainingGameSeconds,
   score,
   onFinishPractice,
+  onExit,
   onSignOut,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
@@ -45,7 +67,8 @@ export function GameTopBar({
     <header className="shrink-0 border-b border-slate-200 bg-white">
       {/* Üç sütun: soru adı, yanlardaki içerik ne kadar geniş olursa olsun tam ortada kalır. */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 lg:gap-6 lg:px-5 lg:py-3">
-        <div className="flex min-w-0 items-center">
+        <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+          <ExitButton onClick={onExit} />
           <PlayerBadge align="left" onSignOut={onSignOut} player={player} size="sm" />
         </div>
 

@@ -1,5 +1,5 @@
 import { type Province } from "@/lib/turkish-plates";
-import { continentInfo, type Continent, type Country, type WorldDifficulty } from "@/lib/world-countries";
+import { continentInfo, isContinentScope, type Continent, type Country, type WorldDifficulty, type WorldScope } from "@/lib/world-countries";
 
 export type AnswerState = "correct" | "incorrect" | null;
 export type GameMode = "turkey" | "world";
@@ -84,6 +84,20 @@ export const FLAG_CHOICE: PlayChoice = { kind: "ranked", mode: "world", difficul
 export function choiceForBoard(board: { mode: GameMode; variant: BoardVariant }): PlayChoice {
   if (board.variant === "flags") return FLAG_CHOICE;
   return { kind: "ranked", mode: board.mode, difficulty: board.variant };
+}
+
+/**
+ * Giriş ekranındaki kapsam ve soru tipi seçimlerini bir tura çevirir.
+ * Yarışta bayrak turu tek bir sıralamaya bağlıdır: 179 ülkenin tamamı, kıtasız.
+ * Kıta yalnızca antrenmanda seçilebilir; kendi sıralaması olmadığı için yarışta yok sayılır.
+ */
+export function worldChoice(kind: PlayKind, scope: WorldScope, prompt: QuestionPrompt): PlayChoice {
+  if (kind === "ranked") {
+    if (prompt === "flag") return FLAG_CHOICE;
+    return { kind, mode: "world", difficulty: scope === "normal" ? "normal" : "hard" };
+  }
+  if (isContinentScope(scope)) return { kind, mode: "world", difficulty: "hard", continent: scope, prompt };
+  return { kind, mode: "world", difficulty: scope, prompt };
 }
 
 export function boardVariantFor(choice: PlayChoice): BoardVariant {

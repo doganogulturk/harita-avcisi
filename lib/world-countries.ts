@@ -249,3 +249,23 @@ export function countriesIn(continent: Continent): Country[] {
 export function continentInfo(continent: Continent) {
   return CONTINENTS.find((option) => option.id === continent)!;
 }
+
+/** Giriş ekranında Dünya turunun kapsamı: bir havuz ya da tek bir kıta. */
+export type WorldScope = WorldDifficulty | Continent;
+
+export function isContinentScope(scope: WorldScope): scope is Continent {
+  return scope !== "normal" && scope !== "hard";
+}
+
+const allCountryCodes: ReadonlySet<string> = new Set(countries.map((country) => country.code));
+const commonCountryCodes: ReadonlySet<string> = new Set(commonCountries.map((country) => country.code));
+
+/** Kapsama giren ülkeler; giriş ekranındaki önizleme haritasında bunlar vurgulanır. */
+export function scopeLocationIds(scope: WorldScope): ReadonlySet<string> {
+  if (isContinentScope(scope)) return continentCodes[scope];
+  return scope === "hard" ? allCountryCodes : commonCountryCodes;
+}
+
+export function scopeCountryCount(scope: WorldScope): number {
+  return scopeLocationIds(scope).size;
+}

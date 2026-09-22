@@ -63,12 +63,15 @@ alter table public.game_results enable row level security;
 
 drop policy if exists "Users can read their own results" on public.game_results;
 drop policy if exists "Authenticated users can read results" on public.game_results;
+drop policy if exists "Anyone can read results" on public.game_results;
 drop policy if exists "Users can create their own results" on public.game_results;
 
-create policy "Authenticated users can read results"
+-- Sıralama giriş ekranından herkese açıktır; siteye ilk gelen de kimin önde olduğunu görebilir.
+-- Yazma izni değişmez: sonuç eklemek için giriş gerekir ve herkes yalnızca kendi sonucunu yazar.
+create policy "Anyone can read results"
 on public.game_results
 for select
-to authenticated
+to anon, authenticated
 using (true);
 
 create policy "Users can create their own results"

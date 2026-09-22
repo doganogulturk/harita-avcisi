@@ -27,13 +27,13 @@ export function AuthPanel({ choiceLabel, isSigningIn, authError, supabaseConfigu
   };
 
   return (
-    <div className="rounded-2xl border-2 border-cyan-200 bg-cyan-50/60 p-5 sm:p-6">
+    <div className="rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8">
       <button
         className="text-xs font-semibold text-slate-500 underline-offset-2 transition hover:text-cyan-700 hover:underline"
         onClick={onCancel}
         type="button"
       >
-        ← Harita seçimine dön
+        ← Geri
       </button>
 
       <p className="mt-3 text-lg font-bold text-slate-900">

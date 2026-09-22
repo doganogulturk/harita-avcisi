@@ -7,6 +7,10 @@ type LeaderboardProps = {
   boardId: BoardId;
   leaderboardError: string | null;
   currentPlayerId: string | undefined;
+  /** Sıralamanın kendi başlığı olan yerlerde (giriş ekranındaki panel) kapatılır. */
+  showTitle?: boolean;
+  /** Verilmezse yükleniyor mu sorusu, tüm sıralamaların boş olmasından tahmin edilir. */
+  isLoading?: boolean;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -56,14 +60,15 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
   );
 }
 
-export function Leaderboard({ leaderboards, boardId, leaderboardError, currentPlayerId, onBoardChange }: LeaderboardProps) {
+export function Leaderboard({ leaderboards, boardId, leaderboardError, currentPlayerId, showTitle = true, isLoading, onBoardChange }: LeaderboardProps) {
   const entries = leaderboards[boardId];
   const isEmptyEverywhere = BOARDS.every((board) => leaderboards[board.id].length === 0);
+  const isStillLoading = isLoading ?? isEmptyEverywhere;
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>
+      <div className={`flex items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
+        {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
         <div className="flex gap-1 rounded-full bg-slate-100 p-1" role="tablist">
           {BOARDS.map((board) => (
             <button
@@ -85,7 +90,7 @@ export function Leaderboard({ leaderboards, boardId, leaderboardError, currentPl
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">
-            {isEmptyEverywhere ? "Sıralama yükleniyor..." : "Bu haritada henüz sonuç yok."}
+            {isStillLoading ? "Sıralama yükleniyor..." : "Bu haritada henüz sonuç yok."}
           </p>
         ) : (
           <ol className="space-y-1.5">
