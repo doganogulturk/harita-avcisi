@@ -122,7 +122,7 @@ body {
   aspect-ratio: 1;
   translate: -50% -50%;
   background: conic-gradient(transparent 0deg 265deg, var(--sweep-color) 350deg, transparent 360deg);
-  animation: sweep-spin 2.8s linear infinite;
+  animation: sweep-spin 2.8s linear var(--sweep-delay, 0s) infinite;
 }
 
 /* Tuşun beyaz zemini; dönen ışıktan yalnızca 2px'lik çerçeve görünür. */
@@ -147,8 +147,54 @@ body {
   --sweep-color: #f43f5e;
 }
 
+.sweep-cyan {
+  --sweep-color: #06b6d4;
+}
+
+/* Sonuç ekranında az önce oynanan turun tuşu: dolu zeminin üzerinden aralıklarla bir ışık süzülür. */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-160%) skewX(-20deg);
+  }
+  55%,
+  100% {
+    transform: translateX(360%) skewX(-20deg);
+  }
+}
+
+.shimmer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: -1;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  transform: translateX(-160%) skewX(-20deg);
+  animation: shimmer 3.2s ease-in-out var(--shimmer-delay, 0s) infinite;
+}
+
+/* Başlığın iki yanındaki parlayan noktalar. */
+@keyframes glow-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.7);
+  }
+}
+
+.glow-dot {
+  animation: glow-pulse 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .sweep::before {
+  .sweep::before,
+  .shimmer::before,
+  .glow-dot {
     animation: none;
   }
 }

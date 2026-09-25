@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
@@ -7,6 +8,7 @@ import {
   BOARDS,
   choiceForBoard,
   choiceLabel,
+  flagUrl,
   formatTime,
   type BoardId,
   type LocationStat,
@@ -101,9 +103,10 @@ function PrimaryButton({ label, onClick }: { label: string; onClick: () => void 
 }
 
 /** Yeni oyun tuşları haritaya göre gruplanır; her tuş bir sıralamaya karşılık gelir. */
-const NEW_GAME_GROUPS: { title: string; boards: { id: BoardId; label: string }[] }[] = [
+const NEW_GAME_GROUPS: { title: string; icon: "turkey" | "world"; boards: { id: BoardId; label: string }[] }[] = [
   {
     title: "Türkiye",
+    icon: "turkey",
     boards: [
       { id: "turkey", label: "Şehir" },
       { id: "turkey-plates", label: "Plaka" },
@@ -111,6 +114,7 @@ const NEW_GAME_GROUPS: { title: string; boards: { id: BoardId; label: string }[]
   },
   {
     title: "Dünya",
+    icon: "world",
     boards: [
       { id: "world", label: "Normal" },
       { id: "world-hard", label: "Zor" },
@@ -119,49 +123,89 @@ const NEW_GAME_GROUPS: { title: string; boards: { id: BoardId; label: string }[]
   },
 ];
 
+/** Başlık: ortada yazı, iki yanında turkuazdan saydama solan çizgiler ve parlayan noktalar. */
+function NewGameHeading() {
+  return (
+    <div aria-hidden="true" className="flex items-center gap-3">
+      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-cyan-500" />
+      <span className="glow-dot h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgb(6_182_212/0.6)]" />
+      <span className="font-display text-lg font-bold tracking-[0.18em] text-slate-900 uppercase">Yeni oyun</span>
+      <span className="glow-dot h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgb(6_182_212/0.6)]" />
+      <span className="h-px flex-1 bg-gradient-to-l from-transparent via-cyan-300 to-cyan-500" />
+    </div>
+  );
+}
+
+function GroupIcon({ icon }: { icon: "turkey" | "world" }) {
+  if (icon === "turkey") {
+    return <Image alt="" className="h-3 w-auto rounded-[2px] shadow-sm" height={12} src={flagUrl("tr")} unoptimized width={16} />;
+  }
+  return (
+    <svg aria-hidden="true" className="h-3.5 w-3.5 text-cyan-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
+    </svg>
+  );
+}
+
 /**
- * Yarış sonucunun yeni oyun tuşları. Az önce oynanan tur dolu turkuaz tuşla öne çıkar ve
- * "tekrar oyna" işini görür; diğerleri çerçeveli.
+ * Yarış sonucunun yeni oyun tuşları. Tuşların çerçevesinde bir ışık döner; aynı anda dönmesinler
+ * diye her biri farklı bir anda başlar. Az önce oynanan tur, üzerinden ışık süzülen dolu turkuaz
+ * tuşla öne çıkar ve "tekrar oyna" işini görür.
  */
 function NewGameSection({ playedBoardId, onPlay }: { playedBoardId: BoardId; onPlay: (choice: PlayChoice) => void }) {
+  let buttonIndex = 0;
   return (
-    <div>
-      <p className="text-sm font-bold text-slate-900">Yeni oyun</p>
-      <div className="mt-3 flex flex-col gap-3">
-        {NEW_GAME_GROUPS.map((group) => (
-          <div key={group.title}>
-            <p className="mb-1.5 text-xs font-semibold text-slate-500">{group.title}</p>
-            <div className={`grid gap-2 ${group.boards.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-              {group.boards.map((option) => {
-                const board = BOARDS.find((candidate) => candidate.id === option.id) ?? BOARDS[0];
-                const isPlayed = option.id === playedBoardId;
-                return (
-                  <button
-                    aria-label={isPlayed ? `${option.label}, tekrar oyna` : undefined}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-sm font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
-                      isPlayed
-                        ? "border-cyan-600 bg-cyan-600 text-white shadow-md shadow-cyan-600/20 hover:bg-cyan-500"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
-                    }`}
-                    key={option.id}
-                    onClick={() => onPlay(choiceForBoard(board))}
-                    title={isPlayed ? "Tekrar oyna" : undefined}
-                    type="button"
-                  >
-                    {isPlayed && (
-                      <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} viewBox="0 0 24 24">
-                        <path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4.5h-4.5" />
-                      </svg>
-                    )}
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
+    <section aria-label="Yeni oyun" className="flex flex-col gap-4">
+      <NewGameHeading />
+      {NEW_GAME_GROUPS.map((group) => (
+        <div key={group.title}>
+          <p className="mb-2 flex items-center justify-center gap-1.5 text-[11px] font-bold tracking-[0.2em] text-slate-500 uppercase">
+            <GroupIcon icon={group.icon} />
+            {group.title}
+          </p>
+          <div className={`grid gap-2 ${group.boards.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+            {group.boards.map((option) => {
+              const board = BOARDS.find((candidate) => candidate.id === option.id) ?? BOARDS[0];
+              const isPlayed = option.id === playedBoardId;
+              const delay = `${-0.55 * buttonIndex++}s`;
+              return (
+                <button
+                  aria-label={isPlayed ? `${option.label}, tekrar oyna` : undefined}
+                  className={`group flex items-center justify-center gap-1.5 rounded-2xl px-2 py-3 font-display text-base font-bold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none ${
+                    isPlayed
+                      ? "shimmer bg-gradient-to-br from-cyan-500 to-cyan-700 text-white shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-500/40"
+                      : "sweep sweep-cyan text-slate-800 shadow-sm hover:text-cyan-700 hover:shadow-md hover:shadow-cyan-500/20"
+                  }`}
+                  key={option.id}
+                  onClick={() => onPlay(choiceForBoard(board))}
+                  // Dönen ışık ve süzülen parıltı, tuşların hepsinde aynı anda olmasın.
+                  style={{ "--sweep-delay": delay, "--shimmer-delay": delay } as React.CSSProperties}
+                  title={isPlayed ? "Tekrar oyna" : undefined}
+                  type="button"
+                >
+                  {isPlayed && (
+                    <svg
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 transition-transform duration-500 group-hover:-rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4.5h-4.5" />
+                    </svg>
+                  )}
+                  {option.label}
+                </button>
+              );
+            })}
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      ))}
+    </section>
   );
 }
 

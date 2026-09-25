@@ -53,7 +53,11 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
 
   return (
     <li className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
-      <span className="flex min-w-0 flex-1 items-center gap-3">
+      {/*
+        İsim ve çubuk, isim sütununun taban genişliğinden artan alanı 1'e 9 paylaşır: çubuk her satırda
+        aynı genişlikte ve aynı hizadan başlar, isme de o artan alanın onda biri kadar ek yer kalır.
+      */}
+      <span className="flex min-w-0 shrink grow basis-40 items-center gap-3 sm:basis-52">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${isTop ? MEDAL_STYLES[rank] : "text-slate-400"}`}
         >
@@ -79,8 +83,7 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
           <span className="shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Sen</span>
         )}
       </span>
-      {/* Çubuk sabit genişlikte ve puana yaslı: hepsi aynı hizadan başlar, isim kalan alanı kullanır. */}
-      <span className="w-28 shrink-0 sm:w-40 xl:w-52" title="Süre (0-120 sn)">
+      <span className="min-w-0 shrink grow-[9] basis-0" title="Süre (0-120 sn)">
         <DurationBar durationMs={entry.duration_ms} isCurrentPlayer={isCurrentPlayer} />
       </span>
       <span className="w-16 shrink-0 text-right font-bold tabular-nums text-slate-900">{entry.score} puan</span>
