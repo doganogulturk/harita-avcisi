@@ -77,7 +77,8 @@ app/
     AuthPanel.tsx       Yarış öncesi giriş adımı (Google / misafir)
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
     GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
-    ResultScreen.tsx    Yarış sonucu + sıralama; antrenman özeti
+    ResultScreen.tsx    Tam ekran sonuç: özet ve yeni tur tuşları, en çok yanlış yapılanlar, sıralama; antrenman özeti
+    Logo.tsx            Nişangah rozetli oyun adı (giriş ve sonuç ekranlarının başlığı)
     MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
     Leaderboard.tsx     Sekmeli sıralama listesi
     LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı

@@ -142,9 +142,6 @@ export default function Home() {
 
   const currentQuestion = questions[questionIndex];
   const supabaseConfigured = getSupabaseClient() !== null;
-  // Giriş ve oyun ekranları kendi kenar boşluklarını yönetip ekranın tamamını kullanır;
-  // sonuç ekranı ise ortalanmış, kaydırılabilir bir kart olarak kalır.
-  const isFullBleed = phase !== "finished";
 
   // Her iki harita da baştan indirilir; giriş ekranındaki her "Oyna" anında başlayabilsin.
   useEffect(() => {
@@ -336,10 +333,11 @@ export default function Home() {
 
   return (
     <main
-      className={`flex h-[100dvh] flex-col bg-slate-50 text-slate-900 ${isFullBleed ? "p-0" : "px-3 py-3 sm:px-5 lg:px-6 lg:py-4"}`}
+      className="flex h-[100dvh] flex-col bg-slate-50 text-slate-900"
       style={{ paddingLeft: "max(env(safe-area-inset-left), 0px)", paddingRight: "max(env(safe-area-inset-right), 0px)" }}
     >
-      <div className={`mx-auto flex min-h-0 w-full flex-1 flex-col ${isFullBleed ? "max-w-none" : "max-w-[90rem] overflow-y-auto"}`}>
+      {/* Her ekran kendi kenar boşluklarını yönetir ve ekranın tamamını kullanır. */}
+      <div className="flex min-h-0 w-full flex-1 flex-col">
         {phase === "ready" ? (
           <IntroScreen
             authError={authError}

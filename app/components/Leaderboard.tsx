@@ -11,6 +11,8 @@ type LeaderboardProps = {
   showTitle?: boolean;
   /** Verilmezse yükleniyor mu sorusu, tüm sıralamaların boş olmasından tahmin edilir. */
   isLoading?: boolean;
+  /** Kapsayıcının yüksekliğini doldurur; liste sabit bir yükseklikte kesilmek yerine kalan alanda kayar. */
+  fill?: boolean;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -60,16 +62,26 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
   );
 }
 
-export function Leaderboard({ leaderboards, boardId, leaderboardError, currentPlayerId, showTitle = true, isLoading, onBoardChange }: LeaderboardProps) {
+export function Leaderboard({
+  leaderboards,
+  boardId,
+  leaderboardError,
+  currentPlayerId,
+  showTitle = true,
+  isLoading,
+  fill = false,
+  onBoardChange,
+}: LeaderboardProps) {
   const entries = leaderboards[boardId];
   const isEmptyEverywhere = BOARDS.every((board) => leaderboards[board.id].length === 0);
   const isStillLoading = isLoading ?? isEmptyEverywhere;
 
   return (
-    <div>
+    <div className={fill ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <div className={`flex items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
         {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
-        <div className="flex gap-1 rounded-full bg-slate-100 p-1" role="tablist">
+        {/* Dar kartlarda beş sekme sığmazsa alt satıra geçer; köşeler bu yüzden tam yuvarlak değil. */}
+        <div className="flex flex-wrap justify-center gap-1 rounded-2xl bg-slate-100 p-1" role="tablist">
           {BOARDS.map((board) => (
             <button
               aria-selected={boardId === board.id}
@@ -85,7 +97,7 @@ export function Leaderboard({ leaderboards, boardId, leaderboardError, currentPl
         </div>
       </div>
 
-      <div className="mt-3 max-h-[20rem] overflow-y-auto pr-1">
+      <div className={`overflow-y-auto pr-1 ${fill ? "mt-4 max-h-[24rem] min-h-0 flex-1 wide:max-h-none" : "mt-3 max-h-[20rem]"}`}>
         {leaderboardError ? (
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (
