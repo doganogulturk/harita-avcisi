@@ -1,6 +1,6 @@
 # Harita Avcısı
 
-Sorulan ili, ülkeyi ya da bayrağı haritada bulma oyunu. Yarış turlarında skor canlı sıralamaya işlenir; antrenmanda giriş yapmadan, süre baskısı olmadan pratik yapılır.
+Sorulan ili, plakayı, ülkeyi ya da bayrağı haritada bulma oyunu. Yarış turlarında skor canlı sıralamaya işlenir; antrenmanda giriş yapmadan, süre baskısı olmadan pratik yapılır.
 
 **Canlı:** [harita-avcisi.vercel.app](https://harita-avcisi.vercel.app/)
 
@@ -23,6 +23,7 @@ Giriş gerektirir (Google ya da misafir adı). Her tur 10 soru ve toplam 120 san
 | Tur | Havuz | Soru |
 | --- | --- | --- |
 | Türkiye | 81 il | İl adı |
+| Plaka | 81 il | İlin plaka kodu; cevaptan sonra ilin adı da gösterilir |
 | Dünya · Normal | 58 tanınmış ülke | Ülke adı |
 | Dünya · Zor | 179 ülke | Ülke adı |
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
@@ -36,7 +37,7 @@ Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya ba
 
 Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir.
 
-- **Türkiye:** 81 il, isimle
+- **Türkiye:** 81 il, isimle ya da plakayla
 - **Dünya:** Normal (58) ya da Tümü (179); sorular isimle veya bayrakla
 - **Kıtalar:** Afrika, Amerika, Asya ve Avrupa. Harita seçilen kıtaya yakınlaşarak açılır; kıta dışındaki ülkeler soluk ve tıklanamaz olur. İki kıtaya yayılan ülkeler (Türkiye, Rusya, Kazakistan, Azerbaycan, Gürcistan, Ermenistan, Kıbrıs) hem Avrupa'da hem Asya'da sorulur. Okyanusya'nın haritada yalnızca 6 ülkesi olduğu için kıta seçeneği yoktur.
 

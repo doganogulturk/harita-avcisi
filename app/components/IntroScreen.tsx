@@ -14,14 +14,25 @@ import {
   GAME_DURATION_SECONDS,
   MAP_URLS,
   QUESTIONS_PER_ROUND,
+  turkeyChoice,
   worldChoice,
   type GameMode,
   type PlayChoice,
   type PlayKind,
   type Player,
-  type QuestionPrompt,
+  type TurkeyPrompt,
+  type WorldPrompt,
 } from "@/lib/game";
-import { setPlayKind, setQuestionPrompt, setWorldScope, usePlayKind, useQuestionPrompt, useWorldScope } from "@/lib/intro-preferences";
+import {
+  setPlayKind,
+  setQuestionPrompt,
+  setTurkeyPrompt,
+  setWorldScope,
+  usePlayKind,
+  useQuestionPrompt,
+  useTurkeyPrompt,
+  useWorldScope,
+} from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
 import { CONTINENTS, continentInfo, countryCount, isContinentScope, scopeCountryCount, type WorldScope } from "@/lib/world-countries";
 
@@ -104,10 +115,20 @@ function ModeSwitch({ value, onChange }: { value: PlayKind; onChange: (value: Pl
   );
 }
 
-const PROMPT_OPTIONS: { id: QuestionPrompt; label: string }[] = [
+const PROMPT_OPTIONS: { id: WorldPrompt; label: string }[] = [
   { id: "name", label: "İsim" },
   { id: "flag", label: "Bayrak" },
 ];
+
+const TURKEY_PROMPT_OPTIONS: { id: TurkeyPrompt; label: string }[] = [
+  { id: "name", label: "İsim" },
+  { id: "plate", label: "Plaka" },
+];
+
+const TURKEY_PROMPT_NOTES: Record<TurkeyPrompt, string> = {
+  name: "Soru olarak ilin adı gelir, sen haritada yerini bulursun.",
+  plate: "Soru olarak plaka kodu gelir, sen o ilin yerini bulursun. Yarışta ayrı bir sıralaması var.",
+};
 
 const SCOPE_LOCK_NOTE = `Yarışta bayrak turu ${countryCount("hard")} ülkenin tamamından sorulur.`;
 
@@ -310,6 +331,7 @@ export function IntroScreen({
   const kind = usePlayKind();
   const storedScope = useWorldScope();
   const prompt = useQuestionPrompt();
+  const turkeyPrompt = useTurkeyPrompt();
   const [selectedMap, setSelectedMap] = useState<GameMode | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
@@ -333,7 +355,7 @@ export function IntroScreen({
   const effectiveScope: WorldScope = isScopeLocked ? "hard" : scope;
 
   const choiceFor = (mode: GameMode): PlayChoice =>
-    mode === "turkey" ? { kind, mode: "turkey", difficulty: "normal" } : worldChoice(kind, scope, prompt);
+    mode === "turkey" ? turkeyChoice(kind, turkeyPrompt) : worldChoice(kind, scope, prompt);
 
   const goBack = () => setSelectedMap(null);
 
@@ -382,7 +404,7 @@ export function IntroScreen({
           <MapChoiceCard
             delayMs={INTRO_CONTENT_DELAY_MS + 120}
             isReady={readyModes.includes("turkey")}
-            meta={`${provinces.length} il · il adıyla`}
+            meta={`${provinces.length} il · adıyla ya da plakasıyla`}
             mode="turkey"
             onSelect={() => setSelectedMap("turkey")}
             title="Türkiye"
@@ -408,6 +430,7 @@ export function IntroScreen({
         onStart={() => onPlay(choiceFor(selectedMap))}
         prompt={prompt}
         scope={effectiveScope}
+        turkeyPrompt={turkeyPrompt}
         isScopeLocked={isScopeLocked}
       />
     );
@@ -488,7 +511,8 @@ type RoundSetupProps = {
   mode: GameMode;
   kind: PlayKind;
   scope: WorldScope;
-  prompt: QuestionPrompt;
+  prompt: WorldPrompt;
+  turkeyPrompt: TurkeyPrompt;
   isScopeLocked: boolean;
   isReady: boolean;
   onBack: () => void;
@@ -496,7 +520,7 @@ type RoundSetupProps = {
 };
 
 /** Adım 2: seçilen haritanın önizlemesi solda, o haritanın ayarları ve Başla sağda. */
-function RoundSetup({ mode, kind, scope, prompt, isScopeLocked, isReady, onBack, onStart }: RoundSetupProps) {
+function RoundSetup({ mode, kind, scope, prompt, turkeyPrompt, isScopeLocked, isReady, onBack, onStart }: RoundSetupProps) {
   const isWorld = mode === "world";
   const poolScopes: { id: WorldScope; label: string }[] = [
     { id: "normal", label: "Normal" },
@@ -574,9 +598,9 @@ function RoundSetup({ mode, kind, scope, prompt, isScopeLocked, isReady, onBack,
                 </Field>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">
-                81 ilin tamamı sorulur. Soru olarak ilin adı gelir, sen haritada yerini bulursun.
-              </p>
+              <Field label="Soru" note={`${provinces.length} ilin tamamı sorulur. ${TURKEY_PROMPT_NOTES[turkeyPrompt]}`}>
+                <Segmented label="Soru tipi" onChange={setTurkeyPrompt} options={TURKEY_PROMPT_OPTIONS} size="sm" value={turkeyPrompt} />
+              </Field>
             )}
           </div>
 

@@ -1,7 +1,7 @@
 import { Leaderboard } from "./Leaderboard";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
-import { choiceLabel, FLAG_CHOICE, formatTime, type BoardId, type PlayChoice, type Player } from "@/lib/game";
+import { choiceLabel, FLAG_CHOICE, formatTime, PLATE_CHOICE, type BoardId, type PlayChoice, type Player } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
 
 type ResultScreenProps = {
@@ -94,6 +94,7 @@ export function ResultScreen({
           <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Yeni tur</p>
           <div className="flex flex-wrap items-center gap-2">
             <PlayButton label="Türkiye" onClick={() => onPlay({ kind: "ranked", mode: "turkey", difficulty: "normal" })} />
+            <PlayButton label="Plaka" onClick={() => onPlay(PLATE_CHOICE)} tone="red" />
             <PlayButton label="Dünya" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "normal" })} />
             <PlayButton label="Dünya · Zor" onClick={() => onPlay({ kind: "ranked", mode: "world", difficulty: "hard" })} tone="red" />
             <PlayButton label="Bayrak" onClick={() => onPlay(FLAG_CHOICE)} tone="red" />

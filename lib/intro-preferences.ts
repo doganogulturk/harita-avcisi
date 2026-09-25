@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { type QuestionPrompt, type PlayKind } from "@/lib/game";
+import { type PlayKind, type TurkeyPrompt, type WorldPrompt } from "@/lib/game";
 import { type WorldScope } from "@/lib/world-countries";
 
 /**
@@ -45,7 +45,8 @@ function createPreference<T extends string>(key: string, isValid: (value: string
 }
 
 const KINDS: PlayKind[] = ["ranked", "practice"];
-const PROMPTS: QuestionPrompt[] = ["name", "flag"];
+const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag"];
+const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 const SCOPES: WorldScope[] = ["normal", "hard", "africa", "america", "asia", "europe"];
 
 export const [usePlayKind, setPlayKind] = createPreference<PlayKind>(
@@ -60,8 +61,15 @@ export const [useWorldScope, setWorldScope] = createPreference<WorldScope>(
   "normal",
 );
 
-export const [useQuestionPrompt, setQuestionPrompt] = createPreference<QuestionPrompt>(
+export const [useQuestionPrompt, setQuestionPrompt] = createPreference<WorldPrompt>(
   "harita-avcisi:intro-prompt",
-  (value): value is QuestionPrompt => (PROMPTS as string[]).includes(value),
+  (value): value is WorldPrompt => (WORLD_PROMPTS as string[]).includes(value),
+  "name",
+);
+
+/** Türkiye haritasının soru tipi ayrı saklanır; dünyada seçilen bayrak Türkiye'ye taşınmasın. */
+export const [useTurkeyPrompt, setTurkeyPrompt] = createPreference<TurkeyPrompt>(
+  "harita-avcisi:intro-turkey-prompt",
+  (value): value is TurkeyPrompt => (TURKEY_PROMPTS as string[]).includes(value),
   "name",
 );
