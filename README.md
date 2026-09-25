@@ -83,7 +83,8 @@ lib/
     usePlayer.ts        Supabase oturumu
     useMapMarkup.ts     SVG haritayı indirip önbelleğe alır ve tıklanabilir yapar
     useMapZoom.ts       viewBox tabanlı yakınlaştırma, kaydırma ve açılış görünümü
-    useLeaderboard.ts   Sonucu tur başına bir kez kaydeder, sıralamaları çeker, realtime abonelik.
+    useLeaderboard.ts   Yarış turunu sunucuda açar (start_round), sonucu tur başına bir kez kaydeder
+                        (finish_round), sıralamaları çeker, realtime abonelik.
                         useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
   turkish-plates.ts     81 il + plaka kodu
   world-countries.ts    179 ülke + ISO kodu; Normal havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
@@ -91,7 +92,7 @@ lib/
   supabase.ts           Supabase istemcisi (env yoksa null döner)
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
-supabase/schema.sql     Tablo, RLS politikaları, leaderboard view'i, realtime
+supabase/schema.sql     Tablolar, RLS politikaları, tur fonksiyonları, leaderboard view'i, realtime
 ```
 
 ### Haritalar, bayraklar ve yazı tipi
@@ -122,16 +123,30 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 
 ### Veri modeli
 
-Yarış sonuçları `game_results` tablosuna yazılır; antrenman sonuçları hiç kaydedilmez. Her satır `game_mode` (`turkey` / `world`) ve `variant` ile bir sıralamaya bağlanır:
+Yarış sonuçları `game_results` tablosunda tutulur; antrenman sonuçları hiç kaydedilmez. Her satır `game_mode` (`turkey` / `world`) ve `variant` ile bir sıralamaya bağlanır:
 
 | Sıralama | `game_mode` | `variant` |
 | --- | --- | --- |
 | Türkiye | `turkey` | `normal` |
+| Plaka | `turkey` | `plates` |
 | Dünya | `world` | `normal` |
 | Dünya · Zor | `world` | `hard` |
 | Bayrak | `world` | `flags` |
 
-RLS politikaları sıralamayı herkese açar: giriş yapmamış ziyaretçi de sıralamayı okuyabilir. Yazma izni giriş gerektirir ve herkes yalnızca kendi sonucunu yazabilir. Sıralama, oyuncu, mod ve `variant` başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
+RLS politikaları sıralamayı herkese açar: giriş yapmamış ziyaretçi de sıralamayı okuyabilir. Tarayıcının
+tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki iki fonksiyonla kaydedilir:
+
+- `start_round(game_mode, variant)`: yarış turu başlarken `game_rounds` tablosunda bir tur açar ve
+  kimliğini döndürür. Tur tarayıcıda beklemeden başlar, istek arka planda sürer.
+- `finish_round(round_id, score, best_streak, answered, duration_ms)`: turun oyuncuya ait olduğunu, daha önce
+  kaydedilmediğini, puanla serinin tutarlı olduğunu ve sürenin mümkün olduğunu denetleyip sonucu yazar.
+  Soruların bitmediği tur ancak 120 saniye dolduysa kabul edilir; 10 soruluk tur en az 30 saniye sürer
+  (9 × 3 saniyelik gösterim + soru başına 0,3 saniye). Kaydedilen süre, sunucunun ölçtüğünden belirgin
+  biçimde kısa olamaz. Oyuncunun adı ve fotoğrafı tarayıcıdan değil oturumdan alınır.
+
+Doğru cevap sorudan belli olduğu için (sorulan ülkenin kodu, tıklanacak alanın kodudur) bu denetimler
+cevapları otomatik veren bir betiği engelleyemez; engelledikleri, hiç oynanmamış bir turun ya da imkânsız
+bir sürenin kaydedilmesidir. Sıralama, oyuncu, mod ve `variant` başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
 
 ## Vercel ile yayınlama
 

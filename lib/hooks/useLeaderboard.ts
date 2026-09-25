@@ -8,9 +8,12 @@ type FinishedRound = {
   player: Player | null;
   /** Her yeni turda artan kimlik; aynı tur sonucunun iki kez kaydedilmesini önler. */
   roundId: number;
+  /** Tur başlarken sunucuda açılan turun kimliği; `startRankedRound` döndürür. */
+  serverRound: Promise<string | null> | null;
   isFinished: boolean;
   choice: PlayChoice;
   score: number;
+  answeredCount: number;
   durationMs: number;
   bestStreak: number;
 };
@@ -21,6 +24,20 @@ const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], "turkey-plates": [], worl
 
 // Supabase aynı adlı kanalı yeniden kullanır; kapanmakta olan eski kanala dinleyici eklenmesin diye her abonelik ayrı adla açılır.
 let channelSequence = 0;
+
+/**
+ * Yarış turunu sunucuda açar; sonuç kaydedilirken süreyi sunucu bu andan itibaren ölçer.
+ * Tur tarayıcıda beklemeden başlar, bu istek arka planda sürer. Açılamazsa null döner ve
+ * turun sonucu kaydedilemez.
+ */
+export function startRankedRound(choice: PlayChoice): Promise<string | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return Promise.resolve(null);
+  return Promise.resolve(supabase.rpc("start_round", { p_game_mode: choice.mode, p_variant: boardVariantFor(choice) })).then(
+    ({ data, error }) => (error || typeof data !== "string" ? null : data),
+    () => null,
+  );
+}
 
 /** Tüm sıralamaları tek seferde çeker. Herhangi biri başarısız olursa null döner. */
 async function fetchLeaderboards(supabase: NonNullable<ReturnType<typeof getSupabaseClient>>): Promise<Leaderboards | null> {
@@ -83,18 +100,18 @@ export function useLeaderboards(isOpen: boolean) {
   return { leaderboards, leaderboardError, isLoading: leaderboards === EMPTY_LEADERBOARDS && leaderboardError === null };
 }
 
-/** Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur. */
-export function useLeaderboard({ player, roundId, isFinished, choice, score, durationMs, bestStreak }: FinishedRound) {
+/**
+ * Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur.
+ * Sonuç tabloya doğrudan yazılmaz; sunucudaki finish_round turu ve süresini doğrulayıp kaydeder.
+ */
+export function useLeaderboard({ player, roundId, serverRound, isFinished, choice, score, answeredCount, durationMs, bestStreak }: FinishedRound) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards>(EMPTY_LEADERBOARDS);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   // Effect yeniden çalışsa da (StrictMode, oturum yenilenmesi) tur başına tek kayıt; yeniden çalışan effect aynı kaydı bekler.
   const save = useRef<{ roundId: number; succeeded: Promise<boolean> } | null>(null);
 
-  const { mode } = choice;
-  const variant = boardVariantFor(choice);
-
   useEffect(() => {
-    if (!isFinished || !player) return;
+    if (!isFinished || !player || !serverRound) return;
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
@@ -110,17 +127,18 @@ export function useLeaderboard({ player, roundId, isFinished, choice, score, dur
 
     const saveResultAndLoadLeaderboards = async () => {
       if (save.current?.roundId !== roundId) {
-        const insert = supabase.from("game_results").insert({
-          user_id: player.id,
-          display_name: player.name,
-          avatar_url: player.avatarUrl,
-          game_mode: mode,
-          variant,
-          score,
-          duration_ms: durationMs,
-          best_streak: bestStreak,
+        const succeeded = serverRound.then(async (serverRoundId) => {
+          if (!serverRoundId) return false;
+          const { error } = await supabase.rpc("finish_round", {
+            p_round_id: serverRoundId,
+            p_score: score,
+            p_best_streak: bestStreak,
+            p_answered: answeredCount,
+            p_duration_ms: durationMs,
+          });
+          return !error;
         });
-        save.current = { roundId, succeeded: Promise.resolve(insert).then(({ error }) => !error) };
+        save.current = { roundId, succeeded: succeeded.catch(() => false) };
       }
       const succeeded = await save.current.succeeded;
       if (!isActive) return;
@@ -139,7 +157,7 @@ export function useLeaderboard({ player, roundId, isFinished, choice, score, dur
       isActive = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [bestStreak, durationMs, isFinished, mode, player, roundId, score, variant]);
+  }, [answeredCount, bestStreak, durationMs, isFinished, player, roundId, score, serverRound]);
 
   const resetLeaderboards = () => {
     setLeaderboards(EMPTY_LEADERBOARDS);

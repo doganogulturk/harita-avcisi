@@ -6,7 +6,7 @@ import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { RotateOverlay } from "./components/RotateOverlay";
-import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
+import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -98,6 +98,7 @@ export default function Home() {
   const [remainingQuestionSeconds, setRemainingQuestionSeconds] = useState(QUESTION_TRANSITION_SECONDS);
   const gameStartedAt = useRef<number | null>(null);
   const [roundId, setRoundId] = useState(0);
+  const [serverRound, setServerRound] = useState<Promise<string | null> | null>(null);
 
   const [pendingChoice, setPendingChoice] = useState<PlayChoice | null>(null);
   // Google girişinden dönüldüğünde, giriş öncesi seçilen tur geri alınır.
@@ -114,10 +115,12 @@ export default function Home() {
   const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId } = useLeaderboard({
     player,
     roundId,
+    serverRound,
     // Antrenman turları kaydedilmez.
     isFinished: phase === "finished" && !isPractice,
     choice,
     score,
+    answeredCount: answers.length,
     durationMs: completionDurationMs,
     bestStreak,
   });
@@ -213,6 +216,9 @@ export default function Home() {
     setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
     gameStartedAt.current = performance.now();
     setRoundId((current) => current + 1);
+    // Yarış turu sunucuda da açılır; süre sunucuda ölçülsün. Misafir girişinden hemen sonra
+    // `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır.
+    setServerRound(nextChoice.kind === "ranked" ? startRankedRound(nextChoice) : null);
     setBoardId(boardIdFor(nextChoice));
     setPendingChoice(null);
     resetLeaderboards();
