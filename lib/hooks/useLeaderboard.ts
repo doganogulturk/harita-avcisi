@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
-import { BOARDS, boardIdFor, boardVariantFor, LEADERBOARD_LIMIT, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
+import {
+  BOARDS,
+  boardIdFor,
+  boardVariantFor,
+  LEADERBOARD_LIMIT,
+  type AnswerRecord,
+  type BoardId,
+  type LeaderboardEntry,
+  type PlayChoice,
+  type Player,
+} from "@/lib/game";
 
 type FinishedRound = {
   player: Player | null;
@@ -12,10 +22,9 @@ type FinishedRound = {
   serverRound: Promise<string | null> | null;
   isFinished: boolean;
   choice: PlayChoice;
-  score: number;
-  answeredCount: number;
+  /** Cevaplanan sorular sırayla; puan ve en uzun seri sunucuda bu listeden hesaplanır. */
+  answers: AnswerRecord[];
   durationMs: number;
-  bestStreak: number;
 };
 
 export type Leaderboards = Record<BoardId, LeaderboardEntry[]>;
@@ -104,9 +113,11 @@ export function useLeaderboards(isOpen: boolean) {
  * Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur.
  * Sonuç tabloya doğrudan yazılmaz; sunucudaki finish_round turu ve süresini doğrulayıp kaydeder.
  */
-export function useLeaderboard({ player, roundId, serverRound, isFinished, choice, score, answeredCount, durationMs, bestStreak }: FinishedRound) {
+export function useLeaderboard({ player, roundId, serverRound, isFinished, choice, answers, durationMs }: FinishedRound) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards>(EMPTY_LEADERBOARDS);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  // Kaydı denenmiş (başarılı ya da değil) son tur; istatistikler bu turun cevaplarını da içersin diye beklenir.
+  const [settledRoundId, setSettledRoundId] = useState<number | null>(null);
   // Effect yeniden çalışsa da (StrictMode, oturum yenilenmesi) tur başına tek kayıt; yeniden çalışan effect aynı kaydı bekler.
   const save = useRef<{ roundId: number; succeeded: Promise<boolean> } | null>(null);
 
@@ -131,10 +142,8 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
           if (!serverRoundId) return false;
           const { error } = await supabase.rpc("finish_round", {
             p_round_id: serverRoundId,
-            p_score: score,
-            p_best_streak: bestStreak,
-            p_answered: answeredCount,
             p_duration_ms: durationMs,
+            p_answers: answers,
           });
           return !error;
         });
@@ -142,6 +151,7 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
       }
       const succeeded = await save.current.succeeded;
       if (!isActive) return;
+      setSettledRoundId(roundId);
       if (!succeeded) {
         setLeaderboardError("Skor kaydedilemedi. Lütfen tekrar deneyin.");
         return;
@@ -157,12 +167,12 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
       isActive = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [answeredCount, bestStreak, durationMs, isFinished, player, roundId, score, serverRound]);
+  }, [answers, durationMs, isFinished, player, roundId, serverRound]);
 
   const resetLeaderboards = () => {
     setLeaderboards(EMPTY_LEADERBOARDS);
     setLeaderboardError(null);
   };
 
-  return { leaderboards, leaderboardError, resetLeaderboards, playedBoardId: boardIdFor(choice) };
+  return { leaderboards, leaderboardError, resetLeaderboards, playedBoardId: boardIdFor(choice), isResultSettled: settledRoundId === roundId };
 }

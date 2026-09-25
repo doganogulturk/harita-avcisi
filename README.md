@@ -29,6 +29,10 @@ Giriş gerektirir (Google ya da misafir adı). Her tur 10 soru ve toplam 120 san
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
 
 Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
+
+Tur bittiğinde o modda **en çok yanlış yapılan 5 yer** gösterilir: tüm oyuncuların yarış turlarındaki cevaplarından,
+yanlış oranına göre. Her yerin yanında en çok neyle karıştırıldığı yazar; oyuncunun o turda kendisinin de yanlış
+yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada Normal, Zor ve Bayrak ayrı değerlendirilir.
 Giriş ekranında Yarış seçiliyken, tur özetinin ardından gelen **Sıralamayı gör** bağlantısı sıralamayı tur
 oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
@@ -36,6 +40,8 @@ Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya ba
 ### Antrenman
 
 Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir.
+En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; yalnızca yarış turlarından hesaplanır ve antrenmanın
+havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatistiğe katılmaz.
 
 - **Türkiye:** 81 il, isimle ya da plakayla
 - **Dünya:** Normal (58) ya da Tümü (179); sorular isimle veya bayrakla
@@ -72,6 +78,7 @@ app/
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
     GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
     ResultScreen.tsx    Yarış sonucu + sıralama; antrenman özeti
+    MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
     Leaderboard.tsx     Sekmeli sıralama listesi
     LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
@@ -83,6 +90,7 @@ lib/
     usePlayer.ts        Supabase oturumu
     useMapMarkup.ts     SVG haritayı indirip önbelleğe alır ve tıklanabilir yapar
     useMapZoom.ts       viewBox tabanlı yakınlaştırma, kaydırma ve açılış görünümü
+    useMostMissed.ts    location_stats view'inden o modda en çok yanlış yapılan yerleri çeker
     useLeaderboard.ts   Yarış turunu sunucuda açar (start_round), sonucu tur başına bir kez kaydeder
                         (finish_round), sıralamaları çeker, realtime abonelik.
                         useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
@@ -92,7 +100,7 @@ lib/
   supabase.ts           Supabase istemcisi (env yoksa null döner)
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
-supabase/schema.sql     Tablolar, RLS politikaları, tur fonksiyonları, leaderboard view'i, realtime
+supabase/schema.sql     Tablolar, RLS politikaları, tur fonksiyonları, leaderboard ve location_stats view'leri, realtime
 ```
 
 ### Haritalar, bayraklar ve yazı tipi
@@ -138,11 +146,17 @@ tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki iki fonksiyonla kayded
 
 - `start_round(game_mode, variant)`: yarış turu başlarken `game_rounds` tablosunda bir tur açar ve
   kimliğini döndürür. Tur tarayıcıda beklemeden başlar, istek arka planda sürer.
-- `finish_round(round_id, score, best_streak, answered, duration_ms)`: turun oyuncuya ait olduğunu, daha önce
-  kaydedilmediğini, puanla serinin tutarlı olduğunu ve sürenin mümkün olduğunu denetleyip sonucu yazar.
+- `finish_round(round_id, duration_ms, answers)`: `answers`, cevaplanan soruların sırayla listesidir
+  (`[{"location": "34", "selected": "41"}, ...]`). Puanı ve en uzun seriyi bu listeden kendisi hesaplar; turun
+  oyuncuya ait olduğunu, daha önce kaydedilmediğini ve sürenin mümkün olduğunu denetleyip sonucu yazar.
   Soruların bitmediği tur ancak 120 saniye dolduysa kabul edilir; 10 soruluk tur en az 30 saniye sürer
   (9 × 3 saniyelik gösterim + soru başına 0,3 saniye). Kaydedilen süre, sunucunun ölçtüğünden belirgin
   biçimde kısa olamaz. Oyuncunun adı ve fotoğrafı tarayıcıdan değil oturumdan alınır.
+
+Her cevap `round_answers` tablosuna da yazılır (sorulan yer, tıklanan yer, doğru mu). Bu tablo tarayıcıya kapalıdır;
+`location_stats` view'i her sıralamada her yerin kaç kez sorulduğunu, kaç kez yanlış cevaplandığını ve en çok hangi
+yerle karıştırıldığını herkese açık olarak toplar. Türkiye'de yerler başında sıfır olmadan plakayla (`6`, `34`),
+dünyada ISO koduyla (`tr`) tutulur.
 
 Doğru cevap sorudan belli olduğu için (sorulan ülkenin kodu, tıklanacak alanın kodudur) bu denetimler
 cevapları otomatik veren bir betiği engelleyemez; engelledikleri, hiç oynanmamış bir turun ya da imkânsız

@@ -126,21 +126,48 @@ begin
 end;
 $$;
 
+-- Yarış turlarında verilen her cevap. "En çok yanlış yapılanlar" bu tablodan hesaplanır; antrenman
+-- cevapları kaydedilmez. Sonuç silinirse cevapları da silinir.
+-- location_id sorulan yer, selected_id oyuncunun tıkladığı yerdir: Türkiye'de başında sıfır olmadan
+-- plaka ("6", "34"), dünyada küçük harfli ISO kodu ("tr").
+create table if not exists public.round_answers (
+  id bigint generated always as identity primary key,
+  result_id bigint not null references public.game_results(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  game_mode text not null,
+  variant text not null,
+  position smallint not null check (position between 0 and 9),
+  location_id text not null,
+  selected_id text not null,
+  is_correct boolean not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists round_answers_game_mode_variant_location_id_idx
+on public.round_answers (game_mode, variant, location_id);
+
+alter table public.round_answers enable row level security;
+revoke all on public.round_answers from anon, authenticated;
+
+-- Eski imza (puanı ve seriyi tarayıcıdan alan sürüm); yenisi cevap listesinden kendisi hesaplar.
+drop function if exists public.finish_round(uuid, integer, integer, integer, integer);
+
 /*
  * Yarış turunun sonucunu doğrulayıp kaydeder. Sabitler lib/game.ts ile aynıdır:
  * 10 soru, 120 saniye, her cevaptan sonra 3 saniyelik gösterim.
  *
+ * p_answers, cevaplanan soruların sırayla listesidir: [{"location": "34", "selected": "41"}, ...].
+ * Puan ve en uzun seri tarayıcıdan alınmaz, bu listeden hesaplanır.
+ *
  * Doğru cevap sorudan belli olduğu için (sorulan ülkenin kodu, tıklanacak alanın kodudur)
- * cevapları tek tek sunucuda kontrol etmek bir şey kazandırmaz. Asıl kontrol süredir:
+ * cevapların doğruluğunu sunucuda denetlemek hileyi engellemez. Asıl kontrol süredir:
  * sunucu turun ne zaman başladığını bilir, bu yüzden hiç oynanmamış bir tur ya da fiziksel
  * olarak imkânsız bir süre kaydedilemez.
  */
 create or replace function public.finish_round(
   p_round_id uuid,
-  p_score integer,
-  p_best_streak integer,
-  p_answered integer,
-  p_duration_ms integer
+  p_duration_ms integer,
+  p_answers jsonb
 )
 returns void
 language plpgsql
@@ -163,6 +190,13 @@ declare
   v_elapsed_ms integer;
   v_min_ms integer := (c_questions - 1) * c_transition_ms + c_questions * c_min_answer_ms;
   v_duration_ms integer;
+  v_id_pattern text;
+  v_answered integer;
+  v_score integer := 0;
+  v_streak integer := 0;
+  v_best_streak integer := 0;
+  v_answer record;
+  v_result_id bigint;
   v_display_name text;
   v_avatar_url text;
 begin
@@ -184,24 +218,48 @@ begin
 
   v_elapsed_ms := floor(extract(epoch from (now() - v_round.started_at)) * 1000);
 
-  if p_answered is null or p_answered < 0 or p_answered > c_questions
-    or p_score is null or p_score < 0 or p_score > p_answered
-    or p_best_streak is null or p_best_streak < 0 or p_best_streak > p_score
-    or p_duration_ms is null
-  then
+  if p_duration_ms is null or p_answers is null or jsonb_typeof(p_answers) <> 'array' then
     raise exception 'Geçersiz sonuç.';
   end if;
 
-  -- Yanlış cevaplar doğruları en fazla (yanlış + 1) seriye böler; en uzun seri bundan kısa olamaz.
-  if p_score > 0 and p_best_streak < ceil(p_score::numeric / (p_answered - p_score + 1)) then
+  v_answered := jsonb_array_length(p_answers);
+  if v_answered > c_questions then
     raise exception 'Geçersiz sonuç.';
   end if;
+
+  -- Türkiye'de 1-81 arası plaka, dünyada iki harfli ülke kodu. Bir turda aynı yer iki kez sorulmaz.
+  v_id_pattern := case v_round.game_mode when 'turkey' then '^([1-9]|[1-7][0-9]|8[01])$' else '^[a-z]{2}$' end;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_answers) as answer
+    where jsonb_typeof(answer) <> 'object'
+      or coalesce(answer ->> 'location', '') !~ v_id_pattern
+      or coalesce(answer ->> 'selected', '') !~ v_id_pattern
+  ) or (
+    select count(distinct answer ->> 'location') from jsonb_array_elements(p_answers) as answer
+  ) <> v_answered then
+    raise exception 'Geçersiz sonuç.';
+  end if;
+
+  for v_answer in
+    select (answer ->> 'location') = (answer ->> 'selected') as is_correct
+    from jsonb_array_elements(p_answers) with ordinality as item(answer, position)
+    order by position
+  loop
+    if v_answer.is_correct then
+      v_score := v_score + 1;
+      v_streak := v_streak + 1;
+      v_best_streak := greatest(v_best_streak, v_streak);
+    else
+      v_streak := 0;
+    end if;
+  end loop;
 
   if v_elapsed_ms > c_game_ms + c_transition_ms + c_late_ms then
     raise exception 'Turun süresi çoktan doldu.';
   end if;
 
-  if p_answered < c_questions then
+  if v_answered < c_questions then
     -- Sorular bitmeden kaydedilen tur ancak süre dolunca biter.
     if v_elapsed_ms < c_game_ms - c_grace_ms then
       raise exception 'Tur bitmeden sonuç kaydedilemez.';
@@ -233,14 +291,60 @@ begin
   update public.game_rounds set finished_at = now() where id = v_round.id;
 
   insert into public.game_results (user_id, display_name, avatar_url, game_mode, variant, score, duration_ms, best_streak)
-  values (v_user_id, coalesce(v_display_name, 'Oyuncu'), v_avatar_url, v_round.game_mode, v_round.variant, p_score, v_duration_ms, p_best_streak);
+  values (v_user_id, coalesce(v_display_name, 'Oyuncu'), v_avatar_url, v_round.game_mode, v_round.variant, v_score, v_duration_ms, v_best_streak)
+  returning id into v_result_id;
+
+  insert into public.round_answers (result_id, user_id, game_mode, variant, position, location_id, selected_id, is_correct)
+  select
+    v_result_id, v_user_id, v_round.game_mode, v_round.variant, (item.position - 1)::smallint,
+    item.answer ->> 'location', item.answer ->> 'selected', (item.answer ->> 'location') = (item.answer ->> 'selected')
+  from jsonb_array_elements(p_answers) with ordinality as item(answer, position);
 end;
 $$;
 
 revoke all on function public.start_round(text, text) from public, anon;
-revoke all on function public.finish_round(uuid, integer, integer, integer, integer) from public, anon;
+revoke all on function public.finish_round(uuid, integer, jsonb) from public, anon;
 grant execute on function public.start_round(text, text) to authenticated;
-grant execute on function public.finish_round(uuid, integer, integer, integer, integer) to authenticated;
+grant execute on function public.finish_round(uuid, integer, jsonb) to authenticated;
+
+-- Her sıralamada (game_mode + variant) her yerin kaç kez sorulduğu, kaç kez yanlış cevaplandığı ve
+-- en çok hangi yerle karıştırıldığı. Yalnızca en az bir kez yanlış cevaplanan yerler listelenir.
+-- round_answers tarayıcıya kapalı olduğu için bu view sahibinin yetkisiyle çalışır ve yalnızca
+-- toplamları gösterir; kimin neyi cevapladığı görünmez.
+drop view if exists public.location_stats;
+
+create view public.location_stats
+as
+with totals as (
+  select game_mode, variant, location_id,
+    count(*) as asked,
+    count(*) filter (where not is_correct) as wrong
+  from public.round_answers
+  group by game_mode, variant, location_id
+),
+confusions as (
+  select distinct on (game_mode, variant, location_id)
+    game_mode, variant, location_id, selected_id, count(*) as confused_count
+  from public.round_answers
+  where not is_correct
+  group by game_mode, variant, location_id, selected_id
+  order by game_mode, variant, location_id, count(*) desc, selected_id
+)
+select
+  totals.game_mode,
+  totals.variant,
+  totals.location_id,
+  totals.asked,
+  totals.wrong,
+  round(totals.wrong::numeric / totals.asked, 4) as wrong_rate,
+  confusions.selected_id as most_confused_with,
+  confusions.confused_count
+from totals
+join confusions using (game_mode, variant, location_id)
+where totals.wrong > 0;
+
+revoke all on public.location_stats from anon, authenticated;
+grant select on public.location_stats to anon, authenticated;
 
 drop view if exists public.leaderboard;
 

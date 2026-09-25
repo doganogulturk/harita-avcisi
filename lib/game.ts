@@ -1,5 +1,5 @@
-import { type Province } from "@/lib/turkish-plates";
-import { continentInfo, isContinentScope, type Continent, type Country, type WorldDifficulty, type WorldScope } from "@/lib/world-countries";
+import { provinces, type Province } from "@/lib/turkish-plates";
+import { continentInfo, countries, isContinentScope, type Continent, type Country, type WorldDifficulty, type WorldScope } from "@/lib/world-countries";
 
 export type AnswerState = "correct" | "incorrect" | null;
 export type GameMode = "turkey" | "world";
@@ -158,6 +158,36 @@ export function locationIdOf(element: SVGElement | null | undefined, mode: GameM
 export function isSameLocation(mode: GameMode, first: string | null | undefined, second: string | null | undefined): boolean {
   if (first == null || second == null) return false;
   return mode === "turkey" ? Number(first) === Number(second) : first === second;
+}
+
+/** Yarış turunda verilen bir cevap; sunucu puanı ve en uzun seriyi bu listeden hesaplar. */
+export type AnswerRecord = { location: string; selected: string };
+
+/** location_stats view'inin bir satırı: bir yerin o sıralamadaki yanlış cevap istatistiği. */
+export type LocationStat = {
+  location_id: string;
+  asked: number;
+  wrong: number;
+  wrong_rate: number;
+  most_confused_with: string;
+  confused_count: number;
+};
+
+export const MOST_MISSED_LIMIT = 5;
+
+/**
+ * Türkiye haritasında plaka "06" diye yazılır, soruda ise 6'dır. Sunucuya ve istatistiğe her yer
+ * tek biçimde gider: Türkiye'de başında sıfır olmayan plaka, dünyada ISO kodu.
+ */
+export function normalizeLocationId(mode: GameMode, locationId: string): string {
+  return mode === "turkey" ? String(Number(locationId)) : locationId;
+}
+
+const PROVINCE_NAMES = new Map(provinces.map((province) => [String(province.plate), province.city]));
+const COUNTRY_NAMES = new Map(countries.map((country) => [country.code, country.name]));
+
+export function locationName(mode: GameMode, locationId: string): string {
+  return (mode === "turkey" ? PROVINCE_NAMES : COUNTRY_NAMES).get(locationId) ?? locationId.toUpperCase();
 }
 
 export function formatTime(seconds: number): string {

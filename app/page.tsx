@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameMap } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { RotateOverlay } from "./components/RotateOverlay";
 import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
+import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -22,6 +23,7 @@ import {
   GAME_DURATION_SECONDS,
   GAME_MODES,
   isSameLocation,
+  normalizeLocationId,
   QUESTION_TRANSITION_MS,
   QUESTIONS_PER_ROUND,
   type AnswerState,
@@ -88,6 +90,8 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>(() => roundFor(DEFAULT_CHOICE));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerState[]>([]);
+  // Her soruda tıklanan yer, sırayla; sunucu puanı ve istatistikleri bundan hesaplar.
+  const [selections, setSelections] = useState<string[]>([]);
   const [answerState, setAnswerState] = useState<AnswerState>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [score, setScore] = useState(0);
@@ -112,17 +116,28 @@ export default function Home() {
   const [readyModes, setReadyModes] = useState<GameMode[]>([]);
 
   const { mapMarkup, mapError } = useMapMarkup(mode);
-  const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId } = useLeaderboard({
+  const answerRecords = useMemo(
+    () => selections.map((selected, index) => ({ location: correctLocationId(questions[index]), selected: normalizeLocationId(mode, selected) })),
+    [mode, questions, selections],
+  );
+  const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId, isResultSettled } = useLeaderboard({
     player,
     roundId,
     serverRound,
     // Antrenman turları kaydedilmez.
     isFinished: phase === "finished" && !isPractice,
     choice,
-    score,
-    answeredCount: answers.length,
+    answers: answerRecords,
     durationMs: completionDurationMs,
-    bestStreak,
+  });
+  // Antrenman havuzu sıralamanınkinden dar olabilir (kıta, Normal havuzda bayrak); liste o havuzdan seçilir.
+  const practicePoolIds = useMemo(() => (isPractice ? poolFor(choice).map(correctLocationId) : null), [choice, isPractice]);
+  // Yarışta bu turun cevapları kaydedildikten sonra çekilir; oyuncunun az önceki cevapları da sayılsın.
+  const mostMissed = useMostMissed({
+    choice,
+    locationIds: practicePoolIds,
+    roundId,
+    enabled: phase === "finished" && (isPractice || isResultSettled),
   });
 
   const currentQuestion = questions[questionIndex];
@@ -206,6 +221,7 @@ export default function Home() {
     setQuestions(roundFor(nextChoice));
     setQuestionIndex(0);
     setAnswers([]);
+    setSelections([]);
     setAnswerState(null);
     setSelectedLocation(null);
     setScore(0);
@@ -312,6 +328,7 @@ export default function Home() {
     setSelectedLocation(locationId);
     setAnswerState(isCorrect ? "correct" : "incorrect");
     setAnswers((currentAnswers) => [...currentAnswers, isCorrect ? "correct" : "incorrect"]);
+    setSelections((currentSelections) => [...currentSelections, locationId]);
     setScore((currentScore) => currentScore + (isCorrect ? 1 : 0));
     setStreak(nextStreak);
     setBestStreak((currentBest) => Math.max(currentBest, nextStreak));
@@ -346,6 +363,8 @@ export default function Home() {
             boardId={boardId}
             leaderboardError={leaderboardError}
             leaderboards={leaderboards}
+            missedLocationIds={answerRecords.filter((answer) => answer.location !== answer.selected).map((answer) => answer.location)}
+            mostMissed={mostMissed}
             onBoardChange={setBoardId}
             onHome={goHome}
             onPlay={play}

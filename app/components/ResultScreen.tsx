@@ -1,7 +1,8 @@
 import { Leaderboard } from "./Leaderboard";
+import { MostMissed } from "./MostMissed";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
-import { choiceLabel, FLAG_CHOICE, formatTime, PLATE_CHOICE, type BoardId, type PlayChoice, type Player } from "@/lib/game";
+import { choiceLabel, FLAG_CHOICE, formatTime, PLATE_CHOICE, type BoardId, type LocationStat, type PlayChoice, type Player } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
 
 type ResultScreenProps = {
@@ -17,6 +18,10 @@ type ResultScreenProps = {
   leaderboards: Leaderboards;
   boardId: BoardId;
   leaderboardError: string | null;
+  /** Tüm oyuncuların bu modda en çok yanlış yaptığı yerler; `undefined` yükleniyor, `null` yüklenemedi. */
+  mostMissed: LocationStat[] | null | undefined;
+  /** Oyuncunun bu turda yanlış cevapladığı yerler. */
+  missedLocationIds: string[];
   onBoardChange: (boardId: BoardId) => void;
   onPlay: (choice: PlayChoice) => void;
   onHome: () => void;
@@ -35,6 +40,8 @@ export function ResultScreen({
   leaderboards,
   boardId,
   leaderboardError,
+  mostMissed,
+  missedLocationIds,
   onBoardChange,
   onPlay,
   onHome,
@@ -47,6 +54,8 @@ export function ResultScreen({
         bestStreak={bestStreak}
         choice={choice}
         durationMs={durationMs}
+        missedLocationIds={missedLocationIds}
+        mostMissed={mostMissed}
         onHome={onHome}
         onPlay={onPlay}
         onSignOut={onSignOut}
@@ -102,6 +111,8 @@ export function ResultScreen({
           </div>
         </div>
 
+        <MostMissed choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+
         <div className="mt-8 border-t border-slate-200 pt-6">
           <Leaderboard
             currentPlayerId={player?.id}
@@ -135,13 +146,30 @@ type PracticeResultProps = {
   answeredCount: number;
   bestStreak: number;
   durationMs: number;
+  mostMissed: LocationStat[] | null | undefined;
+  missedLocationIds: string[];
   onPlay: (choice: PlayChoice) => void;
   onHome: () => void;
   onSignOut: () => void;
 };
 
-/** Antrenman sonucu kaydedilmez; yalnızca oyuncunun kendi gelişimi için özet gösterilir. */
-function PracticeResult({ player, choice, score, answeredCount, bestStreak, durationMs, onPlay, onHome, onSignOut }: PracticeResultProps) {
+/**
+ * Antrenman sonucu kaydedilmez; yalnızca oyuncunun kendi gelişimi için özet gösterilir.
+ * En çok yanlış yapılanlar listesi yine de gösterilir: yarış turlarından gelir, okumak serbesttir.
+ */
+function PracticeResult({
+  player,
+  choice,
+  score,
+  answeredCount,
+  bestStreak,
+  durationMs,
+  mostMissed,
+  missedLocationIds,
+  onPlay,
+  onHome,
+  onSignOut,
+}: PracticeResultProps) {
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
   const stats = [
     { label: "Doğru", value: `${score}/${answeredCount}` },
@@ -174,6 +202,8 @@ function PracticeResult({ player, choice, score, answeredCount, bestStreak, dura
           <PlayButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
           <HomeLink onClick={onHome} />
         </div>
+
+        <MostMissed choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
       </div>
     </section>
   );
