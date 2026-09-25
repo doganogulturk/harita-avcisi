@@ -40,25 +40,28 @@ type ResultScreenProps = {
 
 /** Giriş ekranındaki kartlarla aynı çerçeve. */
 const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 lg:p-7";
-/** Sol özet kartı: iki sütunlu düzende sayfa kayarken üstte sabit kalır. */
-const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 lg:sticky lg:top-0`;
+/**
+ * Sol özet kartı: iki sütunlu düzende ekranın yüksekliğini doldurur, tuşlar altına yaslanır.
+ * Alçak ekranda içerik sığmazsa kart kendi içinde kayar.
+ */
+const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 lg:min-h-0 lg:overflow-y-auto`;
 const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase";
 
 /**
- * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır. Solda turun özeti ve yeni tur tuşları,
- * sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar. Sol kart sayfa kayarken yerinde
- * durur; dar ekranda her şey tek sütunda aynı sırayla alt alta gelir, yani sıralama yine önce görünür.
+ * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır. Solda boydan boya turun özeti ve yeni tur
+ * tuşları, sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar; sağ sütun kendi içinde kayar.
+ * Dar ekranda her şey tek sütunda aynı sırayla alt alta gelir ve sayfa kayar; sıralama yine önce görünür.
  */
 function ResultShell({ player, onSignOut, aside, children }: { player: Player | null; onSignOut: () => void; aside: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 lg:gap-5 lg:px-8 lg:py-5">
+    <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 lg:gap-5 lg:overflow-hidden lg:px-8 lg:py-5">
       <header className="flex shrink-0 items-center justify-between gap-3">
         <Logo isHeading={false} />
         <PlayerBadge onSignOut={onSignOut} player={player} />
       </header>
-      <div className="grid items-start gap-3 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
+      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         {aside}
-        <div className="flex min-w-0 flex-col gap-3 lg:gap-5">{children}</div>
+        <div className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:gap-5 lg:overflow-y-auto">{children}</div>
       </div>
     </section>
   );
@@ -171,7 +174,7 @@ export function ResultScreen({
               <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
             </dl>
 
-            <div className="flex flex-col gap-4 pt-2">
+            <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
               <PrimaryButton label="Tekrar oyna" onClick={() => onPlay(choice)} />
               <div>
                 <p className="mb-2 text-sm font-bold text-slate-900">Başka bir tur</p>
@@ -199,14 +202,12 @@ export function ResultScreen({
       player={player}
     >
       <section className={RESULT_CARD}>
-        <p className={`${RESULT_EYEBROW} mb-4`}>Sıralama</p>
         <Leaderboard
           boardId={boardId}
           currentPlayerId={player?.id}
           leaderboardError={leaderboardError}
           leaderboards={leaderboards}
           onBoardChange={onBoardChange}
-          showTitle={false}
           tall
         />
       </section>
@@ -269,7 +270,7 @@ function PracticeResult({
               <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
             </dl>
 
-            <div className="flex flex-col gap-4 pt-2">
+            <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
               <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
               <HomeLink onClick={onHome} />
             </div>

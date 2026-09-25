@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BOARDS, formatTime, type BoardId, type LeaderboardEntry } from "@/lib/game";
+import { BOARDS, formatTime, GAME_DURATION_MS, type BoardId, type LeaderboardEntry } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
 
 type LeaderboardProps = {
@@ -23,12 +23,38 @@ const MEDAL_STYLES: Record<number, string> = {
   3: "bg-orange-100 text-orange-800 ring-1 ring-orange-300",
 };
 
+/** Süre alanı eklenmeden önce oynanmış turlara geçiş betiğinin yazdığı değer; süreleri bilinmiyor. */
+const UNKNOWN_DURATION_MS = 2147483647;
+
+/**
+ * Turun süresi, 0-120 saniyelik bir çubuk olarak. Kısa çubuk daha hızlı demektir; sıralama önce puana
+ * baktığı için çubuklar yukarıdan aşağı düzenli uzamaz. Süre, dolan kısmın sağ ucunda yazar.
+ */
+function DurationBar({ durationMs, isCurrentPlayer }: { durationMs: number; isCurrentPlayer: boolean }) {
+  if (durationMs >= UNKNOWN_DURATION_MS) return <span className="text-xs text-slate-400">süre yok</span>;
+
+  const ratio = Math.min(1, Math.max(0, durationMs / GAME_DURATION_MS));
+  return (
+    <span className="block h-6 w-full rounded-full bg-white">
+      <span
+        className={`flex h-full min-w-[3.25rem] items-center justify-end rounded-full px-2.5 text-xs font-semibold tabular-nums ${
+          isCurrentPlayer ? "bg-cyan-200 text-cyan-900" : "bg-slate-200 text-slate-600"
+        }`}
+        style={{ width: `${ratio * 100}%` }}
+      >
+        {formatTime(Math.round(durationMs / 1000))}
+      </span>
+    </span>
+  );
+}
+
 function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEntry; rank: number; isCurrentPlayer: boolean }) {
   const isTop = rank <= 3;
 
   return (
-    <li className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
-      <span className="flex min-w-0 items-center gap-3">
+    <li className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
+      {/* İsim sütunu sabit genişlikte: süre çubukları hep aynı hizadan başlasın ve karşılaştırılabilsin. */}
+      <span className="flex w-40 min-w-0 shrink-0 items-center gap-3 sm:w-52">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${isTop ? MEDAL_STYLES[rank] : "text-slate-400"}`}
         >
@@ -54,10 +80,10 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
           <span className="shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Sen</span>
         )}
       </span>
-      <span className="shrink-0 text-right font-bold tabular-nums text-slate-900">
-        {entry.score} puan
-        <span className="ml-2 text-xs font-semibold text-slate-500">{formatTime(Math.round(entry.duration_ms / 1000))}</span>
+      <span className="min-w-0 flex-1" title="Süre (0-120 sn)">
+        <DurationBar durationMs={entry.duration_ms} isCurrentPlayer={isCurrentPlayer} />
       </span>
+      <span className="w-16 shrink-0 text-right font-bold tabular-nums text-slate-900">{entry.score} puan</span>
     </li>
   );
 }
@@ -78,7 +104,7 @@ export function Leaderboard({
 
   return (
     <div>
-      <div className={`flex items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
+      <div className={`flex flex-wrap items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
         {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
         {/* Dar kartlarda beş sekme sığmazsa alt satıra geçer; köşeler bu yüzden tam yuvarlak değil. */}
         <div className="flex flex-wrap justify-center gap-1 rounded-2xl bg-slate-100 p-1" role="tablist">
