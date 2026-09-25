@@ -9,10 +9,12 @@ type MostMissedProps = {
   missedLocationIds: readonly string[];
   /** Kartın çerçevesi; sonuç ekranı kendi kart stilini verir. */
   className?: string;
+  /** Listenin hangi moda ait olduğu (ör. "Bayrak"); sıralamada sekme değişince başlıkta görünür. */
+  modeLabel?: string;
 };
 
 /** Sonuç ekranında, tüm oyuncuların yarış turlarında o modda en çok yanlış yaptığı yerler. */
-export function MostMissed({ choice, stats, missedLocationIds, className = "" }: MostMissedProps) {
+export function MostMissed({ choice, stats, missedLocationIds, className = "", modeLabel }: MostMissedProps) {
   // İstatistik yüklenemezse bölüm hiç gösterilmez; turun sonucu bundan etkilenmez.
   if (stats === null) return null;
 
@@ -22,7 +24,10 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "" }:
 
   return (
     <section className={`flex flex-col ${className}`}>
-      <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">En çok yanlış yapılanlar</p>
+      <p className="flex flex-wrap items-center gap-2 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">
+        En çok yanlış yapılanlar
+        {modeLabel && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 tracking-normal normal-case">{modeLabel}</span>}
+      </p>
       <p className="mt-1.5 text-sm text-slate-500">Tüm oyuncuların yarış turlarından, yanlış oranına göre (yanlış / sorulma).</p>
 
       {stats === undefined ? (

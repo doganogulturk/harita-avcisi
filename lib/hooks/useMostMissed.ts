@@ -18,10 +18,12 @@ type MostMissedOptions = {
  * `undefined`: yükleniyor, `null`: yüklenemedi.
  */
 export function useMostMissed({ choice, locationIds, roundId, enabled }: MostMissedOptions): LocationStat[] | null | undefined {
-  const [loaded, setLoaded] = useState<{ roundId: number; stats: LocationStat[] | null } | null>(null);
+  const [loaded, setLoaded] = useState<{ key: string; stats: LocationStat[] | null } | null>(null);
   const { mode } = choice;
   const variant = boardVariantFor(choice);
   const locationIdsKey = locationIds?.join(",") ?? "";
+  // Tur, mod ya da havuz değişince eski liste gösterilmez; yenisi gelene kadar "yükleniyor" döner.
+  const key = `${roundId}|${mode}|${variant}|${locationIdsKey}`;
 
   useEffect(() => {
     if (!enabled) return;
@@ -44,16 +46,16 @@ export function useMostMissed({ choice, locationIds, roundId, enabled }: MostMis
         .limit(MOST_MISSED_LIMIT),
     ).then(
       ({ data, error }) => {
-        if (isActive) setLoaded({ roundId, stats: error ? null : ((data ?? []) as LocationStat[]) });
+        if (isActive) setLoaded({ key, stats: error ? null : ((data ?? []) as LocationStat[]) });
       },
       () => {
-        if (isActive) setLoaded({ roundId, stats: null });
+        if (isActive) setLoaded({ key, stats: null });
       },
     );
     return () => {
       isActive = false;
     };
-  }, [enabled, locationIdsKey, mode, roundId, variant]);
+  }, [enabled, key, locationIdsKey, mode, variant]);
 
-  return loaded?.roundId === roundId ? loaded.stats : undefined;
+  return loaded?.key === key ? loaded.stats : undefined;
 }

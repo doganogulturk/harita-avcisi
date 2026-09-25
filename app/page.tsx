@@ -15,7 +15,9 @@ import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
 import { commonCountries, continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
 import {
+  BOARDS,
   boardIdFor,
+  choiceForBoard,
   correctLocationId,
   flagUrl,
   isFlagChoice,
@@ -133,8 +135,11 @@ export default function Home() {
   // Antrenman havuzu sıralamanınkinden dar olabilir (kıta, Normal havuzda bayrak); liste o havuzdan seçilir.
   const practicePoolIds = useMemo(() => (isPractice ? poolFor(choice).map(correctLocationId) : null), [choice, isPractice]);
   // Yarışta bu turun cevapları kaydedildikten sonra çekilir; oyuncunun az önceki cevapları da sayılsın.
+  // Yarışta liste, sıralamada seçili sekmenin modunu izler; antrenmanda oynanan moddur.
+  const statsBoard = BOARDS.find((board) => board.id === boardId) ?? BOARDS[0];
+  const statsChoice = useMemo(() => (isPractice ? choice : choiceForBoard(statsBoard)), [choice, isPractice, statsBoard]);
   const mostMissed = useMostMissed({
-    choice,
+    choice: statsChoice,
     locationIds: practicePoolIds,
     roundId,
     enabled: phase === "finished" && (isPractice || isResultSettled),
@@ -361,8 +366,14 @@ export default function Home() {
             boardId={boardId}
             leaderboardError={leaderboardError}
             leaderboards={leaderboards}
-            missedLocationIds={answerRecords.filter((answer) => answer.location !== answer.selected).map((answer) => answer.location)}
+            missedLocationIds={
+              // "Sen de" işareti yalnızca oynanan modun listesinde anlamlı.
+              isPractice || boardId === playedBoardId
+                ? answerRecords.filter((answer) => answer.location !== answer.selected).map((answer) => answer.location)
+                : []
+            }
             mostMissed={mostMissed}
+            mostMissedChoice={statsChoice}
             onBoardChange={setBoardId}
             onHome={goHome}
             onPlay={play}

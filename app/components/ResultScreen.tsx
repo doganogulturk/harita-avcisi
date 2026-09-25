@@ -30,6 +30,8 @@ type ResultScreenProps = {
   leaderboardError: string | null;
   /** Tüm oyuncuların bu modda en çok yanlış yaptığı yerler; `undefined` yükleniyor, `null` yüklenemedi. */
   mostMissed: LocationStat[] | null | undefined;
+  /** Listenin ait olduğu mod: yarışta sıralamada seçili sekme, antrenmanda oynanan mod. */
+  mostMissedChoice: PlayChoice;
   /** Oyuncunun bu turda yanlış cevapladığı yerler. */
   missedLocationIds: string[];
   onBoardChange: (boardId: BoardId) => void;
@@ -98,6 +100,71 @@ function PrimaryButton({ label, onClick }: { label: string; onClick: () => void 
   );
 }
 
+/** Yeni oyun tuşları haritaya göre gruplanır; her tuş bir sıralamaya karşılık gelir. */
+const NEW_GAME_GROUPS: { title: string; boards: { id: BoardId; label: string }[] }[] = [
+  {
+    title: "Türkiye",
+    boards: [
+      { id: "turkey", label: "Şehir" },
+      { id: "turkey-plates", label: "Plaka" },
+    ],
+  },
+  {
+    title: "Dünya",
+    boards: [
+      { id: "world", label: "Normal" },
+      { id: "world-hard", label: "Zor" },
+      { id: "world-flags", label: "Bayrak" },
+    ],
+  },
+];
+
+/**
+ * Yarış sonucunun yeni oyun tuşları. Az önce oynanan tur dolu turkuaz tuşla öne çıkar ve
+ * "tekrar oyna" işini görür; diğerleri çerçeveli.
+ */
+function NewGameSection({ playedBoardId, onPlay }: { playedBoardId: BoardId; onPlay: (choice: PlayChoice) => void }) {
+  return (
+    <div>
+      <p className="text-sm font-bold text-slate-900">Yeni oyun</p>
+      <div className="mt-3 flex flex-col gap-3">
+        {NEW_GAME_GROUPS.map((group) => (
+          <div key={group.title}>
+            <p className="mb-1.5 text-xs font-semibold text-slate-500">{group.title}</p>
+            <div className={`grid gap-2 ${group.boards.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+              {group.boards.map((option) => {
+                const board = BOARDS.find((candidate) => candidate.id === option.id) ?? BOARDS[0];
+                const isPlayed = option.id === playedBoardId;
+                return (
+                  <button
+                    aria-label={isPlayed ? `${option.label}, tekrar oyna` : undefined}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-sm font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
+                      isPlayed
+                        ? "border-cyan-600 bg-cyan-600 text-white shadow-md shadow-cyan-600/20 hover:bg-cyan-500"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
+                    }`}
+                    key={option.id}
+                    onClick={() => onPlay(choiceForBoard(board))}
+                    title={isPlayed ? "Tekrar oyna" : undefined}
+                    type="button"
+                  >
+                    {isPlayed && (
+                      <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4.5h-4.5" />
+                      </svg>
+                    )}
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HomeLink({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -123,6 +190,7 @@ export function ResultScreen({
   boardId,
   leaderboardError,
   mostMissed,
+  mostMissedChoice,
   missedLocationIds,
   onBoardChange,
   onPlay,
@@ -149,7 +217,6 @@ export function ResultScreen({
 
   // Sıralamadaki satır en yüksek puanlı tura ait; süresi bu turunkinden uzun olabilir.
   const personalBest = leaderboards[playedBoardId].find((entry) => entry.user_id === player?.id);
-  const otherBoards = BOARDS.filter((board) => board.id !== playedBoardId);
 
   return (
     <ResultShell
@@ -175,25 +242,7 @@ export function ResultScreen({
             </dl>
 
             <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
-              <PrimaryButton label="Tekrar oyna" onClick={() => onPlay(choice)} />
-              <div>
-                <p className="mb-2 text-sm font-bold text-slate-900">Başka bir tur</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {otherBoards.map((board) => (
-                    <button
-                      className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
-                      key={board.id}
-                      onClick={() => onPlay(choiceForBoard(board))}
-                      type="button"
-                    >
-                      {board.label}
-                      <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <NewGameSection onPlay={onPlay} playedBoardId={playedBoardId} />
               <HomeLink onClick={onHome} />
             </div>
           </aside>
@@ -212,7 +261,13 @@ export function ResultScreen({
         />
       </section>
 
-      <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+      <MostMissed
+        className={RESULT_CARD}
+        choice={mostMissedChoice}
+        missedLocationIds={missedLocationIds}
+        modeLabel={BOARDS.find((board) => board.id === boardId)?.label}
+        stats={mostMissed}
+      />
     </ResultShell>
   );
 }
