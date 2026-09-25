@@ -19,6 +19,9 @@ async function fetchMapMarkup(mode: GameMode): Promise<string> {
     svg.querySelectorAll("path[id], g[id]").forEach((location) => {
       if (!location.id.startsWith("_")) location.setAttribute("data-country-code", location.id);
     });
+  } else {
+    // Kuzey Kıbrıs haritada "00" koduyla işaretli ama sorulmuyor; tıklanıp yanlış sayılmasın.
+    svg.querySelector('[data-plakakodu="00"]')?.removeAttribute("data-plakakodu");
   }
   svg.querySelectorAll(LOCATION_SELECTOR[mode]).forEach((location) => {
     location.setAttribute("role", "button");

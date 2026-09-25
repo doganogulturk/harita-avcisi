@@ -70,7 +70,8 @@ body {
 
 /* Haritada olup oyunda karşılığı olmayan bölgeler; stil verilmezse SVG varsayılanıyla siyah dolar. */
 .map path[id^="_"],
-.map #guney-kibris path {
+.map #guney-kibris path,
+.map #kuzey-kibris path {
   fill: #f1f5f9;
   stroke: #cbd5e1;
   stroke-width: 0.75;
@@ -169,7 +170,8 @@ body {
 .map-preview [data-country-code],
 .map-preview g[data-plakakodu] path,
 .map-preview path[id^="_"],
-.map-preview #guney-kibris path {
+.map-preview #guney-kibris path,
+.map-preview #kuzey-kibris path {
   fill: #e8edf3;
   stroke: #cbd5e1;
   stroke-width: 0.6;
