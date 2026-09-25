@@ -2,8 +2,6 @@
 
 /* Yatay telefon gibi alçak ekranlar: giriş ekranı boşlukları sıkılaştırılır. */
 @custom-variant short (@media (max-height: 30rem));
-/* Sonuç ekranının üç sütuna geçtiği genişlik; altında sıralama sekmeleri tek satıra sığmıyor. */
-@custom-variant wide (@media (min-width: 85rem));
 
 @theme inline {
   --font-display: var(--font-stack-notch), ui-sans-serif, system-ui, sans-serif;

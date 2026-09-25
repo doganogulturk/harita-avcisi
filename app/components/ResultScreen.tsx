@@ -40,21 +40,26 @@ type ResultScreenProps = {
 
 /** Giriş ekranındaki kartlarla aynı çerçeve. */
 const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 lg:p-7";
+/** Sol özet kartı: iki sütunlu düzende sayfa kayarken üstte sabit kalır. */
+const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 lg:sticky lg:top-0`;
 const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase";
 
 /**
- * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır: solda turun özeti ve yeni tur
- * tuşları, yanında en çok yanlış yapılanlar ve sıralama. Geniş ekranda üç sütun yan yana durur
- * ve listeler kendi içinde kayar; daha dar ekranlarda sütunlar alt alta geçer ve sayfa kayar.
+ * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır. Solda turun özeti ve yeni tur tuşları,
+ * sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar. Sol kart sayfa kayarken yerinde
+ * durur; dar ekranda her şey tek sütunda aynı sırayla alt alta gelir, yani sıralama yine önce görünür.
  */
-function ResultShell({ player, onSignOut, gridClassName, children }: { player: Player | null; onSignOut: () => void; gridClassName: string; children: React.ReactNode }) {
+function ResultShell({ player, onSignOut, aside, children }: { player: Player | null; onSignOut: () => void; aside: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 lg:gap-5 lg:px-8 lg:py-5">
       <header className="flex shrink-0 items-center justify-between gap-3">
         <Logo isHeading={false} />
         <PlayerBadge onSignOut={onSignOut} player={player} />
       </header>
-      <div className={`grid gap-3 lg:gap-5 wide:min-h-0 wide:flex-1 ${gridClassName}`}>{children}</div>
+      <div className="grid items-start gap-3 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
+        {aside}
+        <div className="flex min-w-0 flex-col gap-3 lg:gap-5">{children}</div>
+      </div>
     </section>
   );
 }
@@ -145,71 +150,68 @@ export function ResultScreen({
 
   return (
     <ResultShell
-      gridClassName="lg:grid-cols-[22rem_minmax(0,1fr)] wide:grid-cols-[24rem_minmax(0,1fr)_minmax(0,1.15fr)]"
+      aside={
+          <aside className={SUMMARY_CARD}>
+            <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
+
+            <div>
+              <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
+                <span className="text-7xl short:text-6xl">{score}</span>
+                <span className="text-3xl text-slate-400">/{questionCount}</span>
+              </p>
+              {personalBest && (
+                <p className="mt-2 text-sm font-semibold text-cyan-700 tabular-nums">
+                  En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
+                </p>
+              )}
+            </div>
+
+            <dl className="grid grid-cols-2 gap-3">
+              <StatTile label="En uzun seri" value={String(bestStreak)} />
+              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
+            </dl>
+
+            <div className="flex flex-col gap-4 pt-2">
+              <PrimaryButton label="Tekrar oyna" onClick={() => onPlay(choice)} />
+              <div>
+                <p className="mb-2 text-sm font-bold text-slate-900">Başka bir tur</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {otherBoards.map((board) => (
+                    <button
+                      className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
+                      key={board.id}
+                      onClick={() => onPlay(choiceForBoard(board))}
+                      type="button"
+                    >
+                      {board.label}
+                      <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <HomeLink onClick={onHome} />
+            </div>
+          </aside>
+      }
       onSignOut={onSignOut}
       player={player}
     >
-      {/* İki sütunda sol kart kendi boyunda kalır ve sayfa kayarken yerinde durur; üç sütunda sütunu doldurur. */}
-      <aside
-        className={`${RESULT_CARD} flex flex-col gap-5 lg:sticky lg:top-0 lg:row-span-2 lg:self-start wide:static wide:row-span-1 wide:min-h-0 wide:self-stretch wide:overflow-y-auto`}
-      >
-        <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
-
-        <div>
-          <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-            <span className="text-7xl short:text-6xl">{score}</span>
-            <span className="text-3xl text-slate-400">/{questionCount}</span>
-          </p>
-          {personalBest && (
-            <p className="mt-2 text-sm font-semibold text-cyan-700 tabular-nums">
-              En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
-            </p>
-          )}
-        </div>
-
-        <dl className="grid grid-cols-2 gap-3">
-          <StatTile label="En uzun seri" value={String(bestStreak)} />
-          <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
-        </dl>
-
-        <div className="flex flex-col gap-4 pt-2 wide:mt-auto">
-          <PrimaryButton label="Tekrar oyna" onClick={() => onPlay(choice)} />
-          <div>
-            <p className="mb-2 text-sm font-bold text-slate-900">Başka bir tur</p>
-            <div className="grid grid-cols-2 gap-2">
-              {otherBoards.map((board) => (
-                <button
-                  className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
-                  key={board.id}
-                  onClick={() => onPlay(choiceForBoard(board))}
-                  type="button"
-                >
-                  {board.label}
-                  <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                    <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </div>
-          <HomeLink onClick={onHome} />
-        </div>
-      </aside>
-
-      <MostMissed className={`${RESULT_CARD} wide:min-h-0`} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
-
-      <section className={`${RESULT_CARD} flex flex-col wide:min-h-0`}>
+      <section className={RESULT_CARD}>
         <p className={`${RESULT_EYEBROW} mb-4`}>Sıralama</p>
         <Leaderboard
           boardId={boardId}
           currentPlayerId={player?.id}
-          fill
           leaderboardError={leaderboardError}
           leaderboards={leaderboards}
           onBoardChange={onBoardChange}
           showTitle={false}
+          tall
         />
       </section>
+
+      <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
     </ResultShell>
   );
 }
@@ -248,31 +250,35 @@ function PracticeResult({
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
 
   return (
-    <ResultShell gridClassName="lg:grid-cols-[22rem_minmax(0,1fr)] wide:grid-cols-[24rem_minmax(0,1fr)]" onSignOut={onSignOut} player={player}>
-      <aside className={`${RESULT_CARD} flex flex-col gap-5 lg:sticky lg:top-0 lg:self-start wide:static wide:min-h-0 wide:self-stretch wide:overflow-y-auto`}>
-        <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />
+    <ResultShell
+      aside={
+          <aside className={SUMMARY_CARD}>
+            <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />
 
-        <div>
-          <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-            <span className="text-7xl short:text-6xl">{score}</span>
-            <span className="text-3xl text-slate-400">/{answeredCount}</span>
-          </p>
-          <p className="mt-2 text-sm text-slate-500">Antrenman sonuçları sıralamaya kaydedilmez.</p>
-        </div>
+            <div>
+              <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
+                <span className="text-7xl short:text-6xl">{score}</span>
+                <span className="text-3xl text-slate-400">/{answeredCount}</span>
+              </p>
+              <p className="mt-2 text-sm text-slate-500">Antrenman sonuçları sıralamaya kaydedilmez.</p>
+            </div>
 
-        <dl className="grid grid-cols-3 gap-3">
-          <StatTile label="Başarı" value={`%${accuracy}`} />
-          <StatTile label="En uzun seri" value={String(bestStreak)} />
-          <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
-        </dl>
+            <dl className="grid grid-cols-3 gap-3">
+              <StatTile label="Başarı" value={`%${accuracy}`} />
+              <StatTile label="En uzun seri" value={String(bestStreak)} />
+              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
+            </dl>
 
-        <div className="flex flex-col gap-4 pt-2 wide:mt-auto">
-          <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
-          <HomeLink onClick={onHome} />
-        </div>
-      </aside>
-
-      <MostMissed className={`${RESULT_CARD} wide:min-h-0`} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+            <div className="flex flex-col gap-4 pt-2">
+              <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
+              <HomeLink onClick={onHome} />
+            </div>
+          </aside>
+      }
+      onSignOut={onSignOut}
+      player={player}
+    >
+      <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
     </ResultShell>
   );
 }

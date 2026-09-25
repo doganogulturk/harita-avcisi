@@ -11,8 +11,8 @@ type LeaderboardProps = {
   showTitle?: boolean;
   /** Verilmezse yükleniyor mu sorusu, tüm sıralamaların boş olmasından tahmin edilir. */
   isLoading?: boolean;
-  /** Kapsayıcının yüksekliğini doldurur; liste sabit bir yükseklikte kesilmek yerine kalan alanda kayar. */
-  fill?: boolean;
+  /** Liste daha uzun gösterilir (sonuç ekranı, sıralamanın ekranın ana içeriği olduğu yer). */
+  tall?: boolean;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -69,7 +69,7 @@ export function Leaderboard({
   currentPlayerId,
   showTitle = true,
   isLoading,
-  fill = false,
+  tall = false,
   onBoardChange,
 }: LeaderboardProps) {
   const entries = leaderboards[boardId];
@@ -77,7 +77,7 @@ export function Leaderboard({
   const isStillLoading = isLoading ?? isEmptyEverywhere;
 
   return (
-    <div className={fill ? "flex min-h-0 flex-1 flex-col" : undefined}>
+    <div>
       <div className={`flex items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
         {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
         {/* Dar kartlarda beş sekme sığmazsa alt satıra geçer; köşeler bu yüzden tam yuvarlak değil. */}
@@ -97,7 +97,7 @@ export function Leaderboard({
         </div>
       </div>
 
-      <div className={`overflow-y-auto pr-1 ${fill ? "mt-4 max-h-[24rem] min-h-0 flex-1 wide:max-h-none" : "mt-3 max-h-[20rem]"}`}>
+      <div className={`overflow-y-auto pr-1 ${tall ? "mt-4 max-h-[28rem]" : "mt-3 max-h-[20rem]"}`}>
         {leaderboardError ? (
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (
