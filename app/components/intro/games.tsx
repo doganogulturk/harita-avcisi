@@ -34,6 +34,8 @@ export type GameInfo = {
   description: string;
   facts: string[];
   action: string;
+  /** Ok yerine kartın sağ altında yazan eylem (düello ve odada, "Kodla katıl"dan ayrılsın diye). */
+  cardAction?: string;
   theme: GameTheme;
 };
 
@@ -89,6 +91,7 @@ export const GAMES: GameInfo[] = [
     description: "Bir arkadaşınla aynı sorulara aynı anda cevap verin. Kodu gönder, kim daha hızlı görün.",
     facts: ["2 kişi", `${DUEL_QUESTIONS} soru · ${DUEL_QUESTION_MS / 1000} sn`, "Sıralamaya işlenmez"],
     action: "Düelloyu kur",
+    cardAction: "Düello başlat",
     theme: {
       surface: "bg-gradient-to-br from-orange-50 via-white to-white",
       selected: "border-orange-500 bg-orange-500 text-white",
@@ -113,6 +116,7 @@ export const GAMES: GameInfo[] = [
       `${formatMinutes(ROOM_DURATIONS[0])} – ${formatMinutes(ROOM_DURATIONS.at(-1) ?? 60)}`,
     ],
     action: "Odayı kur",
+    cardAction: "Oda oluştur",
     theme: {
       surface: "bg-gradient-to-br from-violet-50 via-white to-white",
       selected: "border-violet-600 bg-violet-600 text-white",

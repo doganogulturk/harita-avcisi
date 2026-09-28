@@ -6,16 +6,7 @@ import { SignInPanel } from "../SignInPanel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { setLastGame } from "@/lib/intro-preferences";
-import {
-  ROOM_DURATIONS,
-  ROOM_MAX_PLAYERS,
-  ROOM_MIN_PLAYERS,
-  ROOM_NAME_MAX,
-  ROOM_PLAYER_PRESETS,
-  ROOM_ROUND_COUNTS,
-  roomPath,
-  type RoomSettings,
-} from "@/lib/room";
+import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
 import { modeOptions, variantFor } from "./DuelSetup";
 import { formatMinutes, gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
@@ -49,11 +40,7 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
   };
   const variant = variantFor(map, options.variant);
 
-  const validationError = !options.name.trim()
-    ? "Odaya bir ad ver."
-    : options.maxPlayers < ROOM_MIN_PLAYERS || options.maxPlayers > ROOM_MAX_PLAYERS
-      ? `Katılımcı sayısı ${ROOM_MIN_PLAYERS}-${ROOM_MAX_PLAYERS} arasında olmalı.`
-      : null;
+  const validationError = options.name.trim() ? null : "Odaya bir ad ver.";
 
   const create = async () => {
     if (validationError) return setError(validationError);
@@ -139,28 +126,13 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
         />
       </Field>
 
-      <Field htmlFor="room-max" label="En fazla katılımcı">
-        <div className="flex flex-wrap items-center gap-2">
-          <Segmented
-            label="Hazır katılımcı sayıları"
-            onChange={(maxPlayers) => update({ maxPlayers })}
-            options={ROOM_PLAYER_PRESETS.map((preset) => ({
-              id: preset,
-              label: String(preset),
-            }))}
-            value={options.maxPlayers as (typeof ROOM_PLAYER_PRESETS)[number]}
-          />
-          <input
-            aria-label="Katılımcı sayısı"
-            className="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm font-bold tabular-nums outline-none focus:border-violet-500"
-            id="room-max"
-            max={ROOM_MAX_PLAYERS}
-            min={ROOM_MIN_PLAYERS}
-            onChange={(event) => update({ maxPlayers: Number(event.target.value) })}
-            type="number"
-            value={options.maxPlayers}
-          />
-        </div>
+      <Field label="En fazla katılımcı">
+        <Segmented
+          label="En fazla katılımcı"
+          onChange={(maxPlayers) => update({ maxPlayers })}
+          options={ROOM_PLAYER_PRESETS.map((preset) => ({ id: preset, label: String(preset) }))}
+          value={options.maxPlayers as (typeof ROOM_PLAYER_PRESETS)[number]}
+        />
       </Field>
     </SetupShell>
   );
