@@ -5,6 +5,9 @@ import { type FormEvent, useState } from "react";
 type AuthPanelProps = {
   /** Oyuncunun giriş yapmadan önce seçtiği tur, ör. "Dünya · Zor". */
   choiceLabel: string;
+  /** Verilirse varsayılan "... turu seni bekliyor" başlığı ve açıklaması yerine gösterilir (ör. düello). */
+  title?: React.ReactNode;
+  description?: string;
   isSigningIn: boolean;
   authError: string | null;
   supabaseConfigured: boolean;
@@ -17,7 +20,17 @@ type AuthPanelProps = {
  * Giriş, ayrı bir ekran değil; oyuncu "Oyna"ya bastıktan sonra aynı kartın içinde
  * açılan bir adım. Seçim korunur, giriş biter bitmez o tur başlar.
  */
-export function AuthPanel({ choiceLabel, isSigningIn, authError, supabaseConfigured, onGoogleSignIn, onGuestSignIn, onCancel }: AuthPanelProps) {
+export function AuthPanel({
+  choiceLabel,
+  title,
+  description,
+  isSigningIn,
+  authError,
+  supabaseConfigured,
+  onGoogleSignIn,
+  onGuestSignIn,
+  onCancel,
+}: AuthPanelProps) {
   const [guestName, setGuestName] = useState("");
   const [isGuestFormVisible, setIsGuestFormVisible] = useState(false);
 
@@ -37,10 +50,14 @@ export function AuthPanel({ choiceLabel, isSigningIn, authError, supabaseConfigu
       </button>
 
       <p className="mt-3 text-lg font-bold text-slate-900">
-        <span className="text-cyan-700">{choiceLabel}</span> turu seni bekliyor
+        {title ?? (
+          <>
+            <span className="text-cyan-700">{choiceLabel}</span> turu seni bekliyor
+          </>
+        )}
       </p>
       <p className="mt-1 text-sm text-slate-600">
-        Skorunun sıralamada görünmesi için giriş yap. Giriş yapar yapmaz bu tur başlıyor.
+        {description ?? "Skorunun sıralamada görünmesi için giriş yap. Giriş yapar yapmaz bu tur başlıyor."}
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">

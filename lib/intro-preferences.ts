@@ -73,3 +73,16 @@ export const [useTurkeyPrompt, setTurkeyPrompt] = createPreference<TurkeyPrompt>
   (value): value is TurkeyPrompt => (TURKEY_PROMPTS as string[]).includes(value),
   "name",
 );
+
+/** Son kurulan düellonun ayarları ("turkey|normal|snatch"); düello penceresi bunlarla açılır. */
+export type DuelSettingsKey = `${"turkey" | "world"}|${string}|${"snatch" | "shared"}`;
+const DUEL_SETTINGS: string[] = ["turkey|normal", "turkey|plates", "world|normal", "world|hard", "world|flags"].flatMap((mode) => [
+  `${mode}|snatch`,
+  `${mode}|shared`,
+]);
+
+export const [useDuelSettingsKey, setDuelSettingsKey] = createPreference<DuelSettingsKey>(
+  "harita-avcisi:duel-settings",
+  (value): value is DuelSettingsKey => DUEL_SETTINGS.includes(value),
+  "turkey|normal|snatch",
+);

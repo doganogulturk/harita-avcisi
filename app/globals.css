@@ -98,6 +98,25 @@ body {
   stroke: #be123c !important;
 }
 
+/* Düello: cevap verildi, soru henüz kapanmadı. */
+.map g.map-pending path,
+.map .map-pending {
+  fill: #67e8f9 !important;
+  stroke: #0e7490 !important;
+}
+
+/* Düello: rakibin tıkladığı yer. Yanlışsa turuncuya boyanır, doğruysa yeşilin etrafında turuncu çerçeve kalır. */
+.map g.map-opponent:not(.map-correct) path,
+.map .map-opponent:not(.map-correct) {
+  fill: #fdba74 !important;
+}
+
+.map g.map-opponent path,
+.map .map-opponent {
+  stroke: #ea580c !important;
+  stroke-width: 2.5 !important;
+}
+
 /* "Yeni tur" tuşlarında çerçeve boyunca dönen ışık. */
 @keyframes sweep-spin {
   to {

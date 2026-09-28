@@ -37,7 +37,7 @@ type GameTopBarProps = {
  * süreyi beklemek ya da 10 soruyu oynamak olmaması gerekiyor; onay sorulmaz.
  */
 /** Sorulan plaka, gerçek bir plakanın sol ucundaki mavi TR şeridiyle birlikte gösterilir. */
-function PlateBadge({ plate }: { plate: number }) {
+export function PlateBadge({ plate }: { plate: number }) {
   return (
     <span
       aria-label={`Plaka ${formatPlate(plate)}`}

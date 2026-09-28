@@ -379,4 +379,613 @@ begin
 end;
 $$;
 
+-- ============================================================================================
+-- Düello: iki oyuncu aynı sorularla aynı anda yarışır. Genel sıralamaya ve istatistiklere işlenmez.
+--
+-- Oyunun hakemi sunucudur: soruları seçer, her sorunun başlangıç anını tutar, cevapların doğruluğunu
+-- ve kimin önce bildiğini kendi saatine göre belirler. Tarayıcı bu tablolara doğrudan erişemez; her
+-- şeyi aşağıdaki fonksiyonlarla yapar. duel_state, çağıranın görmesi gerekeni döndürür: rakibin o
+-- sorudaki cevabı, çağıran cevap verene ya da soru bitene kadar gizlidir.
+--
+-- Kurallar: 'snatch' (Kapan kazanır) ilk doğru bilen 1 puan alır ve soru biter; yanlış tıklayan o soruda
+-- hakkını kaybeder. 'shared' (Herkes puan alır) doğru bilen 1 puan alır, ikisi de bildiyse hızlı olana +1.
+-- Soru, iki oyuncu da cevaplayınca (snatch'te biri doğru bilince) ya da 15 saniye dolunca biter.
+-- ============================================================================================
+
+create table if not exists public.duels (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  -- Rövanşlar aynı seriye bağlanır; seri skoru bu kimlik üzerinden sayılır.
+  series_id uuid not null,
+  game_mode text not null check (game_mode in ('turkey', 'world')),
+  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates')),
+  rule text not null check (rule in ('snatch', 'shared')),
+  host_id uuid not null references auth.users(id) on delete cascade,
+  host_name text not null,
+  host_avatar text,
+  host_ready boolean not null default false,
+  host_seen_at timestamptz not null default now(),
+  guest_id uuid references auth.users(id) on delete cascade,
+  guest_name text,
+  guest_avatar text,
+  guest_ready boolean not null default false,
+  guest_seen_at timestamptz,
+  -- Rövanşta yalnızca eski rakip katılabilir.
+  invited_id uuid references auth.users(id) on delete cascade,
+  status text not null default 'lobby' check (status in ('lobby', 'playing', 'finished')),
+  question_index smallint not null default -1,
+  question_started_at timestamptz,
+  question_ended_at timestamptz,
+  host_score smallint not null default 0,
+  guest_score smallint not null default 0,
+  winner_id uuid,
+  finish_reason text check (finish_reason in ('completed', 'forfeit')),
+  rematch_duel_id uuid references public.duels(id) on delete set null,
+  rematch_by uuid,
+  rematch_declined boolean not null default false,
+  created_at timestamptz not null default now(),
+  finished_at timestamptz
+);
+
+create index if not exists duels_series_id_idx on public.duels (series_id);
+
+create table if not exists public.duel_questions (
+  duel_id uuid not null references public.duels(id) on delete cascade,
+  position smallint not null,
+  location_id text not null,
+  primary key (duel_id, position)
+);
+
+create table if not exists public.duel_answers (
+  duel_id uuid not null references public.duels(id) on delete cascade,
+  position smallint not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  selected_id text not null,
+  is_correct boolean not null,
+  response_ms integer not null,
+  points smallint not null default 0,
+  answered_at timestamptz not null default now(),
+  primary key (duel_id, position, user_id)
+);
+
+alter table public.duels enable row level security;
+alter table public.duel_questions enable row level security;
+alter table public.duel_answers enable row level security;
+revoke all on public.duels from anon, authenticated;
+revoke all on public.duel_questions from anon, authenticated;
+revoke all on public.duel_answers from anon, authenticated;
+
+-- duel_pool:başla (scripts/generate-duel-pools.mjs üretir; elle düzenlemeyin)
+-- Düello sorularının seçildiği havuzlar. Türkiye'de 81 il (plaka), dünyada lib/world-countries.ts'teki
+-- Normal havuzu (58 ülke) ya da tamamı (179 ülke); Bayrak düellosu tamamından sorulur.
+create or replace function public.duel_pool(p_game_mode text, p_variant text)
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select case
+    when p_game_mode = 'turkey' then array(select plate::text from generate_series(1, 81) as plate)
+    when p_variant = 'normal' then array[
+      'de', 'us', 'ar', 'au', 'at', 'az', 'be', 'ae', 'gb', 'br', 'bg', 'cz', 'cn', 'dk', 'id', 'ma',
+      'ph', 'fi', 'fr', 'za', 'kr', 'hr', 'in', 'nl', 'iq', 'ir', 'ie', 'es', 'se', 'ch', 'it', 'jp',
+      'ca', 'kz', 'ke', 'co', 'cu', 'hu', 'mx', 'eg', 'ng', 'no', 'pk', 'pe', 'pl', 'pt', 'ro', 'ru',
+      'sa', 'cl', 'th', 'tr', 'ua', 'uy', 've', 'vn', 'nz', 'gr'
+    ]
+    else array[
+      'af', 'de', 'us', 'ao', 'ar', 'al', 'au', 'at', 'az', 'bs', 'bd', 'by', 'be', 'bz', 'bj', 'ae',
+      'gb', 'bo', 'ba', 'bw', 'br', 'bn', 'bg', 'bf', 'bi', 'bt', 'cv', 'dz', 'dj', 'td', 'cz', 'cn',
+      'dk', 'cd', 'do', 'dm', 'ec', 'gq', 'sv', 'id', 'er', 'am', 'ee', 'sz', 'et', 'fk', 'ma', 'ci',
+      'ph', 'fi', 'fr', 'ga', 'gm', 'gh', 'gn', 'gw', 'gl', 'gt', 'gy', 'za', 'kr', 'ss', 'ge', 'ht',
+      'hr', 'in', 'nl', 'hn', 'iq', 'ir', 'ie', 'es', 'il', 'se', 'ch', 'it', 'is', 'jm', 'jp', 'kh',
+      'cm', 'ca', 'me', 'qa', 'kz', 'ke', 'cy', 'kg', 'co', 'km', 'cg', 'cr', 'kw', 'kp', 'mk', 'cu',
+      'la', 'ls', 'lv', 'lr', 'ly', 'lt', 'lb', 'lu', 'hu', 'mg', 'mw', 'mv', 'my', 'ml', 'mt', 'mu',
+      'mx', 'eg', 'mn', 'md', 'mr', 'mz', 'mm', 'na', 'np', 'ne', 'ng', 'ni', 'no', 'cf', 'uz', 'pk',
+      'pa', 'pg', 'py', 'pe', 'pl', 'pt', 'pr', 'ro', 'rw', 'ru', 'lc', 'vc', 'st', 'sn', 'sc', 'rs',
+      'sl', 'sg', 'sk', 'si', 'sb', 'so', 'lk', 'sd', 'sr', 'sy', 'sa', 'cl', 'tj', 'tz', 'th', 'tw',
+      'tg', 'tt', 'tn', 'tr', 'tm', 'ug', 'ua', 'om', 'uy', 'jo', 'vu', 've', 'vn', 'ye', 'nc', 'nz',
+      'gr', 'zm', 'zw'
+    ]
+  end;
+$$;
+-- duel_pool:bitir
+
+/* Oyuncunun sıralamada ve düelloda görünen adı ve fotoğrafı (lib/game.ts'teki playerFromUser ile aynı sıra). */
+create or replace function public.player_profile(p_user_id uuid, out display_name text, out avatar_url text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select
+    coalesce(
+      nullif(trim(raw_user_meta_data ->> 'full_name'), ''),
+      nullif(trim(raw_user_meta_data ->> 'name'), ''),
+      nullif(trim(raw_user_meta_data ->> 'display_name'), ''),
+      nullif(trim(email), ''),
+      'Oyuncu'
+    ),
+    coalesce(nullif(raw_user_meta_data ->> 'avatar_url', ''), nullif(raw_user_meta_data ->> 'picture', ''))
+  from auth.users
+  where id = p_user_id;
+$$;
+
+/* Düello kodu: 6 karakter; birbirine karışan O/0 ve I/1 kullanılmaz. */
+create or replace function public.duel_new_code()
+returns text
+language plpgsql
+volatile
+set search_path = ''
+as $$
+declare
+  c_alphabet constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  v_code text;
+begin
+  loop
+    select string_agg(substr(c_alphabet, 1 + floor(random() * length(c_alphabet))::int, 1), '')
+    into v_code
+    from generate_series(1, 6);
+    exit when not exists (select 1 from public.duels where code = v_code);
+  end loop;
+  return v_code;
+end;
+$$;
+
+create or replace function public.duel_check_settings(p_game_mode text, p_variant text, p_rule text)
+returns void
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+  if not (
+    (p_game_mode = 'turkey' and p_variant in ('normal', 'plates'))
+    or (p_game_mode = 'world' and p_variant in ('normal', 'hard', 'flags'))
+  ) or p_rule not in ('snatch', 'shared') then
+    raise exception 'Geçersiz düello ayarı.';
+  end if;
+end;
+$$;
+
+/*
+ * Açık sorunun kapanışı: 'shared' kuralında ikisi de doğru bildiyse hızlı olana +1 verilir, skorlar
+ * cevaplardaki puanlardan yeniden toplanır ve sorunun bittiği an yazılır. Satır kilitliyken çağrılır.
+ */
+create or replace function public.duel_close_question(p_duel public.duels)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_faster uuid;
+begin
+  if p_duel.rule = 'shared' then
+    select user_id into v_faster
+    from public.duel_answers
+    where duel_id = p_duel.id and position = p_duel.question_index and is_correct
+    order by response_ms, answered_at
+    limit 1;
+    if v_faster is not null and (
+      select count(*) from public.duel_answers
+      where duel_id = p_duel.id and position = p_duel.question_index and is_correct
+    ) = 2 then
+      update public.duel_answers set points = points + 1
+      where duel_id = p_duel.id and position = p_duel.question_index and user_id = v_faster;
+    end if;
+  end if;
+
+  update public.duels set
+    question_ended_at = now(),
+    host_score = coalesce((select sum(points) from public.duel_answers where duel_id = p_duel.id and user_id = p_duel.host_id), 0),
+    guest_score = coalesce((select sum(points) from public.duel_answers where duel_id = p_duel.id and user_id = p_duel.guest_id), 0)
+  where id = p_duel.id;
+end;
+$$;
+
+/*
+ * Düellonun çağıranın gözünden görünüşü. Rakibin açık sorudaki cevabının yeri ve doğruluğu, çağıran
+ * cevap verene ya da soru bitene kadar gizlenir; yalnızca cevapladığı bilinir. Sorunun kendisi de
+ * başlama anı gelmeden (geri sayım sırasında) gösterilmez.
+ */
+create or replace function public.duel_state(p_duel_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  c_online_ms constant integer := 10000;
+  v_user_id uuid := auth.uid();
+  v_duel public.duels;
+  v_rematch public.duels;
+  v_i_answered boolean;
+begin
+  select * into v_duel from public.duels where id = p_duel_id;
+  if not found then
+    return null;
+  end if;
+
+  select exists (
+    select 1 from public.duel_answers
+    where duel_id = v_duel.id and position = v_duel.question_index and user_id = v_user_id
+  ) into v_i_answered;
+
+  if v_duel.rematch_duel_id is not null then
+    select * into v_rematch from public.duels where id = v_duel.rematch_duel_id;
+  end if;
+
+  return jsonb_build_object(
+    'code', v_duel.code,
+    'status', v_duel.status,
+    'game_mode', v_duel.game_mode,
+    'variant', v_duel.variant,
+    'rule', v_duel.rule,
+    'server_now', now(),
+    'me', case when v_user_id = v_duel.host_id then 'host' when v_user_id = v_duel.guest_id then 'guest' end,
+    'host', jsonb_build_object(
+      'id', v_duel.host_id, 'name', v_duel.host_name, 'avatar', v_duel.host_avatar, 'ready', v_duel.host_ready,
+      'score', v_duel.host_score, 'online', v_duel.host_seen_at > now() - make_interval(secs => c_online_ms / 1000.0)
+    ),
+    'guest', case when v_duel.guest_id is null then null else jsonb_build_object(
+      'id', v_duel.guest_id, 'name', v_duel.guest_name, 'avatar', v_duel.guest_avatar, 'ready', v_duel.guest_ready,
+      'score', v_duel.guest_score, 'online', coalesce(v_duel.guest_seen_at > now() - make_interval(secs => c_online_ms / 1000.0), false)
+    ) end,
+    'question_index', v_duel.question_index,
+    'question_started_at', v_duel.question_started_at,
+    'question_ended_at', v_duel.question_ended_at,
+    -- Başlamış soruların yerleri; açık soru ancak başlama anından sonra görünür.
+    'questions', coalesce((
+      select jsonb_agg(jsonb_build_object('position', q.position, 'location', q.location_id) order by q.position)
+      from public.duel_questions q
+      where q.duel_id = v_duel.id
+        and (q.position < v_duel.question_index
+          or (q.position = v_duel.question_index and v_duel.question_started_at <= now())
+          or v_duel.status = 'finished')
+    ), '[]'::jsonb),
+    'answers', coalesce((
+      select jsonb_agg(
+        case
+          when a.user_id = v_user_id or a.position < v_duel.question_index or v_duel.question_ended_at is not null
+            or v_duel.status = 'finished' or v_i_answered
+          then jsonb_build_object('position', a.position, 'user_id', a.user_id, 'selected', a.selected_id,
+            'correct', a.is_correct, 'response_ms', a.response_ms, 'points', a.points)
+          else jsonb_build_object('position', a.position, 'user_id', a.user_id, 'selected', null,
+            'correct', null, 'response_ms', null, 'points', null)
+        end
+        order by a.position, a.answered_at)
+      from public.duel_answers a
+      where a.duel_id = v_duel.id
+    ), '[]'::jsonb),
+    'winner_id', v_duel.winner_id,
+    'finish_reason', v_duel.finish_reason,
+    'rematch', case when v_duel.rematch_duel_id is null then null else jsonb_build_object(
+      'code', v_rematch.code, 'by', v_duel.rematch_by, 'declined', v_duel.rematch_declined,
+      'game_mode', v_rematch.game_mode, 'variant', v_rematch.variant, 'rule', v_rematch.rule
+    ) end,
+    -- Seri skoru, bu düellonun ev sahibi ve misafirine göre.
+    'series', jsonb_build_object(
+      'host_wins', (select count(*) from public.duels d where d.series_id = v_duel.series_id and d.status = 'finished' and d.winner_id = v_duel.host_id),
+      'guest_wins', (select count(*) from public.duels d where d.series_id = v_duel.series_id and d.status = 'finished' and d.winner_id = v_duel.guest_id)
+    )
+  );
+end;
+$$;
+
+create or replace function public.duel_for_player(p_code text)
+returns public.duels
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_duel public.duels;
+begin
+  if auth.uid() is null then
+    raise exception 'Düello için giriş gerekir.';
+  end if;
+  select * into v_duel from public.duels where code = upper(trim(p_code)) for update;
+  if not found then
+    raise exception 'Düello bulunamadı.';
+  end if;
+  if auth.uid() is distinct from v_duel.host_id and auth.uid() is distinct from v_duel.guest_id then
+    raise exception 'Bu düellonun oyuncusu değilsin.';
+  end if;
+  return v_duel;
+end;
+$$;
+
+create or replace function public.create_duel(p_game_mode text, p_variant text, p_rule text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile record;
+  v_id uuid := gen_random_uuid();
+  v_code text;
+begin
+  if v_user_id is null then
+    raise exception 'Düello kurmak için giriş gerekir.';
+  end if;
+  perform public.duel_check_settings(p_game_mode, p_variant, p_rule);
+  select * into v_profile from public.player_profile(v_user_id);
+  v_code := public.duel_new_code();
+  insert into public.duels (id, code, series_id, game_mode, variant, rule, host_id, host_name, host_avatar)
+  values (v_id, v_code, v_id, p_game_mode, p_variant, p_rule, v_user_id, coalesce(v_profile.display_name, 'Oyuncu'), v_profile.avatar_url);
+  return v_code;
+end;
+$$;
+
+/* Bağlantıyla gelen oyuncuyu misafir olarak oturtur. Zaten oyuncuysa yalnızca durumu döndürür. */
+create or replace function public.join_duel(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_duel public.duels;
+  v_profile record;
+begin
+  if v_user_id is null then
+    raise exception 'Düelloya katılmak için giriş gerekir.';
+  end if;
+  select * into v_duel from public.duels where code = upper(trim(p_code)) for update;
+  if not found then
+    raise exception 'Düello bulunamadı.';
+  end if;
+  if v_user_id = v_duel.host_id or v_user_id = v_duel.guest_id then
+    return public.duel_state(v_duel.id);
+  end if;
+  if v_duel.guest_id is not null or v_duel.status <> 'lobby' then
+    raise exception 'Bu düello dolu.';
+  end if;
+  if v_duel.invited_id is not null and v_duel.invited_id <> v_user_id then
+    raise exception 'Bu rövanş başka bir oyuncuya ait.';
+  end if;
+  select * into v_profile from public.player_profile(v_user_id);
+  update public.duels set
+    guest_id = v_user_id,
+    guest_name = coalesce(v_profile.display_name, 'Oyuncu'),
+    guest_avatar = v_profile.avatar_url,
+    guest_seen_at = now()
+  where id = v_duel.id;
+  return public.duel_state(v_duel.id);
+end;
+$$;
+
+create or replace function public.duel_ready(p_code text, p_ready boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_duel public.duels := public.duel_for_player(p_code);
+begin
+  if v_duel.status = 'lobby' then
+    if auth.uid() = v_duel.host_id then
+      update public.duels set host_ready = p_ready, host_seen_at = now() where id = v_duel.id;
+    else
+      update public.duels set guest_ready = p_ready, guest_seen_at = now() where id = v_duel.id;
+    end if;
+  end if;
+  return public.duel_tick(p_code);
+end;
+$$;
+
+/*
+ * Oyunun saati. İki tarayıcı da düzenli aralıklarla çağırır: çağıranın hâlâ bağlı olduğunu kaydeder,
+ * zamanı gelen geçişi yapar (ikisi de hazırsa düelloyu başlatır, 15 saniyesi dolan soruyu kapatır,
+ * gösterimi biten sorudan sonrakine geçer) ve 30 saniyedir sesi çıkmayan rakibe karşı hükmen galibiyet
+ * verir. Satır kilitli olduğu için aynı geçiş iki kez yapılmaz.
+ */
+create or replace function public.duel_tick(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c_questions constant integer := 10;
+  c_question_ms constant integer := 15000;
+  c_reveal_ms constant integer := 3000;
+  c_countdown_ms constant integer := 3000;
+  c_forfeit_ms constant integer := 30000;
+  v_duel public.duels := public.duel_for_player(p_code);
+  v_is_host boolean := auth.uid() = v_duel.host_id;
+  v_opponent_seen timestamptz;
+begin
+  if v_is_host then
+    update public.duels set host_seen_at = now() where id = v_duel.id;
+  else
+    update public.duels set guest_seen_at = now() where id = v_duel.id;
+  end if;
+
+  if v_duel.status = 'lobby' then
+    if v_duel.guest_id is not null and v_duel.host_ready and v_duel.guest_ready then
+      insert into public.duel_questions (duel_id, position, location_id)
+      select v_duel.id, (row_number() over () - 1)::smallint, location_id
+      from (
+        select location_id from unnest(public.duel_pool(v_duel.game_mode, v_duel.variant)) as location_id
+        order by random()
+        limit c_questions
+      ) as picked;
+      update public.duels set
+        status = 'playing',
+        question_index = 0,
+        question_started_at = now() + make_interval(secs => c_countdown_ms / 1000.0),
+        question_ended_at = null
+      where id = v_duel.id;
+    end if;
+    return public.duel_state(v_duel.id);
+  end if;
+
+  if v_duel.status = 'playing' then
+    v_opponent_seen := case when v_is_host then v_duel.guest_seen_at else v_duel.host_seen_at end;
+    if v_opponent_seen < now() - make_interval(secs => c_forfeit_ms / 1000.0) then
+      update public.duels set status = 'finished', finished_at = now(), winner_id = auth.uid(), finish_reason = 'forfeit'
+      where id = v_duel.id;
+      return public.duel_state(v_duel.id);
+    end if;
+
+    if v_duel.question_ended_at is null
+      and now() >= v_duel.question_started_at + make_interval(secs => c_question_ms / 1000.0) then
+      perform public.duel_close_question(v_duel);
+      select * into v_duel from public.duels where id = v_duel.id;
+    end if;
+
+    if v_duel.question_ended_at is not null
+      and now() >= v_duel.question_ended_at + make_interval(secs => c_reveal_ms / 1000.0) then
+      if v_duel.question_index >= c_questions - 1 then
+        update public.duels set
+          status = 'finished',
+          finished_at = now(),
+          finish_reason = 'completed',
+          winner_id = case
+            when v_duel.host_score > v_duel.guest_score then v_duel.host_id
+            when v_duel.guest_score > v_duel.host_score then v_duel.guest_id
+          end
+        where id = v_duel.id;
+      else
+        update public.duels set
+          question_index = v_duel.question_index + 1,
+          question_started_at = now(),
+          question_ended_at = null
+        where id = v_duel.id;
+      end if;
+    end if;
+  end if;
+
+  return public.duel_state(v_duel.id);
+end;
+$$;
+
+/* Açık soruya cevap. Doğruluğu ve cevap süresini sunucu belirler; her oyuncunun soru başına tek hakkı var. */
+create or replace function public.duel_answer(p_code text, p_position integer, p_selected text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c_question_ms constant integer := 15000;
+  -- Süre dolmak üzereyken verilen cevap ağda gecikirse kaybolmasın.
+  c_grace_ms constant integer := 500;
+  v_duel public.duels := public.duel_for_player(p_code);
+  v_correct_id text;
+  v_is_correct boolean;
+  v_answers integer;
+begin
+  if v_duel.status <> 'playing' or p_position <> v_duel.question_index then
+    return public.duel_tick(p_code);
+  end if;
+  if v_duel.question_ended_at is not null
+    or now() < v_duel.question_started_at
+    or now() > v_duel.question_started_at + make_interval(secs => (c_question_ms + c_grace_ms) / 1000.0)
+    or exists (select 1 from public.duel_answers where duel_id = v_duel.id and position = p_position and user_id = auth.uid())
+  then
+    return public.duel_tick(p_code);
+  end if;
+
+  select location_id into v_correct_id from public.duel_questions where duel_id = v_duel.id and position = p_position;
+  v_is_correct := p_selected = v_correct_id;
+
+  insert into public.duel_answers (duel_id, position, user_id, selected_id, is_correct, response_ms, points)
+  values (
+    v_duel.id, p_position, auth.uid(), coalesce(p_selected, ''), v_is_correct,
+    greatest(0, floor(extract(epoch from (now() - v_duel.question_started_at)) * 1000))::integer,
+    case when v_is_correct then 1 else 0 end
+  );
+
+  select count(*) into v_answers from public.duel_answers where duel_id = v_duel.id and position = p_position;
+  if (v_duel.rule = 'snatch' and v_is_correct) or v_answers = 2 then
+    perform public.duel_close_question(v_duel);
+  end if;
+
+  return public.duel_tick(p_code);
+end;
+$$;
+
+/*
+ * Rövanş: çağıran, aynı ya da farklı ayarlarla yeni bir düello kurar; eski rakip davetli olur ve
+ * yalnızca o katılabilir. Rakip de aynı anda istediyse yeni düello kurulmaz, var olanın kodu döner.
+ */
+create or replace function public.duel_rematch(p_code text, p_game_mode text, p_variant text, p_rule text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_duel public.duels := public.duel_for_player(p_code);
+  v_user_id uuid := auth.uid();
+  v_opponent uuid;
+  v_profile record;
+  v_id uuid := gen_random_uuid();
+  v_code text;
+begin
+  if v_duel.status <> 'finished' then
+    raise exception 'Düello bitmeden rövanş istenemez.';
+  end if;
+  if v_duel.rematch_duel_id is not null and not v_duel.rematch_declined then
+    return (select code from public.duels where id = v_duel.rematch_duel_id);
+  end if;
+  perform public.duel_check_settings(p_game_mode, p_variant, p_rule);
+
+  v_opponent := case when v_user_id = v_duel.host_id then v_duel.guest_id else v_duel.host_id end;
+  select * into v_profile from public.player_profile(v_user_id);
+  v_code := public.duel_new_code();
+  insert into public.duels (id, code, series_id, game_mode, variant, rule, host_id, host_name, host_avatar, invited_id)
+  values (v_id, v_code, v_duel.series_id, p_game_mode, p_variant, p_rule, v_user_id,
+    coalesce(v_profile.display_name, 'Oyuncu'), v_profile.avatar_url, v_opponent);
+  update public.duels set rematch_duel_id = v_id, rematch_by = v_user_id, rematch_declined = false where id = v_duel.id;
+  return v_code;
+end;
+$$;
+
+create or replace function public.duel_decline_rematch(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_duel public.duels := public.duel_for_player(p_code);
+begin
+  if v_duel.rematch_duel_id is not null and v_duel.rematch_by <> auth.uid() then
+    update public.duels set rematch_declined = true where id = v_duel.id;
+  end if;
+  return public.duel_state(v_duel.id);
+end;
+$$;
+
+-- Tarayıcının çağırabildiği düello fonksiyonları; yardımcılar dışarıya kapalı.
+revoke all on function public.duel_pool(text, text) from public, anon, authenticated;
+revoke all on function public.player_profile(uuid) from public, anon, authenticated;
+revoke all on function public.duel_new_code() from public, anon, authenticated;
+revoke all on function public.duel_check_settings(text, text, text) from public, anon, authenticated;
+revoke all on function public.duel_close_question(public.duels) from public, anon, authenticated;
+revoke all on function public.duel_state(uuid) from public, anon, authenticated;
+revoke all on function public.duel_for_player(text) from public, anon, authenticated;
+revoke all on function public.create_duel(text, text, text) from public, anon;
+revoke all on function public.join_duel(text) from public, anon;
+revoke all on function public.duel_ready(text, boolean) from public, anon;
+revoke all on function public.duel_tick(text) from public, anon;
+revoke all on function public.duel_answer(text, integer, text) from public, anon;
+revoke all on function public.duel_rematch(text, text, text, text) from public, anon;
+revoke all on function public.duel_decline_rematch(text) from public, anon;
+grant execute on function public.create_duel(text, text, text) to authenticated;
+grant execute on function public.join_duel(text) to authenticated;
+grant execute on function public.duel_ready(text, boolean) to authenticated;
+grant execute on function public.duel_tick(text) to authenticated;
+grant execute on function public.duel_answer(text, integer, text) to authenticated;
+grant execute on function public.duel_rematch(text, text, text, text) to authenticated;
+grant execute on function public.duel_decline_rematch(text) to authenticated;
+
 notify pgrst, 'reload schema';

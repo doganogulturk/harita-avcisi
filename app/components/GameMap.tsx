@@ -25,6 +25,10 @@ type GameMapProps = {
   activeLocationIds?: ReadonlySet<string> | null;
   /** Haritanın açılış görünümü; verilmezse haritanın tamamı. */
   homeView?: MapBox | null;
+  /** Düello: oyuncunun verdiği ama sorusu henüz kapanmamış cevap. Doğru cevabı açık etmeden işaretlenir. */
+  pendingLocation?: string | null;
+  /** Düello: rakibin tıkladığı yer (sunucu ancak oyuncu cevapladıktan ya da soru bittikten sonra verir). */
+  opponentLocation?: string | null;
   onSelect: (locationId: string) => void;
 };
 
@@ -41,6 +45,8 @@ export function GameMap({
   selectedLocation,
   activeLocationIds = null,
   homeView = null,
+  pendingLocation = null,
+  opponentLocation = null,
   onSelect,
 }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,9 +79,11 @@ export function GameMap({
       const isCorrect = isSameLocation(mode, locationId, correctLocation);
       location.classList.toggle("map-correct", answerState !== null && isCorrect);
       location.classList.toggle("map-incorrect", answerState === "incorrect" && isSameLocation(mode, locationId, selectedLocation));
+      location.classList.toggle("map-pending", answerState === null && isSameLocation(mode, locationId, pendingLocation));
+      location.classList.toggle("map-opponent", isSameLocation(mode, locationId, opponentLocation));
       if (answerState !== null && isCorrect) ensureVisible(location);
     });
-  }, [answerState, ensureVisible, mapMarkup, mode, question, restoreAfterReveal, selectedLocation]);
+  }, [answerState, ensureVisible, mapMarkup, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
 
   const selectFromEvent = (target: EventTarget) => {
     const location = (target as Element).closest<SVGElement>(LOCATION_SELECTOR[mode]);

@@ -10,6 +10,7 @@ import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
@@ -275,32 +276,22 @@ export default function Home() {
   }
 
   async function signInWithGoogle() {
-    const supabase = getSupabaseClient();
-    if (!supabase) return setAuthError("Supabase bağlantısı yapılandırılmalıdır.");
     setIsSigningIn(true);
     setAuthError(null);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const error = await startGoogleSignIn(window.location.origin);
     if (error) {
-      setAuthError("Google ile giriş başlatılamadı. Lütfen tekrar deneyin.");
+      setAuthError(error);
       setIsSigningIn(false);
     }
   }
 
   async function signInAsGuest(rawName: string) {
-    const name = rawName.trim();
-    if (!name) return setAuthError("Sıralamada görünmek için bir ad yazın.");
-    const supabase = getSupabaseClient();
-    if (!supabase) return setAuthError("Supabase bağlantısı yapılandırılmalıdır.");
     setIsSigningIn(true);
     setAuthError(null);
-    const { data, error } = await supabase.auth.signInAnonymously({ options: { data: { display_name: name } } });
-    if (error || !data.user) {
-      setAuthError(`Misafir oturumu başlatılamadı: ${error?.message ?? "Supabase kullanıcı oluşturmadı."}`);
-      setIsSigningIn(false);
-      return;
-    }
-    setPlayer({ id: data.user.id, name, avatarUrl: null });
+    const result = await signInAsGuestSession(rawName);
     setIsSigningIn(false);
+    if ("error" in result) return setAuthError(result.error);
+    setPlayer(result.player);
     writePendingChoice(null);
     if (pendingChoice) startGame(pendingChoice);
   }

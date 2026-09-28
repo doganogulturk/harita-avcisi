@@ -6,6 +6,7 @@ import { AuthPanel } from "./AuthPanel";
 import { PlayButton, PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
 import { LeaderboardPanel } from "./LeaderboardPanel";
+import { DuelCreateDialog } from "./duel/DuelCreateDialog";
 import { Logo } from "./Logo";
 import { ScopePreviewMap } from "./ScopePreviewMap";
 import {
@@ -297,6 +298,7 @@ export function IntroScreen({
   const turkeyPrompt = useTurkeyPrompt();
   const [selectedMap, setSelectedMap] = useState<GameMode | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [isDuelOpen, setIsDuelOpen] = useState(false);
 
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
@@ -415,7 +417,16 @@ export function IntroScreen({
             <ModeSwitch onChange={setPlayKind} value={kind} />
           </div>
         )}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-3">
+          <button
+            className="sweep sweep-cyan intro-focus flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-display text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:text-cyan-700 short:py-1.5 lg:px-5 lg:text-lg"
+            onClick={() => setIsDuelOpen(true)}
+            style={{ "--intro-delay": `${INTRO_CONTENT_DELAY_MS}ms` } as React.CSSProperties}
+            title="Bir arkadaşınla aynı sorularla, aynı anda yarış"
+            type="button"
+          >
+            <span aria-hidden="true">⚔️</span> Düello
+          </button>
           <PlayerBadge onSignOut={onSignOut} player={player} />
         </div>
       </header>
@@ -449,6 +460,8 @@ export function IntroScreen({
           supabaseConfigured={supabaseConfigured}
         />
       )}
+
+      {isDuelOpen && <DuelCreateDialog onClose={() => setIsDuelOpen(false)} player={player} supabaseConfigured={supabaseConfigured} />}
 
       {shouldAnimate && !isCurtainUp && <IntroCurtain />}
     </section>

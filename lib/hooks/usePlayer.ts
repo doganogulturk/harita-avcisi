@@ -7,9 +7,12 @@ import { playerFromUser, type Player } from "@/lib/game";
 /**
  * Supabase oturumunu izler. `onSessionRestored`, sayfa yüklendiğinde açık bir oturum
  * bulunursa çağrılır; Google girişinden dönüşte bekleyen tur seçimini geri almak için.
+ * Üçüncü değer, açık oturum olup olmadığının anlaşılıp anlaşılmadığıdır; o zamana kadar
+ * `player` null olsa da oyuncu "giriş yapmamış" sayılmamalı.
  */
 export function usePlayer(onSessionRestored?: () => void) {
   const [player, setPlayer] = useState<Player | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const handleSessionRestored = useRef(onSessionRestored);
 
   useEffect(() => {
@@ -21,6 +24,7 @@ export function usePlayer(onSessionRestored?: () => void) {
     if (!supabase) return;
 
     void supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoaded(true);
       if (!user) return;
       setPlayer(playerFromUser(user));
       handleSessionRestored.current?.();
@@ -32,5 +36,5 @@ export function usePlayer(onSessionRestored?: () => void) {
     return () => subscription.unsubscribe();
   }, []);
 
-  return [player, setPlayer] as const;
+  return [player, setPlayer, isLoaded || getSupabaseClient() === null] as const;
 }

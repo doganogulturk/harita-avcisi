@@ -50,6 +50,26 @@ havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatisti
 Oyun sırasında üst bardaki çıkış tuşu turu bırakıp ana menüye döner; yanlışlıkla başlatılan bir tur için
 sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 
+### Düello
+
+İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranının üstündeki **⚔️ Düello** tuşu kurma penceresini açar:
+harita ve mod (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak) ile kural seçilir, düello kurulunca
+`/duello/<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da pencereye
+kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
+sayımla başlar.
+
+- 10 soru; her soru en fazla 15 saniye. İki oyuncu da cevaplayınca (Kapan kazanır'da biri doğru bilince) soru hemen biter.
+- Her oyuncunun soru başına tek tıklama hakkı var. Rakibin nereye tıkladığı, oyuncu kendi cevabını verene ya da
+  soru bitene kadar gösterilmez; yalnızca cevapladığı bilinir.
+- **⚡ Kapan kazanır:** ilk doğru bilen 1 puan alır ve soru biter; yanlış tıklayan o soruda hakkını kaybeder.
+- **🎯 Herkes puan alır:** doğru bilen 1 puan alır; ikisi de bildiyse hızlı olana +1.
+- Soru bitince iki tıklama haritada birlikte gösterilir (doğru cevap yeşil, oyuncunun yanlışı kırmızı, rakibin
+  tıkladığı turuncu) ve 3 saniye sonra sonraki soruya geçilir.
+- Sonuçta kazanan, soru soru döküm ve seri skoru görünür. **Rövanş** aynı ayarlarla, **Başka modla rövanş** yeni
+  ayarlarla yeni bir düello kurar; rakibe istek gider, kabul ederse ikisi de yeni lobiye geçer.
+- Rakip 30 saniyeden uzun süre bağlantısız kalırsa düello hükmen kazanılır.
+- Düellolar genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine işlenmez.
+
 ### Harita
 
 Harita tekerlek, sürükleme ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
@@ -84,6 +104,8 @@ app/
     LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
     PlayButton.tsx      Rozetli oyna tuşu
+    duel/               Düello: kurma penceresi, lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
+  duello/[kod]/page.tsx Düello sayfası; kodu okuyup DuelScreen'i çizer
 lib/
   game.ts               Ortak tipler, tur seçimi (PlayChoice), sıralama tanımları (BOARDS)
   intro-preferences.ts  Giriş ekranı seçimlerini (tür, kapsam, soru tipi) tarayıcıda saklar
@@ -99,6 +121,11 @@ lib/
   world-countries.ts    179 ülke + ISO kodu; Normal havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
   shuffle.ts            Fisher-Yates karıştırma
   supabase.ts           Supabase istemcisi (env yoksa null döner)
+  auth.ts               Google ve misafir girişi (ana sayfa ve düello ortak kullanır)
+  duel.ts               Düello tipleri, kurallar, modlar ve yer kimliğinden soruya geçiş
+  hooks/useDuel.ts      Düelloya katılır, durumu düzenli aralıklarla sorar, cevap / hazır / rövanş işlemleri
+scripts/
+  generate-duel-pools.mjs  Düello soru havuzlarını world-countries.ts'ten schema.sql'e yazar
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
 supabase/schema.sql     Tablolar, RLS politikaları, tur fonksiyonları, leaderboard ve location_stats view'leri, realtime
@@ -162,6 +189,29 @@ dünyada ISO koduyla (`tr`) tutulur.
 Doğru cevap sorudan belli olduğu için (sorulan ülkenin kodu, tıklanacak alanın kodudur) bu denetimler
 cevapları otomatik veren bir betiği engelleyemez; engelledikleri, hiç oynanmamış bir turun ya da imkânsız
 bir sürenin kaydedilmesidir. Sıralama, oyuncu, mod ve `variant` başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
+
+### Düello
+
+Düellonun hakemi veritabanıdır. `duels` (ayarlar, oyuncular, skor, açık sorunun başlama ve bitiş anı),
+`duel_questions` (düellonun 10 sorusu) ve `duel_answers` (cevaplar, cevap süresi, puan) tabloları tarayıcıya
+tamamen kapalıdır; tarayıcı yalnızca şu fonksiyonları çağırır:
+
+| Fonksiyon | İş |
+| --- | --- |
+| `create_duel(mode, variant, rule)` | Düello kurar, 6 karakterlik kodu döndürür (O/0 ve I/1 kullanılmaz) |
+| `join_duel(code)` | Oyuncuyu misafir olarak oturtur; rövanşta yalnızca eski rakip katılabilir |
+| `duel_ready(code, ready)` | Hazır / hazır değil |
+| `duel_tick(code)` | Oyunun saati: oyuncunun bağlı olduğunu kaydeder, zamanı gelen geçişi yapar (başlatma, 15 sn dolan soruyu kapatma, sonraki soru, bitiş, 30 sn sessiz rakibe karşı hükmen galibiyet) ve durumu döndürür |
+| `duel_answer(code, position, selected)` | Açık soruya cevap; doğruluğu ve süreyi sunucu belirler |
+| `duel_rematch(code, mode, variant, rule)` | Rövanş düellosu kurar; ikisi aynı anda isterse tek düello kurulur |
+| `duel_decline_rematch(code)` | Gelen rövanş isteğini reddeder |
+
+Durum, çağıranın görmesi gerekeni içerir: açık soru başlama anından önce, rakibin açık sorudaki cevabının yeri ise
+oyuncu cevap verene ya da soru bitene kadar gönderilmez. Tarayıcı durumu oyun sırasında yarım saniyede, lobide ve
+sonuçta 1,5 saniyede bir sorar; realtime aboneliği gerekmez.
+
+Soruları sunucu seçtiği için soru havuzları `duel_pool` fonksiyonunda durur. Bu fonksiyon elle yazılmaz:
+`lib/world-countries.ts` değişirse `node scripts/generate-duel-pools.mjs` çalıştırılıp `schema.sql` yeniden uygulanır.
 
 ## Vercel ile yayınlama
 
