@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState, useSyncExternalStore } from "react";
 import { DUEL_MODES, DUEL_RULES, type DuelRule, type DuelSettings } from "@/lib/duel";
-import { flagUrl } from "@/lib/game";
+import { flagUrl, type BoardVariant, type GameMode } from "@/lib/game";
 
 /** Düelloda oyuncunun kendisi hep mavi, rakibi hep turuncu. */
 export type DuelTone = "me" | "opponent";
@@ -56,73 +57,129 @@ function GroupIcon({ mode }: { mode: "turkey" | "world" }) {
   );
 }
 
-/** Harita + mod ve kural seçimi: düello kurarken ve başka modla rövanş isterken. */
+/** Harita ve mod seçimi (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak): düello ve oda kurarken. */
+export function ModePicker({ mode, variant, onChange }: { mode: GameMode; variant: BoardVariant; onChange: (mode: GameMode, variant: BoardVariant) => void }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-bold text-slate-900">Harita ve mod</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {DUEL_MODES.map((group) => {
+          const isGroupSelected = mode === group.mode;
+          return (
+            <div
+              className={`rounded-2xl border-2 p-4 transition ${isGroupSelected ? "border-cyan-500 bg-cyan-50/60" : "border-slate-200"}`}
+              key={group.mode}
+            >
+              <p className={`flex items-center gap-2 font-display text-xl font-bold ${isGroupSelected ? "text-slate-900" : "text-slate-500"}`}>
+                <GroupIcon mode={group.mode} /> {group.title}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2" role="radiogroup">
+                {group.options.map((option) => {
+                  const isSelected = isGroupSelected && variant === option.variant;
+                  return (
+                    <button
+                      aria-checked={isSelected}
+                      className={`rounded-full px-4 py-1.5 text-sm font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
+                        isSelected ? "bg-cyan-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700"
+                      }`}
+                      key={option.variant}
+                      onClick={() => onChange(group.mode, option.variant)}
+                      role="radio"
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Düello kuralı: Kapan kazanır ya da Herkes puan alır. */
+export function RulePicker({ rule, onChange }: { rule: DuelRule; onChange: (rule: DuelRule) => void }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-bold text-slate-900">Kural</p>
+      <div className="grid gap-3 sm:grid-cols-2" role="radiogroup">
+        {(Object.keys(DUEL_RULES) as DuelRule[]).map((option) => {
+          const isSelected = rule === option;
+          return (
+            <button
+              aria-checked={isSelected}
+              className={`rounded-2xl border-2 p-4 text-left transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
+                isSelected ? "border-cyan-500 bg-gradient-to-br from-cyan-50 to-white shadow-md shadow-cyan-500/10" : "border-slate-200 hover:border-cyan-300"
+              }`}
+              key={option}
+              onClick={() => onChange(option)}
+              role="radio"
+              type="button"
+            >
+              <span className={`block font-display text-xl font-bold ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
+                {DUEL_RULES[option].icon} {DUEL_RULES[option].label}
+              </span>
+              <span className="mt-1 block text-sm text-slate-500">{DUEL_RULES[option].summary}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Düello kurarken ve başka modla rövanş isterken: harita, mod ve kural. */
 export function DuelSettingsPicker({ value, onChange }: { value: DuelSettings; onChange: (value: DuelSettings) => void }) {
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <p className="mb-2 text-sm font-bold text-slate-900">Harita ve mod</p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {DUEL_MODES.map((group) => {
-            const isGroupSelected = value.mode === group.mode;
-            return (
-              <div
-                className={`rounded-2xl border-2 p-4 transition ${isGroupSelected ? "border-cyan-500 bg-cyan-50/60" : "border-slate-200"}`}
-                key={group.mode}
-              >
-                <p className={`flex items-center gap-2 font-display text-xl font-bold ${isGroupSelected ? "text-slate-900" : "text-slate-500"}`}>
-                  <GroupIcon mode={group.mode} /> {group.title}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2" role="radiogroup">
-                  {group.options.map((option) => {
-                    const isSelected = isGroupSelected && value.variant === option.variant;
-                    return (
-                      <button
-                        aria-checked={isSelected}
-                        className={`rounded-full px-4 py-1.5 text-sm font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
-                          isSelected ? "bg-cyan-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700"
-                        }`}
-                        key={option.variant}
-                        onClick={() => onChange({ ...value, mode: group.mode, variant: option.variant })}
-                        role="radio"
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <ModePicker mode={value.mode} onChange={(mode, variant) => onChange({ ...value, mode, variant })} variant={value.variant} />
+      <RulePicker onChange={(rule) => onChange({ ...value, rule })} rule={value.rule} />
+    </div>
+  );
+}
 
-      <div>
-        <p className="mb-2 text-sm font-bold text-slate-900">Kural</p>
-        <div className="grid gap-3 sm:grid-cols-2" role="radiogroup">
-          {(Object.keys(DUEL_RULES) as DuelRule[]).map((rule) => {
-            const isSelected = value.rule === rule;
-            return (
-              <button
-                aria-checked={isSelected}
-                className={`rounded-2xl border-2 p-4 text-left transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
-                  isSelected ? "border-cyan-500 bg-gradient-to-br from-cyan-50 to-white shadow-md shadow-cyan-500/10" : "border-slate-200 hover:border-cyan-300"
-                }`}
-                key={rule}
-                onClick={() => onChange({ ...value, rule })}
-                role="radio"
-                type="button"
-              >
-                <span className={`block font-display text-xl font-bold ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
-                  {DUEL_RULES[rule].icon} {DUEL_RULES[rule].label}
-                </span>
-                <span className="mt-1 block text-sm text-slate-500">{DUEL_RULES[rule].summary}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+const noSubscription = () => () => {};
+
+/** Paylaşma satırı: kod, bağlantıyı kopyalama ve (telefonda) paylaşma menüsü. */
+export function ShareCode({ code, path, label, shareText }: { code: string; path: string; label: string; shareText: string }) {
+  const [isCopied, setIsCopied] = useState(false);
+  const url = typeof window === "undefined" ? path : `${window.location.origin}${path}`;
+  // Paylaşma menüsü tarayıcıya bağlı; sunucuda çizilen ilk halde yok sayılır, uyuşmazlık olmaz.
+  const canShare = useSyncExternalStore(
+    noSubscription,
+    () => typeof navigator.share === "function",
+    () => false,
+  );
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setIsCopied(true);
+      window.setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      // Pano kullanılamıyorsa kod ekranda zaten okunuyor.
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-slate-500">
+      {label}
+      <span className="rounded-lg bg-slate-100 px-3 py-1 font-mono text-lg font-bold tracking-[0.3em] text-slate-900">{code}</span>
+      <button className="font-semibold text-cyan-700 underline-offset-4 hover:underline" onClick={copy} type="button">
+        {isCopied ? "✓ Kopyalandı" : "Bağlantıyı kopyala"}
+      </button>
+      {canShare && (
+        <button
+          className="font-semibold text-cyan-700 underline-offset-4 hover:underline"
+          onClick={() => void navigator.share({ title: "Harita Avcısı", text: shareText, url }).catch(() => {})}
+          type="button"
+        >
+          Paylaş
+        </button>
+      )}
     </div>
   );
 }

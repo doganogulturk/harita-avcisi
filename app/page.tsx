@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GameMap } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
@@ -10,6 +10,7 @@ import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
@@ -22,22 +23,14 @@ import {
   correctLocationId,
   flagUrl,
   isFlagChoice,
-  GAME_DURATION_MS,
-  GAME_DURATION_SECONDS,
   GAME_MODES,
-  isSameLocation,
-  normalizeLocationId,
-  QUESTION_TRANSITION_MS,
   QUESTIONS_PER_ROUND,
-  type AnswerState,
   type BoardId,
   type GameMode,
   type GamePhase,
   type PlayChoice,
   type Question,
 } from "@/lib/game";
-
-const QUESTION_TRANSITION_SECONDS = QUESTION_TRANSITION_MS / 1000;
 const PENDING_CHOICE_KEY = "harita-avcisi:pending-choice";
 
 /**
@@ -89,22 +82,14 @@ export default function Home() {
   const mode = choice.mode;
   const isPractice = choice.kind === "practice";
   const continent = mode === "world" ? choice.continent : undefined;
-  const [phase, setPhase] = useState<GamePhase>("ready");
-  const [questions, setQuestions] = useState<Question[]>(() => roundFor(DEFAULT_CHOICE));
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<AnswerState[]>([]);
-  // Her soruda tıklanan yer, sırayla; sunucu puanı ve istatistikleri bundan hesaplar.
-  const [selections, setSelections] = useState<string[]>([]);
-  const [answerState, setAnswerState] = useState<AnswerState>(null);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [completionDurationMs, setCompletionDurationMs] = useState(0);
-  const [remainingGameSeconds, setRemainingGameSeconds] = useState(GAME_DURATION_SECONDS);
-  const [remainingQuestionSeconds, setRemainingQuestionSeconds] = useState(QUESTION_TRANSITION_SECONDS);
-  const gameStartedAt = useRef<number | null>(null);
-  const [roundId, setRoundId] = useState(0);
+  const round = useRoundPlay({
+    mode,
+    timed: !isPractice,
+    extend: isPractice ? (lastQuestion) => nextPracticeCycle(choice, lastQuestion) : undefined,
+  });
+  const { questions, questionIndex, currentQuestion, answers, answerRecords, answerState, score, bestStreak, completionDurationMs } = round;
+  const phase: GamePhase = round.status === "idle" ? "ready" : round.status;
+  const roundId = round.roundKey;
   const [serverRound, setServerRound] = useState<Promise<string | null> | null>(null);
 
   const [pendingChoice, setPendingChoice] = useState<PlayChoice | null>(null);
@@ -119,10 +104,6 @@ export default function Home() {
   const [readyModes, setReadyModes] = useState<GameMode[]>([]);
 
   const { mapMarkup, mapError } = useMapMarkup(mode);
-  const answerRecords = useMemo(
-    () => selections.map((selected, index) => ({ location: correctLocationId(questions[index]), selected: normalizeLocationId(mode, selected) })),
-    [mode, questions, selections],
-  );
   const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId, isResultSettled } = useLeaderboard({
     player,
     roundId,
@@ -146,7 +127,6 @@ export default function Home() {
     enabled: phase === "finished" && (isPractice || isResultSettled),
   });
 
-  const currentQuestion = questions[questionIndex];
   const supabaseConfigured = getSupabaseClient() !== null;
 
   // Her iki harita da baştan indirilir; giriş ekranındaki her "Oyna" anında başlayabilsin.
@@ -163,27 +143,6 @@ export default function Home() {
     return () => { isActive = false; };
   }, []);
 
-  const isRoundComplete = answers.length === questions.length;
-
-  // Turun toplam süresini geri sayar ve süre dolunca turu bitirir. Son soru cevaplandığında
-  // durur; aksi halde son cevabın ardından geçen gösterim süresi, kaydedilen süreyi ezebilir.
-  // Antrenmanın süre sınırı yoktur.
-  useEffect(() => {
-    if (phase !== "playing" || isRoundComplete || isPractice) return;
-    const updateRemaining = () => {
-      const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
-      const remainingSeconds = Math.max(0, Math.ceil((GAME_DURATION_MS - elapsedMs) / 1000));
-      setRemainingGameSeconds(remainingSeconds);
-      if (remainingSeconds === 0) {
-        setCompletionDurationMs(GAME_DURATION_MS);
-        setPhase("finished");
-      }
-    };
-    updateRemaining();
-    const timer = window.setInterval(updateRemaining, 250);
-    return () => window.clearInterval(timer);
-  }, [isPractice, isRoundComplete, phase]);
-
   // Bayrak turlarında sıradaki bayrak önceden indirilir; yarışta bayrağın yüklenmesi süreden yemesin.
   useEffect(() => {
     if (phase !== "playing" || !isFlagChoice(choice)) return;
@@ -192,56 +151,15 @@ export default function Home() {
     });
   }, [choice, phase, questionIndex, questions]);
 
-  // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
-  useEffect(() => {
-    if (phase !== "playing" || !answerState) return;
-    const startedAt = performance.now();
-    const countdown = window.setInterval(
-      () => setRemainingQuestionSeconds(Math.max(0, Math.ceil((QUESTION_TRANSITION_MS - (performance.now() - startedAt)) / 1000))),
-      100,
-    );
-    const timer = window.setTimeout(() => {
-      if (questionIndex === questions.length - 1) {
-        if (!isPractice) {
-          setPhase("finished");
-          return;
-        }
-        setQuestions((current) => [...current, ...nextPracticeCycle(choice, current[current.length - 1])]);
-      }
-      setQuestionIndex((currentIndex) => currentIndex + 1);
-      setAnswerState(null);
-      setSelectedLocation(null);
-    }, QUESTION_TRANSITION_MS);
-
-    return () => {
-      window.clearInterval(countdown);
-      window.clearTimeout(timer);
-    };
-  }, [answerState, choice, isPractice, phase, questionIndex, questions.length]);
-
   function startGame(nextChoice: PlayChoice) {
     setChoice(nextChoice);
-    setQuestions(roundFor(nextChoice));
-    setQuestionIndex(0);
-    setAnswers([]);
-    setSelections([]);
-    setAnswerState(null);
-    setSelectedLocation(null);
-    setScore(0);
-    setStreak(0);
-    setBestStreak(0);
-    setCompletionDurationMs(0);
-    setRemainingGameSeconds(GAME_DURATION_SECONDS);
-    setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
-    gameStartedAt.current = performance.now();
-    setRoundId((current) => current + 1);
+    round.start(roundFor(nextChoice));
     // Yarış turu sunucuda da açılır; süre sunucuda ölçülsün. Misafir girişinden hemen sonra
     // `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır.
     setServerRound(nextChoice.kind === "ranked" ? startRankedRound(nextChoice) : null);
     setBoardId(boardIdFor(nextChoice));
     setPendingChoice(null);
     resetLeaderboards();
-    setPhase("playing");
   }
 
   /**
@@ -258,14 +176,8 @@ export default function Home() {
     writePendingChoice(choice);
   }
 
-  function finishPractice() {
-    const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
-    setCompletionDurationMs(Math.round(elapsedMs));
-    setPhase("finished");
-  }
-
   function goHome() {
-    setPhase("ready");
+    round.reset();
     setAuthError(null);
   }
 
@@ -302,29 +214,9 @@ export default function Home() {
     const { error } = await supabase.auth.signOut();
     if (error) return setAuthError("Çıkış yapılamadı. Lütfen tekrar deneyin.");
     setPlayer(null);
-    setPhase("ready");
+    round.reset();
     setAuthError(null);
     cancelPendingChoice();
-  }
-
-  function chooseLocation(locationId: string) {
-    if (phase !== "playing" || !currentQuestion || answerState) return;
-    const isCorrect = isSameLocation(mode, locationId, correctLocationId(currentQuestion));
-
-    if (!isPractice && questionIndex === questions.length - 1) {
-      const elapsedMs = gameStartedAt.current === null ? 0 : performance.now() - gameStartedAt.current;
-      setCompletionDurationMs(Math.round(Math.min(GAME_DURATION_MS, elapsedMs)));
-    }
-
-    const nextStreak = isCorrect ? streak + 1 : 0;
-    setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
-    setSelectedLocation(locationId);
-    setAnswerState(isCorrect ? "correct" : "incorrect");
-    setAnswers((currentAnswers) => [...currentAnswers, isCorrect ? "correct" : "incorrect"]);
-    setSelections((currentSelections) => [...currentSelections, locationId]);
-    setScore((currentScore) => currentScore + (isCorrect ? 1 : 0));
-    setStreak(nextStreak);
-    setBestStreak((currentBest) => Math.max(currentBest, nextStreak));
   }
 
   return (
@@ -381,14 +273,14 @@ export default function Home() {
               answerState={answerState}
               choice={choice}
               onExit={goHome}
-              onFinishPractice={finishPractice}
+              onFinishPractice={round.finish}
               onPlay={play}
               onSignOut={signOut}
               player={player}
               question={currentQuestion}
               questionCount={questions.length}
-              remainingGameSeconds={remainingGameSeconds}
-              remainingQuestionSeconds={remainingQuestionSeconds}
+              remainingGameSeconds={round.remainingGameSeconds}
+              remainingQuestionSeconds={round.remainingQuestionSeconds}
               score={score}
             />
             <GameMap
@@ -399,9 +291,9 @@ export default function Home() {
               mapError={mapError}
               mapMarkup={mapMarkup}
               mode={mode}
-              onSelect={chooseLocation}
+              onSelect={round.choose}
               question={currentQuestion}
-              selectedLocation={selectedLocation}
+              selectedLocation={round.selectedLocation}
             />
           </section>
         )}

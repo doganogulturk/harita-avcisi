@@ -70,6 +70,23 @@ sayımla başlar.
 - Rakip 30 saniyeden uzun süre bağlantısız kalırsa düello hükmen kazanılır.
 - Düellolar genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine işlenmez.
 
+### Oda
+
+Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranının üstündeki **👥 Oda** tuşu kurma penceresini açar:
+oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve en fazla katılımcı (2-50) seçilir.
+Oda `/oda/<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir.
+
+- **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an
+  işlemeye başlar. Başlatılmayan oda 24 saat sonra kapanır. Oda başladıktan sonra bağlantıyı açan katılamaz ama
+  sıralamayı izleyebilir.
+- **Turlar:** her tur normal bir yarış turudur (10 soru, 120 saniye); her turun soruları odadaki herkes için aynıdır
+  ve tur başlayana kadar gizlidir. Turlar sırayla, oda süresi içinde istenen anda ve birer kez oynanır. Başlatılıp
+  bırakılan tur "yarım" sayılır: 0 puan, 120 saniye.
+- **Oda sıralaması:** tur tur puanlar, toplam puan ve toplam süre canlı güncellenir; toplam puana, eşitlikte toplam
+  süreye göre dizilir. Süre bitince oda kapanır ve ilk üç kürsüde gösterilir.
+- Oda turları genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine de işlenir.
+- Bir oyuncunun aynı anda en fazla 3 açık odası olabilir.
+
 ### Harita
 
 Harita tekerlek, sürükleme ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
@@ -105,7 +122,10 @@ app/
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
     PlayButton.tsx      Rozetli oyna tuşu
     duel/               Düello: kurma penceresi, lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
+    room/               Oda: kurma penceresi, lobi, oda panosu (sıralama, kürsü), odadaki tur (RoomScreen yönetir)
+    SignInPanel.tsx     Düello ve oda için giriş adımı (Google / misafir)
   duello/[kod]/page.tsx Düello sayfası; kodu okuyup DuelScreen'i çizer
+  oda/[kod]/page.tsx    Oda sayfası; kodu okuyup RoomScreen'i çizer
 lib/
   game.ts               Ortak tipler, tur seçimi (PlayChoice), sıralama tanımları (BOARDS)
   intro-preferences.ts  Giriş ekranı seçimlerini (tür, kapsam, soru tipi) tarayıcıda saklar
@@ -124,6 +144,9 @@ lib/
   auth.ts               Google ve misafir girişi (ana sayfa ve düello ortak kullanır)
   duel.ts               Düello tipleri, kurallar, modlar ve yer kimliğinden soruya geçiş
   hooks/useDuel.ts      Düelloya katılır, durumu düzenli aralıklarla sorar, cevap / hazır / rövanş işlemleri
+  hooks/useRoundPlay.ts Bir turun oynanışı (sorular, 120 sn, 3 sn gösterim, puan ve seri); ana sayfa ve oda kullanır
+  room.ts               Oda tipleri ve ayar seçenekleri
+  hooks/useRoom.ts      Odaya katılır, durumu yoklar, odayı ve turları başlatır
 scripts/
   generate-duel-pools.mjs  Düello soru havuzlarını world-countries.ts'ten schema.sql'e yazar
 public/maps/            turkey.svg, world.svg
@@ -212,6 +235,22 @@ sonuçta 1,5 saniyede bir sorar; realtime aboneliği gerekmez.
 
 Soruları sunucu seçtiği için soru havuzları `duel_pool` fonksiyonunda durur. Bu fonksiyon elle yazılmaz:
 `lib/world-countries.ts` değişirse `node scripts/generate-duel-pools.mjs` çalıştırılıp `schema.sql` yeniden uygulanır.
+
+### Oda
+
+`rooms` (ayarlar, başlama ve bitiş anı), `room_players` ve `room_questions` (her turun 10 sorusu) tabloları tarayıcıya
+kapalıdır. Odadaki bir tur, `game_rounds` ve `game_results` tablolarında `room_id` / `room_round` ile işaretli normal bir
+yarış turudur; bu yüzden `finish_round`'un bütün denetimlerinden geçer ve genel sıralamaya da yazılır. Oda turunda
+`finish_round` ayrıca cevapların sırayla o turun sorularına verildiğini doğrular.
+
+| Fonksiyon | İş |
+| --- | --- |
+| `create_room(name, mode, variant, round_count, duration_minutes, max_players)` | Oda kurar, kodu döndürür |
+| `join_room(code)` | Lobideyse ve yer varsa oyuncuyu ekler; değilse katılamama nedeniyle durumu döndürür |
+| `get_room(code)` | Oda durumu ve sıralaması |
+| `start_room(code)` | Oda sahibi başlatır; her turun soruları seçilir (turlar arasında tekrar yok) |
+| `start_room_round(code, round)` | Sıradaki turu açar ve sorularını döndürür; turlar sırayla, birer kez |
+| `abandon_round(round_id)` | Oyuncu turu bırakır; tur hemen "yarım" sayılır |
 
 ## Vercel ile yayınlama
 

@@ -26,9 +26,14 @@ type GameTopBarProps = {
   remainingQuestionSeconds: number;
   remainingGameSeconds: number;
   score: number;
-  onPlay: (choice: PlayChoice) => void;
+  /** Verilmezse turu yeniden başlatma / tur değiştirme kontrolleri gösterilmez (oda turu tek seferliktir). */
+  onPlay?: (choice: PlayChoice) => void;
+  /** Tur kontrollerinin yerinde gösterilen etiket, ör. "Cuma akşamı · Tur 2/3". */
+  roundLabel?: string;
   onFinishPractice: () => void;
   onExit: () => void;
+  /** Çıkış tuşunun açıklaması; turdan çıkmanın sonucu moda göre değişir. */
+  exitTitle?: string;
   onSignOut: () => void;
 };
 
@@ -54,13 +59,13 @@ export function PlateBadge({ plate }: { plate: number }) {
   );
 }
 
-function ExitButton({ onClick }: { onClick: () => void }) {
+function ExitButton({ onClick, title = "Ana menü · Bu turun skoru kaydedilmez" }: { onClick: () => void; title?: string }) {
   return (
     <button
       aria-label="Turu bırak ve ana menüye dön"
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
       onClick={onClick}
-      title="Ana menü · Bu turun skoru kaydedilmez"
+      title={title}
       type="button"
     >
       <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
@@ -90,6 +95,8 @@ export function GameTopBar({
   score,
   onFinishPractice,
   onExit,
+  exitTitle,
+  roundLabel,
   onSignOut,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
@@ -99,7 +106,7 @@ export function GameTopBar({
       {/* Üç sütun: soru adı, yanlardaki içerik ne kadar geniş olursa olsun tam ortada kalır. */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 lg:gap-6 lg:px-5 lg:py-3">
         <div className="flex min-w-0 items-center gap-2 lg:gap-3">
-          <ExitButton onClick={onExit} />
+          <ExitButton onClick={onExit} title={exitTitle} />
           <PlayerBadge align="left" onSignOut={onSignOut} player={player} size="sm" />
         </div>
 
@@ -176,7 +183,13 @@ export function GameTopBar({
               {formatTime(remainingGameSeconds)}
             </p>
 
-            <RoundControls choice={choice} onPlay={onPlay} />
+            {onPlay ? (
+              <RoundControls choice={choice} onPlay={onPlay} />
+            ) : (
+              roundLabel && (
+                <span className="hidden shrink-0 rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-800 md:inline lg:text-sm">{roundLabel}</span>
+              )
+            )}
           </div>
         )}
       </div>

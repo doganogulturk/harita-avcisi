@@ -2,11 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AuthPanel } from "../AuthPanel";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
 import { RotateOverlay } from "../RotateOverlay";
-import { signInAsGuest, startGoogleSignIn } from "@/lib/auth";
+import { SignInPanel } from "../SignInPanel";
 import { duelPath, type DuelSettings } from "@/lib/duel";
 import { useDuel } from "@/lib/hooks/useDuel";
 import { usePlayer } from "@/lib/hooks/usePlayer";
@@ -39,8 +38,6 @@ export function DuelScreen({ code }: { code: string }) {
   const router = useRouter();
   const [player, setPlayer, isPlayerLoaded] = usePlayer();
   const { state, fatalError, connectionError, serverNow, setReady, answer, requestRematch, declineRematch } = useDuel(code, player);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [isSigningIn, setIsSigningIn] = useState(false);
   const [isRequestingRematch, setIsRequestingRematch] = useState(false);
   const supabaseConfigured = getSupabaseClient() !== null;
 
@@ -73,30 +70,10 @@ export function DuelScreen({ code }: { code: string }) {
   if (!player) {
     return body(
       <div className="mx-auto my-auto w-full max-w-2xl">
-        <AuthPanel
-          authError={authError}
-          choiceLabel="Düello"
+        <SignInPanel
           description="Rakibin seni görebilsin diye giriş yap; misafir girişi de olur. Düello genel sıralamaya işlenmez."
-          isSigningIn={isSigningIn}
           onCancel={goHome}
-          onGoogleSignIn={async () => {
-            setIsSigningIn(true);
-            setAuthError(null);
-            const error = await startGoogleSignIn(window.location.href);
-            if (error) {
-              setAuthError(error);
-              setIsSigningIn(false);
-            }
-          }}
-          onGuestSignIn={async (name) => {
-            setIsSigningIn(true);
-            setAuthError(null);
-            const result = await signInAsGuest(name);
-            setIsSigningIn(false);
-            if ("error" in result) return setAuthError(result.error);
-            setPlayer(result.player);
-          }}
-          supabaseConfigured={supabaseConfigured}
+          onSignedIn={setPlayer}
           title={
             <>
               ⚔️ <span className="text-cyan-700">Düello</span> daveti · kod {code.toUpperCase()}

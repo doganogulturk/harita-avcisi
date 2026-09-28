@@ -114,9 +114,10 @@ begin
     raise exception 'Geçersiz tur: % / %', p_game_mode, p_variant;
   end if;
 
-  -- Bitirilmeyen ya da çoktan kapanan eski turlar tabloda birikmesin.
+  -- Bitirilmeyen ya da çoktan kapanan eski turlar tabloda birikmesin. Oda turları kalır: oda sıralaması
+  -- tur tur ayrıntıyı ve yarım bırakılan turları onlardan okur.
   delete from public.game_rounds
-  where user_id = v_user_id and started_at < now() - interval '1 day';
+  where user_id = v_user_id and room_id is null and started_at < now() - interval '1 day';
 
   insert into public.game_rounds (user_id, game_mode, variant)
   values (v_user_id, p_game_mode, p_variant)
@@ -241,6 +242,17 @@ begin
     raise exception 'Geçersiz sonuç.';
   end if;
 
+  -- Oda turunda sorular sunucudan gelir; cevaplar sırayla o turun sorularına verilmiş olmalı.
+  if v_round.room_id is not null and exists (
+    select 1
+    from jsonb_array_elements(p_answers) with ordinality as item(answer, position)
+    left join public.room_questions q
+      on q.room_id = v_round.room_id and q.round_no = v_round.room_round and q.position = item.position - 1
+    where q.location_id is distinct from item.answer ->> 'location'
+  ) then
+    raise exception 'Geçersiz sonuç.';
+  end if;
+
   for v_answer in
     select (answer ->> 'location') = (answer ->> 'selected') as is_correct
     from jsonb_array_elements(p_answers) with ordinality as item(answer, position)
@@ -290,8 +302,9 @@ begin
 
   update public.game_rounds set finished_at = now() where id = v_round.id;
 
-  insert into public.game_results (user_id, display_name, avatar_url, game_mode, variant, score, duration_ms, best_streak)
-  values (v_user_id, coalesce(v_display_name, 'Oyuncu'), v_avatar_url, v_round.game_mode, v_round.variant, v_score, v_duration_ms, v_best_streak)
+  insert into public.game_results (user_id, display_name, avatar_url, game_mode, variant, score, duration_ms, best_streak, room_id, room_round)
+  values (v_user_id, coalesce(v_display_name, 'Oyuncu'), v_avatar_url, v_round.game_mode, v_round.variant, v_score, v_duration_ms, v_best_streak,
+    v_round.room_id, v_round.room_round)
   returning id into v_result_id;
 
   insert into public.round_answers (result_id, user_id, game_mode, variant, position, location_id, selected_id, is_correct)
@@ -987,5 +1000,378 @@ grant execute on function public.duel_tick(text) to authenticated;
 grant execute on function public.duel_answer(text, integer, text) to authenticated;
 grant execute on function public.duel_rematch(text, text, text, text) to authenticated;
 grant execute on function public.duel_decline_rematch(text) to authenticated;
+
+-- ============================================================================================
+-- Oda: bir grup, aynı sorularla kendi içinde yarışır. Oda sahibi haritayı, modu, tur sayısını (1/3/5),
+-- süreyi (15/30/60 dk) ve en fazla katılımcıyı (2-50) seçer. Katılım yalnızca lobide açıktır; sahip
+-- "Başlat" deyince süre işler ve herkes turlarını sırayla, dilediği anda oynar. Her tur normal bir
+-- yarış turudur (10 soru, 120 saniye): start_room_round ile açılır, finish_round ile doğrulanıp kaydedilir,
+-- bu yüzden genel sıralamaya ve istatistiklere de işlenir. Her turun soruları odadaki herkes için aynıdır
+-- ve tur başlayana kadar gizlidir; her tur bir kez oynanır, başlatılıp bırakılan tur 0 sayılır.
+-- ============================================================================================
+
+create table if not exists public.rooms (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  name text not null check (char_length(name) between 1 and 30),
+  game_mode text not null check (game_mode in ('turkey', 'world')),
+  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates')),
+  round_count smallint not null check (round_count in (1, 3, 5)),
+  duration_minutes smallint not null check (duration_minutes in (15, 30, 60)),
+  max_players smallint not null check (max_players between 2 and 50),
+  host_id uuid not null references auth.users(id) on delete cascade,
+  started_at timestamptz,
+  ends_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists rooms_host_id_idx on public.rooms (host_id);
+
+create table if not exists public.room_players (
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  display_name text not null,
+  avatar_url text,
+  joined_at timestamptz not null default now(),
+  primary key (room_id, user_id)
+);
+
+create table if not exists public.room_questions (
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  round_no smallint not null,
+  position smallint not null,
+  location_id text not null,
+  primary key (room_id, round_no, position)
+);
+
+-- Yarış turları ve sonuçları odaya bağlanabilir; oda dışındaki turlarda boş kalır.
+alter table public.game_rounds
+  add column if not exists room_id uuid references public.rooms(id) on delete set null,
+  add column if not exists room_round smallint;
+alter table public.game_results
+  add column if not exists room_id uuid references public.rooms(id) on delete set null,
+  add column if not exists room_round smallint;
+
+-- Her oyuncu odadaki her turu bir kez başlatabilir.
+create unique index if not exists game_rounds_room_round_user_idx
+on public.game_rounds (room_id, room_round, user_id) where room_id is not null;
+
+create index if not exists game_results_room_id_idx on public.game_results (room_id) where room_id is not null;
+
+alter table public.rooms enable row level security;
+alter table public.room_players enable row level security;
+alter table public.room_questions enable row level security;
+revoke all on public.rooms from anon, authenticated;
+revoke all on public.room_players from anon, authenticated;
+revoke all on public.room_questions from anon, authenticated;
+
+/* Odanın durumu: lobide, oyunda ya da bitti. Başlatılmayan oda 24 saat sonra kapanmış sayılır. */
+create or replace function public.room_status(p_room public.rooms)
+returns text
+language sql
+stable
+set search_path = ''
+as $$
+  select case
+    when p_room.started_at is null and p_room.created_at < now() - interval '24 hours' then 'finished'
+    when p_room.started_at is null then 'lobby'
+    when now() < p_room.ends_at then 'playing'
+    else 'finished'
+  end;
+$$;
+
+/*
+ * Odanın çağıranın gözünden görünüşü: ayarlar, oyuncular ve oda sıralaması. Sıralamada her oyuncunun
+ * tur tur puanı ve süresi, toplam puanı ve toplam süresi var; toplam puana, eşitlikte toplam süreye göre
+ * dizilir. Oyuncunun bıraktığı ya da başlatılıp 150 saniyede bitirilmeyen tur "yarım" sayılır: 0 puan, 120 saniye.
+ */
+create or replace function public.room_state(p_room_id uuid, p_join_error text default null)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  c_round_ms constant integer := 120000;
+  v_user_id uuid := auth.uid();
+  v_room public.rooms;
+  v_status text;
+begin
+  select * into v_room from public.rooms where id = p_room_id;
+  if not found then
+    return null;
+  end if;
+  v_status := public.room_status(v_room);
+
+  return jsonb_build_object(
+    'code', v_room.code,
+    'name', v_room.name,
+    'game_mode', v_room.game_mode,
+    'variant', v_room.variant,
+    'round_count', v_room.round_count,
+    'duration_minutes', v_room.duration_minutes,
+    'max_players', v_room.max_players,
+    'status', v_status,
+    'started_at', v_room.started_at,
+    'ends_at', v_room.ends_at,
+    'server_now', now(),
+    'host_id', v_room.host_id,
+    'is_member', exists (select 1 from public.room_players where room_id = v_room.id and user_id = v_user_id),
+    'join_error', p_join_error,
+    'players', coalesce((
+      select jsonb_agg(player order by (player ->> 'total_score')::int desc, (player ->> 'total_duration_ms')::int, player ->> 'joined_at')
+      from (
+        select jsonb_build_object(
+          'id', rp.user_id,
+          'name', rp.display_name,
+          'avatar', rp.avatar_url,
+          'joined_at', rp.joined_at,
+          'rounds', coalesce((
+            select jsonb_agg(jsonb_build_object(
+              'round', r.room_round,
+              'status', case when res.id is not null then 'done'
+                when r.finished_at is not null or r.started_at < now() - make_interval(secs => (c_round_ms + 30000) / 1000.0) then 'abandoned'
+                else 'playing' end,
+              'score', coalesce(res.score, 0),
+              'duration_ms', case when res.id is not null then res.duration_ms else c_round_ms end
+            ) order by r.room_round)
+            from public.game_rounds r
+            left join public.game_results res on res.room_id = r.room_id and res.room_round = r.room_round and res.user_id = r.user_id
+            where r.room_id = v_room.id and r.user_id = rp.user_id
+          ), '[]'::jsonb),
+          'total_score', coalesce((
+            select sum(res.score) from public.game_results res where res.room_id = v_room.id and res.user_id = rp.user_id
+          ), 0),
+          'total_duration_ms', coalesce((
+            select sum(case when res.id is not null then res.duration_ms else c_round_ms end)
+            from public.game_rounds r
+            left join public.game_results res on res.room_id = r.room_id and res.room_round = r.room_round and res.user_id = r.user_id
+            where r.room_id = v_room.id and r.user_id = rp.user_id
+          ), 0)
+        ) as player
+        from public.room_players rp
+        where rp.room_id = v_room.id
+      ) as players
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+create or replace function public.room_by_code(p_code text, p_lock boolean default false)
+returns public.rooms
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_room public.rooms;
+begin
+  if auth.uid() is null then
+    raise exception 'Oda için giriş gerekir.';
+  end if;
+  if p_lock then
+    select * into v_room from public.rooms where code = upper(trim(p_code)) for update;
+  else
+    select * into v_room from public.rooms where code = upper(trim(p_code));
+  end if;
+  if not found then
+    raise exception 'Oda bulunamadı.';
+  end if;
+  return v_room;
+end;
+$$;
+
+create or replace function public.create_room(
+  p_name text, p_game_mode text, p_variant text, p_round_count integer, p_duration_minutes integer, p_max_players integer
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c_max_open_rooms constant integer := 3;
+  v_user_id uuid := auth.uid();
+  v_profile record;
+  v_id uuid := gen_random_uuid();
+  v_code text;
+begin
+  if v_user_id is null then
+    raise exception 'Oda kurmak için giriş gerekir.';
+  end if;
+  perform public.duel_check_settings(p_game_mode, p_variant, 'snatch');
+  if p_round_count not in (1, 3, 5) or p_duration_minutes not in (15, 30, 60) or p_max_players not between 2 and 50
+    or char_length(trim(coalesce(p_name, ''))) not between 1 and 30 then
+    raise exception 'Geçersiz oda ayarı.';
+  end if;
+  if (select count(*) from public.rooms r where r.host_id = v_user_id and public.room_status(r) <> 'finished') >= c_max_open_rooms then
+    raise exception 'Aynı anda en fazla % açık odan olabilir.', c_max_open_rooms;
+  end if;
+
+  select * into v_profile from public.player_profile(v_user_id);
+  -- Oda kodları düello kodlarıyla aynı alfabeden; ikisi ayrı tablolarda olduğu için çakışmaları sorun değil.
+  loop
+    v_code := public.duel_new_code();
+    exit when not exists (select 1 from public.rooms where code = v_code);
+  end loop;
+  insert into public.rooms (id, code, name, game_mode, variant, round_count, duration_minutes, max_players, host_id)
+  values (v_id, v_code, trim(p_name), p_game_mode, p_variant, p_round_count, p_duration_minutes, p_max_players, v_user_id);
+  insert into public.room_players (room_id, user_id, display_name, avatar_url)
+  values (v_id, v_user_id, coalesce(v_profile.display_name, 'Oyuncu'), v_profile.avatar_url);
+  return v_code;
+end;
+$$;
+
+/*
+ * Odaya katılır. Oyuncu zaten odadaysa ya da katılamıyorsa (oda başlamış, bitmiş ya da dolu) hata vermez;
+ * durumu, katılamama nedeniyle birlikte döndürür ki bağlantıyı açan sıralamayı yine de görebilsin.
+ */
+create or replace function public.join_room(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_room public.rooms := public.room_by_code(p_code, true);
+  v_profile record;
+begin
+  if exists (select 1 from public.room_players where room_id = v_room.id and user_id = v_user_id) then
+    return public.room_state(v_room.id);
+  end if;
+  if public.room_status(v_room) <> 'lobby' then
+    return public.room_state(v_room.id, 'Oda başladı; yeni oyuncu katılamaz.');
+  end if;
+  if (select count(*) from public.room_players where room_id = v_room.id) >= v_room.max_players then
+    return public.room_state(v_room.id, 'Oda dolu.');
+  end if;
+  select * into v_profile from public.player_profile(v_user_id);
+  insert into public.room_players (room_id, user_id, display_name, avatar_url)
+  values (v_room.id, v_user_id, coalesce(v_profile.display_name, 'Oyuncu'), v_profile.avatar_url);
+  return public.room_state(v_room.id);
+end;
+$$;
+
+create or replace function public.get_room(p_code text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return public.room_state((public.room_by_code(p_code)).id);
+end;
+$$;
+
+/* Oda sahibi başlatır: her turun soruları seçilir (turlar arasında tekrar yok) ve süre işlemeye başlar. */
+create or replace function public.start_room(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c_questions constant integer := 10;
+  v_room public.rooms := public.room_by_code(p_code, true);
+begin
+  if auth.uid() <> v_room.host_id then
+    raise exception 'Odayı yalnızca oda sahibi başlatabilir.';
+  end if;
+  if public.room_status(v_room) <> 'lobby' then
+    raise exception 'Oda zaten başladı.';
+  end if;
+  if (select count(*) from public.room_players where room_id = v_room.id) < 2 then
+    raise exception 'Başlatmak için en az 2 oyuncu gerekir.';
+  end if;
+
+  insert into public.room_questions (room_id, round_no, position, location_id)
+  select v_room.id, ((ordinal - 1) / c_questions + 1)::smallint, ((ordinal - 1) % c_questions)::smallint, location_id
+  from (
+    select location_id, row_number() over () as ordinal
+    from (
+      select location_id from unnest(public.duel_pool(v_room.game_mode, v_room.variant)) as location_id
+      order by random()
+      limit c_questions * v_room.round_count
+    ) as picked
+  ) as numbered;
+
+  update public.rooms set started_at = now(), ends_at = now() + make_interval(mins => v_room.duration_minutes)
+  where id = v_room.id;
+  return public.room_state(v_room.id);
+end;
+$$;
+
+/*
+ * Odadaki bir turu açar ve sorularını döndürür. Turlar sırayla oynanır, her tur bir kez başlatılabilir;
+ * süre bitince yeni tur açılmaz (başlamış tur kendi 120 saniyesi içinde bitirilebilir).
+ */
+create or replace function public.start_room_round(p_code text, p_round integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_room public.rooms := public.room_by_code(p_code);
+  v_round_id uuid;
+begin
+  if not exists (select 1 from public.room_players where room_id = v_room.id and user_id = v_user_id) then
+    raise exception 'Bu odanın oyuncusu değilsin.';
+  end if;
+  if public.room_status(v_room) <> 'playing' then
+    raise exception 'Oda şu an oynanmıyor.';
+  end if;
+  if p_round < 1 or p_round > v_room.round_count then
+    raise exception 'Geçersiz tur.';
+  end if;
+  if (select count(*) from public.game_rounds where room_id = v_room.id and user_id = v_user_id) <> p_round - 1 then
+    raise exception 'Turlar sırayla ve birer kez oynanır.';
+  end if;
+
+  insert into public.game_rounds (user_id, game_mode, variant, room_id, room_round)
+  values (v_user_id, v_room.game_mode, v_room.variant, v_room.id, p_round)
+  returning id into v_round_id;
+
+  return jsonb_build_object(
+    'round_id', v_round_id,
+    'questions', (
+      select jsonb_agg(location_id order by position)
+      from public.room_questions
+      where room_id = v_room.id and round_no = p_round
+    )
+  );
+end;
+$$;
+
+/* Oyuncu turu bilerek bırakır; tur hemen "yarım" sayılır ve artık bitirilemez. */
+create or replace function public.abandon_round(p_round_id uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.game_rounds set finished_at = now()
+  where id = p_round_id and user_id = auth.uid() and finished_at is null;
+$$;
+
+revoke all on function public.room_status(public.rooms) from public, anon, authenticated;
+revoke all on function public.room_state(uuid, text) from public, anon, authenticated;
+revoke all on function public.room_by_code(text, boolean) from public, anon, authenticated;
+revoke all on function public.create_room(text, text, text, integer, integer, integer) from public, anon;
+revoke all on function public.join_room(text) from public, anon;
+revoke all on function public.get_room(text) from public, anon;
+revoke all on function public.start_room(text) from public, anon;
+revoke all on function public.start_room_round(text, integer) from public, anon;
+grant execute on function public.create_room(text, text, text, integer, integer, integer) to authenticated;
+grant execute on function public.join_room(text) to authenticated;
+grant execute on function public.get_room(text) to authenticated;
+grant execute on function public.start_room(text) to authenticated;
+grant execute on function public.start_room_round(text, integer) to authenticated;
+revoke all on function public.abandon_round(uuid) from public, anon;
+grant execute on function public.abandon_round(uuid) to authenticated;
 
 notify pgrst, 'reload schema';

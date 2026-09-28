@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
-import { AuthPanel } from "../AuthPanel";
-import { signInAsGuest, startGoogleSignIn } from "@/lib/auth";
+import { SignInPanel } from "../SignInPanel";
 import { DUEL_QUESTION_MS, DUEL_QUESTIONS, duelPath, type DuelRule, type DuelSettings } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
@@ -84,33 +83,12 @@ export function DuelCreateDialog({ player, supabaseConfigured, onClose }: DuelCr
 
         {isAuthStep && !player ? (
           <div className="mt-5">
-            <AuthPanel
-              authError={error}
-              choiceLabel="Düello"
+            <SignInPanel
               description="Rakibin seni görebilsin diye giriş yap; misafir girişi de olur. Giriş yapar yapmaz düello kurulur."
-              isSigningIn={isBusy}
               onCancel={() => setIsAuthStep(false)}
-              onGoogleSignIn={async () => {
-                setIsBusy(true);
-                // Google girişinden dönüşte pencere kapanmış olur; ayarlar hatırlandığı için tek tıkla kurulur.
-                const message = await startGoogleSignIn(window.location.origin);
-                if (message) {
-                  setError(message);
-                  setIsBusy(false);
-                }
-              }}
-              onGuestSignIn={async (name) => {
-                setIsBusy(true);
-                setError(null);
-                const result = await signInAsGuest(name);
-                if ("error" in result) {
-                  setError(result.error);
-                  setIsBusy(false);
-                  return;
-                }
-                await create();
-              }}
-              supabaseConfigured={supabaseConfigured}
+              onSignedIn={() => void create()}
+              // Google girişinden dönüşte pencere kapanmış olur; ayarlar hatırlandığı için tek tıkla kurulur.
+              redirectTo={window.location.origin}
               title={<>⚔️ Düello kurmak için giriş yap</>}
             />
           </div>
