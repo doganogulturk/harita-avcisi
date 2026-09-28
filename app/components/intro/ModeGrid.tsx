@@ -154,26 +154,15 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
               />
             )}
             {!onShowLeaderboard && !onJoin && <span />}
-            {game.cardAction ? (
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-md transition-all duration-200 group-hover:gap-2.5 short:px-3 short:py-1.5 lg:px-5 lg:py-3 lg:text-base ${theme.badge}`}
-              >
-                {game.cardAction}
-                <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            ) : (
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-white short:h-8 short:w-8 lg:h-12 lg:w-12 ${theme.arrow}`}
-              >
-                <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            )}
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-md transition-all duration-200 group-hover:gap-2.5 short:px-3 short:py-1.5 lg:px-5 lg:py-3 lg:text-base ${theme.badge}`}
+            >
+              {game.cardAction}
+              <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </>
         )}
       </div>

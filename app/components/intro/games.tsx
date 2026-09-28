@@ -21,7 +21,6 @@ export type GameTheme = {
   lastCard: string;
   badge: string;
   link: string;
-  arrow: string;
   watermark: string;
   button: string;
   /** Kartın üzerinden süzülen ışığın rengi (globals.css, .card-sweep). */
@@ -34,8 +33,8 @@ export type GameInfo = {
   description: string;
   facts: string[];
   action: string;
-  /** Ok yerine kartın sağ altında yazan eylem (düello ve odada, "Kodla katıl"dan ayrılsın diye). */
-  cardAction?: string;
+  /** Kartın sağ altındaki eylem düğmesi. */
+  cardAction: string;
   theme: GameTheme;
 };
 
@@ -51,6 +50,7 @@ export const GAMES: GameInfo[] = [
     description: `${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye. Eşit puanda hızlı olan önde; sonucun sıralamaya işlenir.`,
     facts: [`${QUESTIONS_PER_ROUND} soru`, `${GAME_DURATION_SECONDS} sn`, "Sıralamaya işlenir"],
     action: "Başla",
+    cardAction: "Yarışa başla",
     theme: {
       surface: "bg-gradient-to-br from-cyan-50 via-white to-white",
       selected: "border-cyan-600 bg-cyan-600 text-white",
@@ -59,7 +59,6 @@ export const GAMES: GameInfo[] = [
       lastCard: "border-cyan-300",
       badge: "bg-cyan-600 text-white",
       link: "text-cyan-700 decoration-cyan-300 hover:text-cyan-800 hover:decoration-cyan-600",
-      arrow: "group-hover:bg-cyan-600",
       watermark: "text-cyan-600",
       button: `${BUTTON_BASE} bg-cyan-600 text-white shadow-cyan-600/20 hover:bg-cyan-500 focus-visible:ring-cyan-200`,
       glow: "rgb(6 182 212 / 0.14)",
@@ -71,6 +70,7 @@ export const GAMES: GameInfo[] = [
     description: "Giriş yok, süre yok. İstediğin kadar oyna, kıtaları tek tek çalış; hiçbir yere kaydedilmez.",
     facts: ["Sınırsız soru", "Süre yok", "Kaydedilmez"],
     action: "Başla",
+    cardAction: "Antrenmana başla",
     theme: {
       surface: "bg-gradient-to-br from-amber-50 via-white to-white",
       selected: "border-amber-400 bg-amber-400 text-amber-950",
@@ -79,7 +79,6 @@ export const GAMES: GameInfo[] = [
       lastCard: "border-amber-300",
       badge: "bg-amber-400 text-amber-950",
       link: "text-amber-700 decoration-amber-300 hover:text-amber-800 hover:decoration-amber-600",
-      arrow: "group-hover:bg-amber-400 group-hover:text-amber-950",
       watermark: "text-amber-500",
       button: `${BUTTON_BASE} bg-amber-400 text-amber-950 shadow-amber-400/30 hover:bg-amber-300 focus-visible:ring-amber-200`,
       glow: "rgb(245 158 11 / 0.16)",
@@ -100,7 +99,6 @@ export const GAMES: GameInfo[] = [
       lastCard: "border-orange-300",
       badge: "bg-orange-500 text-white",
       link: "text-orange-600 decoration-orange-300 hover:text-orange-700 hover:decoration-orange-500",
-      arrow: "group-hover:bg-orange-500",
       watermark: "text-orange-500",
       button: `${BUTTON_BASE} bg-orange-500 text-white shadow-orange-500/25 hover:bg-orange-400 focus-visible:ring-orange-200`,
       glow: "rgb(249 115 22 / 0.14)",
@@ -125,7 +123,6 @@ export const GAMES: GameInfo[] = [
       lastCard: "border-violet-300",
       badge: "bg-violet-600 text-white",
       link: "text-violet-700 decoration-violet-300 hover:text-violet-800 hover:decoration-violet-600",
-      arrow: "group-hover:bg-violet-600",
       watermark: "text-violet-600",
       button: `${BUTTON_BASE} bg-violet-600 text-white shadow-violet-600/20 hover:bg-violet-500 focus-visible:ring-violet-200`,
       glow: "rgb(139 92 246 / 0.14)",
