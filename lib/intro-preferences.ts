@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { type PlayKind, type TurkeyPrompt, type WorldPrompt } from "@/lib/game";
+import { type GameMode, type TurkeyPrompt, type WorldPrompt } from "@/lib/game";
 import { type WorldScope } from "@/lib/world-countries";
 
 /**
@@ -44,15 +44,27 @@ function createPreference<T extends string>(key: string, isValid: (value: string
   return [() => useSyncExternalStore(subscribe, read, () => fallback), write] as const;
 }
 
-const KINDS: PlayKind[] = ["ranked", "practice"];
+/** Giriş ekranının ilk adımındaki dört oyun. */
+export type IntroGame = "ranked" | "practice" | "duel" | "room";
+
+const GAMES: IntroGame[] = ["ranked", "practice", "duel", "room"];
+const MAPS: GameMode[] = ["turkey", "world"];
 const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag"];
 const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 const SCOPES: WorldScope[] = ["normal", "hard", "africa", "america", "asia", "europe"];
 
-export const [usePlayKind, setPlayKind] = createPreference<PlayKind>(
-  "harita-avcisi:intro-kind",
-  (value): value is PlayKind => (KINDS as string[]).includes(value),
-  "ranked",
+/** En son başlatılan (ya da kurulan) oyun; ilk adımda o kart "Son oynadığın" diye işaretlenir. */
+export const [useLastGame, setLastGame] = createPreference<IntroGame | "none">(
+  "harita-avcisi:intro-last-game",
+  (value): value is IntroGame => (GAMES as string[]).includes(value),
+  "none",
+);
+
+/** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
+export const [useIntroMap, setIntroMap] = createPreference<GameMode>(
+  "harita-avcisi:intro-map",
+  (value): value is GameMode => (MAPS as string[]).includes(value),
+  "turkey",
 );
 
 export const [useWorldScope, setWorldScope] = createPreference<WorldScope>(
@@ -74,7 +86,7 @@ export const [useTurkeyPrompt, setTurkeyPrompt] = createPreference<TurkeyPrompt>
   "name",
 );
 
-/** Son kurulan düellonun ayarları ("turkey|normal|snatch"); düello penceresi bunlarla açılır. */
+/** Son kurulan düellonun ayarları ("turkey|normal|snatch"); düello kurulumu bunlarla açılır. */
 export type DuelSettingsKey = `${"turkey" | "world"}|${string}|${"snatch" | "shared"}`;
 const DUEL_SETTINGS: string[] = ["turkey|normal", "turkey|plates", "world|normal", "world|hard", "world|flags"].flatMap((mode) => [
   `${mode}|snatch`,

@@ -6,8 +6,15 @@ Sorulan ili, plakayı, ülkeyi ya da bayrağı haritada bulma oyunu. Yarış tur
 
 ## Oyun
 
-Giriş ekranı iki adımlıdır: önce harita seçilir (Türkiye ya da Dünya), sonra o turun ayarları yapılıp **Başla** denir.
-Üstteki **Yarış / Antrenman** seçicisi her iki adımda da açıktır. Tüm seçimler tarayıcıda hatırlanır.
+Giriş ekranı iki adımlıdır. İlk adımda dört oyun 2×2 büyük kart olarak durur: **Yarış**, **Antrenman**, **Düello**
+ve **Oda**. Her kartın kendi rengi, simgesi, bir cümlelik açıklaması ve künyesi (soru sayısı, süre, sıralamaya
+işlenip işlenmediği) vardır. En son oynanan oyunun kartı "Son oynadığın" diye işaretlenir. Yarış kartında
+**Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** bağlantısı bulunur. Alçak (yatay telefon) ekranlarda
+künyeler gizlenir, düzen 2×2 kalır.
+
+İkinci adım dört oyunda aynı düzendedir: solda oynanacak harita, sağda en üstte Türkiye / Dünya seçimi, altında
+oyunun kendi ayarları ve en altta büyük eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**). **← Oyun modu**
+ilk adıma döner. Tüm seçimler tarayıcıda hatırlanır.
 
 İkinci adımda oynanacak harita gerçek boyutuyla gösterilir. Kıta seçildiğinde o kıta harita üzerinde vurgulanır;
 havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam yan paneldeki tek satırlık açıklamayla anlatılır.
@@ -33,8 +40,7 @@ Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye,
 Tur bittiğinde o modda **en çok yanlış yapılan 5 yer** gösterilir: tüm oyuncuların yarış turlarındaki cevaplarından,
 yanlış oranına göre. Her yerin yanında en çok neyle karıştırıldığı yazar; oyuncunun o turda kendisinin de yanlış
 yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada Normal, Zor ve Bayrak ayrı değerlendirilir.
-Giriş ekranında Yarış seçiliyken, tur özetinin ardından gelen **Sıralamayı gör** bağlantısı sıralamayı tur
-oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
+Giriş ekranındaki Yarış kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
 
 ### Antrenman
@@ -52,10 +58,10 @@ sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 
 ### Düello
 
-İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranının üstündeki **⚔️ Düello** tuşu kurma penceresini açar:
+İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Düello** kartı seçilince ikinci adımda
 harita ve mod (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak) ile kural seçilir, düello kurulunca
-`/duello/<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da pencereye
-kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
+`/duello/<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Düello kartındaki
+**Kodla katıl** alanına kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
 sayımla başlar.
 
 - 10 soru; her soru en fazla 15 saniye. İki oyuncu da cevaplayınca (Kapan kazanır'da biri doğru bilince) soru hemen biter.
@@ -72,9 +78,9 @@ sayımla başlar.
 
 ### Oda
 
-Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranının üstündeki **👥 Oda** tuşu kurma penceresini açar:
+Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranında **Oda** kartı seçilince ikinci adımda
 oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve en fazla katılımcı (2-50) seçilir.
-Oda `/oda/<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir.
+Oda `/oda/<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Oda kartındaki **Kodla katıl** ile de girer.
 
 - **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an
   işlemeye başlar. Başlatılmayan oda 24 saat sonra kapanır. Oda başladıktan sonra bağlantıyı açan katılamaz ama
@@ -109,7 +115,9 @@ app/
   icon.svg              Nişangah favicon'u
   globals.css           Tailwind, harita SVG'si için stiller ve açılış animasyonu
   components/
-    IntroScreen.tsx     Giriş ekranı: harita seçimi (adım 1) ve tur ayarları (adım 2), açılış animasyonu
+    IntroScreen.tsx     Giriş ekranı: oyun seçimi (adım 1) ve ayarlar (adım 2), açılış animasyonu
+    intro/              Giriş ekranının parçaları: dört oyun kartı (ModeGrid), ortak adım 2 düzeni (SetupParts),
+                        Yarış/Antrenman, Düello ve Oda ayarları, oyunların renk ve simgeleri (games.tsx)
     ScopePreviewMap.tsx Adım 2'deki önizleme haritası; seçilen kıtayı vurgular
     AuthPanel.tsx       Yarış öncesi giriş adımı (Google / misafir)
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
@@ -121,14 +129,14 @@ app/
     LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
     PlayButton.tsx      Rozetli oyna tuşu
-    duel/               Düello: kurma penceresi, lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
-    room/               Oda: kurma penceresi, lobi, oda panosu (sıralama, kürsü), odadaki tur (RoomScreen yönetir)
+    duel/               Düello: lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
+    room/               Oda: lobi, oda panosu (sıralama, kürsü), odadaki tur (RoomScreen yönetir)
     SignInPanel.tsx     Düello ve oda için giriş adımı (Google / misafir)
   duello/[kod]/page.tsx Düello sayfası; kodu okuyup DuelScreen'i çizer
   oda/[kod]/page.tsx    Oda sayfası; kodu okuyup RoomScreen'i çizer
 lib/
   game.ts               Ortak tipler, tur seçimi (PlayChoice), sıralama tanımları (BOARDS)
-  intro-preferences.ts  Giriş ekranı seçimlerini (tür, kapsam, soru tipi) tarayıcıda saklar
+  intro-preferences.ts  Giriş ekranı seçimlerini (son oyun, harita, kapsam, soru tipi, düello ayarları) tarayıcıda saklar
   hooks/
     usePlayer.ts        Supabase oturumu
     useMapMarkup.ts     SVG haritayı indirip önbelleğe alır ve tıklanabilir yapar

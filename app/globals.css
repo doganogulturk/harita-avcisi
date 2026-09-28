@@ -198,6 +198,28 @@ body {
   animation: shimmer 3.2s ease-in-out var(--shimmer-delay, 0s) infinite;
 }
 
+/* Giriş ekranındaki oyun kartları: fareyle üzerine gelince kartın renginde bir ışık bir kez süzülür. */
+.card-sweep {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.card-sweep::before {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% 0;
+  z-index: -1;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
+  transform: translateX(-160%) skewX(-20deg);
+  pointer-events: none;
+}
+
+.card-sweep:hover::before {
+  transform: translateX(330%) skewX(-20deg);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* Başlığın iki yanındaki parlayan noktalar. */
 @keyframes glow-pulse {
   50% {
@@ -215,6 +237,10 @@ body {
   .shimmer::before,
   .glow-dot {
     animation: none;
+  }
+
+  .card-sweep:hover::before {
+    transition: none;
   }
 }
 
