@@ -51,6 +51,11 @@ let hasPlayedIntro = false;
 const INTRO_CURTAIN_MS = 1820;
 /** Seçim ekranı, katman çekilirken netleşmeye başlar. */
 const INTRO_CONTENT_DELAY_MS = 1400;
+/** İlk kartın gecikmesi; sonraki kartlar birer adım arayla gelir. */
+const INTRO_CARD_DELAY_MS = INTRO_CONTENT_DELAY_MS + 80;
+const INTRO_CARD_STEP_MS = 90;
+/** Son kartın da netleştiği an (4 kart, globals.css'teki intro-focus süresi 700 ms). */
+const INTRO_DONE_MS = INTRO_CARD_DELAY_MS + 3 * INTRO_CARD_STEP_MS + 700;
 
 /**
  * Açılış katmanı: oyunun adı ekranın ortasında belirir, sonra katman çekilerek arkadaki
@@ -89,14 +94,23 @@ export function IntroScreen({
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
   const [isCurtainUp, setIsCurtainUp] = useState(false);
+  // Animasyon bitince data-intro kaldırılır: "← Oyun modu" ile adım 1'e dönüldüğünde yeniden kurulan
+  // kartlar açılış gecikmesini baştan beklemesin, hemen görünsün.
+  const [isIntroDone, setIsIntroDone] = useState(false);
+  // Katman kalkmadan data-intro kaldırılırsa katmanın çekilme animasyonu kesilip katman geri belirir.
+  const isIntroPlaying = shouldAnimate && (!isIntroDone || !isCurtainUp);
 
   // Açılış katmanı çekildikten sonra DOM'dan kaldırılır. Hareket azaltma açıksa hiç beklenmez.
   useEffect(() => {
     hasPlayedIntro = true;
     if (!shouldAnimate) return;
     const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => setIsCurtainUp(true), isReducedMotion ? 0 : INTRO_CURTAIN_MS);
-    return () => window.clearTimeout(timer);
+    const curtainTimer = window.setTimeout(() => setIsCurtainUp(true), isReducedMotion ? 0 : INTRO_CURTAIN_MS);
+    const doneTimer = window.setTimeout(() => setIsIntroDone(true), isReducedMotion ? 0 : INTRO_DONE_MS);
+    return () => {
+      window.clearTimeout(curtainTimer);
+      window.clearTimeout(doneTimer);
+    };
   }, [shouldAnimate]);
 
   const kind: PlayKind = selectedGame === "practice" ? "practice" : "ranked";
@@ -110,6 +124,12 @@ export function IntroScreen({
     mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, playKind === "ranked" && isContinentScope(storedScope) ? "hard" : storedScope, prompt);
 
   const goBack = () => setSelectedGame(null);
+
+  // Oyuncu kartların netleşmesini beklemeden bir oyun seçtiyse animasyon da biter.
+  const selectGame = (game: IntroGame) => {
+    setIsIntroDone(true);
+    setSelectedGame(game);
+  };
 
   const start = () => {
     setLastGame(kind);
@@ -179,17 +199,18 @@ export function IntroScreen({
 
     return (
       <ModeGrid
-        introDelayMs={INTRO_CONTENT_DELAY_MS + 80}
+        introDelayMs={INTRO_CARD_DELAY_MS}
+        introStepMs={INTRO_CARD_STEP_MS}
         lastGame={lastGame}
         onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
-        onSelect={setSelectedGame}
+        onSelect={selectGame}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />
     );
   };
 
   return (
-    <section className="flex h-full w-full flex-col gap-3 px-4 py-3 lg:gap-5 lg:px-8 lg:py-5" data-intro={shouldAnimate ? "" : undefined}>
+    <section className="flex h-full w-full flex-col gap-3 px-4 py-3 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
       <header className="flex shrink-0 items-center justify-between gap-3">
         <Logo />
         <PlayerBadge onSignOut={onSignOut} player={player} />

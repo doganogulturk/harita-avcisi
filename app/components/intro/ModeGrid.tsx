@@ -8,6 +8,8 @@ type ModeGridProps = {
   lastGame: IntroGame | "none";
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
   introDelayMs: number;
+  /** Kartlar arasındaki açılış gecikmesi farkı. */
+  introStepMs: number;
   onSelect: (game: IntroGame) => void;
   onShowLeaderboard: () => void;
   /** Düello ve oda kartındaki "Kodla katıl"; 6 karakterlik kod geçerliyse o sayfaya gider. */
@@ -15,12 +17,12 @@ type ModeGridProps = {
 };
 
 /** Adım 1: dört oyun, 2×2 büyük kart. Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
-export function ModeGrid({ lastGame, introDelayMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
+export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
   return (
     <div className="grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-2 gap-3 lg:gap-5">
       {GAMES.map((game, index) => (
         <ModeCard
-          delayMs={introDelayMs + 90 * index}
+          delayMs={introDelayMs + introStepMs * index}
           game={game}
           isLast={lastGame === game.id}
           key={game.id}
@@ -111,9 +113,10 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         ))}
       </div>
 
-      <div className="relative mt-2 flex min-h-9 items-center justify-between gap-2 short:mt-1 lg:mt-4 lg:min-h-12">
+      {/* Satırın boş kısmı tıklamayı alttaki kart tuşuna geçirir; yalnızca içindeki tuşlar tıklanır. */}
+      <div className="pointer-events-none relative mt-2 flex min-h-9 items-center justify-between gap-2 short:mt-1 lg:mt-4 lg:min-h-12">
         {isJoining && onJoin ? (
-          <form className="relative z-10 flex min-w-0 flex-1 flex-wrap items-center gap-1.5" onSubmit={join}>
+          <form className="pointer-events-auto relative z-10 flex min-w-0 flex-1 flex-wrap items-center gap-1.5" onSubmit={join}>
             <input
               aria-label={`${game.title} kodu`}
               autoCapitalize="characters"
@@ -154,15 +157,25 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
               />
             )}
             {!onShowLeaderboard && !onJoin && <span />}
-            <span
+            {/* Kart tuşunun görünen yüzü; aynı işi yapar. Klavye ve ekran okuyucu için kart tuşu yeterli. */}
+            <button
               aria-hidden="true"
-              className={`pointer-events-none flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-md transition-all duration-200 group-hover:gap-2.5 short:px-3 short:py-1.5 lg:px-5 lg:py-3 lg:text-base ${theme.badge}`}
+              className={`group/action pill-shine pointer-events-auto relative z-10 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-md transition-all duration-200 group-hover:gap-2.5 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-95 active:shadow-sm short:px-3 short:py-1.5 lg:px-5 lg:py-3 lg:text-base ${theme.badge}`}
+              onClick={onSelect}
+              tabIndex={-1}
+              type="button"
             >
               {game.cardAction}
-              <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                viewBox="0 0 24 24"
+              >
                 <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </span>
+            </button>
           </>
         )}
       </div>
@@ -173,7 +186,7 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
 function CardLink({ label, className, onClick }: { label: string; className: string; onClick: () => void }) {
   return (
     <button
-      className={`relative z-10 text-sm font-semibold underline underline-offset-4 transition focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-base ${className}`}
+      className={`pointer-events-auto relative z-10 text-sm font-semibold underline underline-offset-4 transition focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-base ${className}`}
       onClick={onClick}
       type="button"
     >

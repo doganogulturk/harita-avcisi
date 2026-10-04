@@ -20,8 +20,8 @@ ilk adıma döner. Tüm seçimler tarayıcıda hatırlanır.
 havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam yan paneldeki tek satırlık açıklamayla anlatılır.
 
 Sayfa ilk açıldığında oyunun adı ekranın ortasında belirir, ardından bu katman çekilerek seçim ekranı açılır.
-Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye dönüşte tekrarlanmaz ve hareket azaltma açıksa
-hiç gösterilmez.
+Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **← Oyun modu** ile ilk adıma dönüşte
+tekrarlanmaz, kartlar beklemeden görünür. Hareket azaltma açıksa hiç gösterilmez.
 
 ### Yarış
 
