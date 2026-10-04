@@ -97,6 +97,16 @@ Oda `/oda/<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu o
 
 Harita tekerlek, sürükleme ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
 
+### Uygulama olarak yükleme
+
+Site telefona ve tablete uygulama gibi eklenebilir; ana ekranda **Harita Avcısı** adıyla nişangah simgesi görünür
+ve tarayıcı çubukları olmadan, yatay açılır.
+
+- **Android (Chrome):** menü (⋮) → **Uygulamayı yükle** ya da **Ana ekrana ekle**.
+- **iPhone / iPad (Safari):** Paylaş → **Ana Ekrana Ekle**.
+
+Tanım `app/manifest.ts`'te; simgeler `public/icons/` ve `app/apple-icon.png`.
+
 ## Yerelde çalıştırma
 
 ```bash
@@ -113,6 +123,8 @@ app/
   page.tsx              Oyun durumu, zamanlayıcılar ve ekranlar arası akış
   layout.tsx            Kök düzen, viewport ve başlık yazı tipi
   icon.svg              Nişangah favicon'u
+  apple-icon.png        iOS ana ekran simgesi
+  manifest.ts           Uygulama olarak yükleme tanımı (ad, simgeler, yatay açılış)
   globals.css           Tailwind, harita SVG'si için stiller ve açılış animasyonu
   components/
     IntroScreen.tsx     Giriş ekranı: oyun seçimi (adım 1) ve ayarlar (adım 2), açılış animasyonu

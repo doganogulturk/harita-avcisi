@@ -13,6 +13,9 @@ const displayFont = Stack_Sans_Notch({
 export const metadata: Metadata = {
   title: "Harita Avcısı",
   description: "Türkiye şehirleri ve dünya ülkeleri için hızlı harita bulma oyunu.",
+  applicationName: "Harita Avcısı",
+  // iOS'ta "Ana Ekrana Ekle" ile eklenen uygulamanın adı ve tam ekran açılması; simge app/apple-icon.png.
+  appleWebApp: { capable: true, title: "Harita Avcısı", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
