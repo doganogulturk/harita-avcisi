@@ -23,7 +23,7 @@ const all = countries.map((country) => country.code);
 const block = `-- duel_pool:başla (scripts/generate-duel-pools.mjs üretir; elle düzenlemeyin)
 -- Düello sorularının seçildiği havuzlar. Türkiye'de 81 il (plaka), dünyada lib/world-countries.ts'teki
 -- Normal havuzu (${common.length} ülke) ya da tamamı (${all.length} ülke); Bayrak düellosu tamamından sorulur.
-create or replace function public.duel_pool(p_game_mode text, p_variant text)
+create or replace function do_harita_avcisi.duel_pool(p_game_mode text, p_variant text)
 returns text[]
 language sql
 immutable

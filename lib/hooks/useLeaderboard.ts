@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, SUPABASE_SCHEMA } from "@/lib/supabase";
 import {
   BOARDS,
   boardIdFor,
@@ -71,7 +71,7 @@ async function fetchLeaderboards(supabase: NonNullable<ReturnType<typeof getSupa
 function subscribeToResults(supabase: NonNullable<ReturnType<typeof getSupabaseClient>>, name: string, reload: () => void) {
   return supabase
     .channel(`${name}-${++channelSequence}`)
-    .on("postgres_changes", { event: "*", schema: "public", table: "game_results" }, reload)
+    .on("postgres_changes", { event: "*", schema: SUPABASE_SCHEMA, table: "game_results" }, reload)
     .subscribe();
 }
 

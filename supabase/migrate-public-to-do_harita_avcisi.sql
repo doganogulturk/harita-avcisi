@@ -1,3 +1,67 @@
+-- Tek seferlik: Harita Avcısı'nın nesnelerini public'ten do_harita_avcisi şemasına taşır.
+-- SQL Editor'da bir kez çalıştırın; işi bitince bu dosya silinebilir, kalıcı tanım supabase/schema.sql'dedir.
+--
+-- Tablolar verileriyle birlikte taşınır (ALTER TABLE ... SET SCHEMA): indeksler, kısıtlar, identity
+-- dizileri, RLS politikaları, yetkiler ve Realtime yayını onlarla gider. Fonksiyon gövdeleri ise
+-- search_path = '' yüzünden public.xxx adlarını metin olarak tuttuğu için taşınamaz; view'lerle birlikte
+-- public'ten silinir ve aşağıda, schema.sql'in güncel hâliyle yeni şemada yeniden kurulur.
+--
+-- Hepsi tek transaction'dır: herhangi bir adım hata verirse hiçbir şey değişmez. Bilinmeyen bir
+-- bağımlılık varsa cascade kullanılmadığı için DROP'lar hata verip işlemi durdurur.
+--
+-- Sonra: Dashboard → Settings → API → Exposed schemas listesine do_harita_avcisi eklenir ve yeni
+-- istemci (lib/supabase.ts'te SUPABASE_SCHEMA) yayına alınır. O ana kadar eski istemci çalışmaz.
+
+begin;
+
+create schema if not exists do_harita_avcisi;
+
+-- 1. View'ler
+drop view if exists public.leaderboard;
+drop view if exists public.location_stats;
+
+-- 2. Fonksiyonlar (25)
+drop function if exists public.start_round(text, text);
+drop function if exists public.finish_round(uuid, integer, jsonb);
+drop function if exists public.abandon_round(uuid);
+drop function if exists public.create_duel(text, text, text);
+drop function if exists public.join_duel(text);
+drop function if exists public.duel_ready(text, boolean);
+drop function if exists public.duel_tick(text);
+drop function if exists public.duel_answer(text, integer, text);
+drop function if exists public.duel_rematch(text, text, text, text);
+drop function if exists public.duel_decline_rematch(text);
+drop function if exists public.duel_state(uuid);
+drop function if exists public.duel_for_player(text);
+drop function if exists public.duel_close_question(public.duels);
+drop function if exists public.duel_check_settings(text, text, text);
+drop function if exists public.duel_new_code();
+drop function if exists public.duel_pool(text, text);
+drop function if exists public.player_profile(uuid);
+drop function if exists public.create_room(text, text, text, integer, integer, integer);
+drop function if exists public.join_room(text);
+drop function if exists public.get_room(text);
+drop function if exists public.start_room(text);
+drop function if exists public.start_room_round(text, integer);
+drop function if exists public.room_state(uuid, text);
+drop function if exists public.room_by_code(text, boolean);
+drop function if exists public.room_status(public.rooms);
+
+-- 3. Tablolar (9), verileriyle
+alter table public.game_results set schema do_harita_avcisi;
+alter table public.game_rounds set schema do_harita_avcisi;
+alter table public.round_answers set schema do_harita_avcisi;
+alter table public.duels set schema do_harita_avcisi;
+alter table public.duel_questions set schema do_harita_avcisi;
+alter table public.duel_answers set schema do_harita_avcisi;
+alter table public.rooms set schema do_harita_avcisi;
+alter table public.room_players set schema do_harita_avcisi;
+alter table public.room_questions set schema do_harita_avcisi;
+
+-- 4. supabase/schema.sql (aşağısı o dosyanın kopyasıdır). Tablolar ve indeksler zaten var, "if not exists"
+-- olanlar atlanır; yetkiler daraltılır, view'ler ve fonksiyonlar yeni şemada kurulur.
+-- ============================================================================================
+
 -- Harita Avcısı'nın tüm tabloları, view'leri ve fonksiyonları kendi şemasında durur; aynı Supabase
 -- projesindeki diğer uygulamalarla karışmaz. İstemci bu şemaya lib/supabase.ts'teki SUPABASE_SCHEMA ile
 -- bağlanır; şemanın Dashboard'da Settings → API → Exposed schemas listesinde olması gerekir.
@@ -1344,4 +1408,19 @@ grant all on all tables in schema do_harita_avcisi to service_role;
 grant all on all sequences in schema do_harita_avcisi to service_role;
 grant execute on all functions in schema do_harita_avcisi to service_role;
 
+-- ============================================================================================
+
+commit;
+
 notify pgrst, 'reload schema';
+
+-- Kontrol (ayrıca çalıştırın): public'te bu projeden bir şey kalmamalı, yeni şemada 9 tablo, 2 view ve
+-- 25 fonksiyon olmalı, game_results Realtime yayınında görünmeli.
+--
+-- select table_schema, table_type, count(*) from information_schema.tables
+-- where table_schema = 'do_harita_avcisi' group by 1, 2;
+--
+-- select count(*) from pg_proc where pronamespace = 'do_harita_avcisi'::regnamespace;
+--
+-- select schemaname, tablename from pg_publication_tables
+-- where pubname = 'supabase_realtime' and tablename = 'game_results';

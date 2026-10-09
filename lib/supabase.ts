@@ -1,8 +1,15 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-let client: SupabaseClient | undefined;
+/** Tabloların, view'lerin ve fonksiyonların durduğu şema (supabase/schema.sql). */
+export const SUPABASE_SCHEMA = "do_harita_avcisi";
 
-export function getSupabaseClient(): SupabaseClient | null {
+function createGameClient(url: string, publishableKey: string) {
+  return createClient(url, publishableKey, { db: { schema: SUPABASE_SCHEMA } });
+}
+
+let client: ReturnType<typeof createGameClient> | undefined;
+
+export function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -10,6 +17,6 @@ export function getSupabaseClient(): SupabaseClient | null {
     return null;
   }
 
-  client ??= createClient(url, publishableKey);
+  client ??= createGameClient(url, publishableKey);
   return client;
 }

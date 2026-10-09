@@ -171,7 +171,7 @@ scripts/
   generate-duel-pools.mjs  Düello soru havuzlarını world-countries.ts'ten schema.sql'e yazar
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
-supabase/schema.sql     Tablolar, RLS politikaları, tur fonksiyonları, leaderboard ve location_stats view'leri, realtime
+supabase/schema.sql     do_harita_avcisi şeması: tablolar, RLS politikaları, tur fonksiyonları, leaderboard ve location_stats view'leri, realtime
 ```
 
 ### Haritalar, bayraklar ve yazı tipi
@@ -190,10 +190,11 @@ Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasınd
 ## Supabase ve oturum açma
 
 1. Supabase projesi oluşturun.
-2. SQL Editor'de [`supabase/schema.sql`](./supabase/schema.sql) dosyasını çalıştırın. Dosya idempotent'tir; şema değiştiğinde (ör. yeni bir `variant` eklendiğinde) tekrar çalıştırın.
-3. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
-4. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.
-5. Authentication > URL Configuration ekranına yerel adresinizi ve Vercel alan adınızı ekleyin.
+2. SQL Editor'de [`supabase/schema.sql`](./supabase/schema.sql) dosyasını çalıştırın. Her şey `do_harita_avcisi` şemasında kurulur, böylece aynı Supabase projesindeki başka uygulamalarla karışmaz. Dosya idempotent'tir; şema değiştiğinde (ör. yeni bir `variant` eklendiğinde) tekrar çalıştırın.
+3. Settings > API > **Exposed schemas** listesine `do_harita_avcisi` ekleyin; istemci bu şemaya bağlanır (`lib/supabase.ts`'teki `SUPABASE_SCHEMA`).
+4. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
+5. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.
+6. Authentication > URL Configuration ekranına yerel adresinizi ve Vercel alan adınızı ekleyin.
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
