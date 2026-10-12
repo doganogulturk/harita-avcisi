@@ -60,7 +60,7 @@ sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 
 İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Düello** kartı seçilince ikinci adımda
 harita ve mod (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak) ile kural seçilir, düello kurulunca
-`/duello/<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Düello kartındaki
+`/duello?kod=<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Düello kartındaki
 **Kodla katıl** alanına kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
 sayımla başlar.
 
@@ -80,7 +80,7 @@ sayımla başlar.
 
 Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranında **Oda** kartı seçilince ikinci adımda
 oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve en fazla katılımcı (5 / 10 / 20 / 50) seçilir.
-Oda `/oda/<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Oda kartındaki **Kodla katıl** ile de girer.
+Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Oda kartındaki **Kodla katıl** ile de girer.
 
 - **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an
   işlemeye başlar. Başlatılmayan oda 24 saat sonra kapanır. Oda başladıktan sonra bağlantıyı açan katılamaz ama
@@ -106,6 +106,24 @@ ve tarayıcı çubukları olmadan, yatay açılır.
 - **iPhone / iPad (Safari):** Paylaş → **Ana Ekrana Ekle**.
 
 Tanım `app/manifest.ts`'te; simgeler `public/icons/` ve `app/apple-icon.png`.
+
+### Mobil uygulama (Capacitor)
+
+Site `next build` ile düz dosyalar olarak derlenir (`output: "export"`, çıktı `out/`). Aynı dosyalar Capacitor ile iOS
+(`ios/`) ve Android (`android/`) uygulamasına girer; uygulama sayfaları cihazın içinden sunar. Bu yüzden sunucu gerektiren
+Next.js özellikleri kullanılmaz: düello ve oda kodu adresin parçası değil sorgu dizgisidir (`/duello?kod=ABCD`), eski
+`/duello/ABCD` ve `/oda/ABCD` bağlantıları `vercel.json`'da yeni adrese yönlenir.
+
+Gerekenler: Xcode (iOS), Android Studio ve Java 21 (Android; Gradle 8 daha yeni Java ile çalışmaz, `JAVA_HOME` 21'i göstermeli).
+
+```bash
+npm run mobil     # derle ve iki platforma kopyala (cap sync)
+npm run ios       # derle, kopyala, Xcode'da aç
+npm run android   # derle, kopyala, Android Studio'da aç
+```
+
+Uygulama yalnızca yatay açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Uygulama kimliği
+(`capacitor.config.ts` → `appId`) şimdilik geçicidir; mağazaya ilk yüklemeden sonra değiştirilemez.
 
 ## Yerelde çalıştırma
 
@@ -144,8 +162,8 @@ app/
     duel/               Düello: lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
     room/               Oda: lobi, oda panosu (sıralama, kürsü), odadaki tur (RoomScreen yönetir)
     SignInPanel.tsx     Düello ve oda için giriş adımı (Google / misafir)
-  duello/[kod]/page.tsx Düello sayfası; kodu okuyup DuelScreen'i çizer
-  oda/[kod]/page.tsx    Oda sayfası; kodu okuyup RoomScreen'i çizer
+  duello/page.tsx       Düello sayfası; kodu sorgu dizgisinden (?kod=) okuyup DuelScreen'i çizer
+  oda/page.tsx          Oda sayfası; kodu sorgu dizgisinden (?kod=) okuyup RoomScreen'i çizer
 lib/
   game.ts               Ortak tipler, tur seçimi (PlayChoice), sıralama tanımları (BOARDS)
   intro-preferences.ts  Giriş ekranı seçimlerini (son oyun, harita, kapsam, soru tipi, düello ayarları) tarayıcıda saklar

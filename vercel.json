@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/duello/:kod", "destination": "/duello?kod=:kod", "permanent": true },
+    { "source": "/oda/:kod", "destination": "/oda?kod=:kod", "permanent": true }
+  ]
+}

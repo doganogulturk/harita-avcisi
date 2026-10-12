@@ -118,5 +118,5 @@ export function answerOf(state: DuelState, position: number, userId: string | un
 }
 
 export function duelPath(code: string): string {
-  return `/duello/${code}`;
+  return `/duello?kod=${encodeURIComponent(code)}`;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
@@ -22,7 +22,13 @@ function Message({ title, children }: { title: string; children?: React.ReactNod
   );
 }
 
-/** /oda/[kod]: giriş, lobi, oda panosu ve odadaki tur tek sayfada; hangisinin görüneceğini sunucudaki durum belirler. */
+/** /oda?kod=…: giriş, lobi, oda panosu ve odadaki tur tek sayfada; hangisinin görüneceğini sunucudaki durum belirler. */
+/** Kodu adresin sorgu dizgisinden okur; sayfa statik olduğu için kod derlemede bilinemez. */
+export function RoomScreenFromQuery() {
+  const code = useSearchParams().get("kod") ?? "";
+  return <RoomScreen code={code.toUpperCase()} />;
+}
+
 export function RoomScreen({ code }: { code: string }) {
   const router = useRouter();
   const [player, setPlayer, isPlayerLoaded] = usePlayer();

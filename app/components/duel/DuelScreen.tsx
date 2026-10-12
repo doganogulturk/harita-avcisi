@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
@@ -33,7 +33,13 @@ function Message({ title, children }: { title: string; children?: React.ReactNod
   );
 }
 
-/** /duello/[kod]: giriş, lobi, oyun ve sonuç tek sayfada; hangisinin görüneceğini sunucudaki durum belirler. */
+/** /duello?kod=…: giriş, lobi, oyun ve sonuç tek sayfada; hangisinin görüneceğini sunucudaki durum belirler. */
+/** Kodu adresin sorgu dizgisinden okur; sayfa statik olduğu için kod derlemede bilinemez. */
+export function DuelScreenFromQuery() {
+  const code = useSearchParams().get("kod") ?? "";
+  return <DuelScreen code={code.toUpperCase()} />;
+}
+
 export function DuelScreen({ code }: { code: string }) {
   const router = useRouter();
   const [player, setPlayer, isPlayerLoaded] = usePlayer();

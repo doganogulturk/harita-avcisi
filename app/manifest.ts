@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+// Statik dışa aktarımda manifest derleme sırasında dosyaya yazılır.
+export const dynamic = "force-static";
+
 /**
  * Ana ekrana eklenebilir uygulama tanımı. Simgeler logodaki nişangahtır (public/icons). Oyun yatay
  * düzen için tasarlandığı için yüklü uygulama yatay açılır; telefonu çevir uyarısına gerek kalmaz.

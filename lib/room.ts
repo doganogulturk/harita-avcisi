@@ -56,7 +56,7 @@ export type RoomState = {
 };
 
 export function roomPath(code: string): string {
-  return `/oda/${code}`;
+  return `/oda?kod=${encodeURIComponent(code)}`;
 }
 
 /** Oyuncunun sıradaki turu; hepsini oynadıysa null. */
