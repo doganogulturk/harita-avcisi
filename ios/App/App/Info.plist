@@ -6,6 +6,18 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<!-- Google girişinden dönüş: com.haritaavcisi.app://auth/callback (lib/auth.ts) -->
+			<key>CFBundleURLName</key>
+			<string>com.haritaavcisi.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.haritaavcisi.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>Harita Avcısı</string>
 	<key>CFBundleExecutable</key>
