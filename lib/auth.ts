@@ -86,3 +86,17 @@ export async function signInAsGuest(rawName: string): Promise<{ player: Player }
   if (error || !data.user) return { error: `Misafir oturumu başlatılamadı: ${error?.message ?? "Supabase kullanıcı oluşturmadı."}` };
   return { player: { id: data.user.id, name, avatarUrl: null } };
 }
+
+/**
+ * Oturumdaki hesabı ve oyuncunun bütün verisini kalıcı olarak siler (supabase/schema.sql → delete_my_account),
+ * ardından bu cihazdaki oturumu kapatır. Silinemezse hata metni döner.
+ */
+export async function deleteMyAccount(): Promise<string | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return NOT_CONFIGURED;
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) return "Hesap silinemedi. Lütfen tekrar deneyin.";
+  // Hesap sunucuda yok artık; yalnızca bu cihazda kalan oturum bilgisi temizlenir.
+  await supabase.auth.signOut({ scope: "local" });
+  return null;
+}

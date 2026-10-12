@@ -1339,6 +1339,30 @@ grant execute on function do_harita_avcisi.start_room_round(text, integer) to au
 revoke all on function do_harita_avcisi.abandon_round(uuid) from public, anon;
 grant execute on function do_harita_avcisi.abandon_round(uuid) to authenticated;
 
+-- Hesap silme: App Store ve Google Play, oyuncunun hesabını uygulamanın içinden silebilmesini şart koşar.
+-- Yalnızca oturumdaki kullanıcı kendi hesabını silebilir. auth.users satırı silinince skorları, turları,
+-- cevapları, düelloları, kurduğu ve katıldığı odalar "on delete cascade" ile birlikte gider; oturumları da
+-- Supabase Auth'ta kapanır.
+create or replace function do_harita_avcisi.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'Hesabı silmek için giriş gerekir.';
+  end if;
+
+  delete from auth.users where id = v_user_id;
+end;
+$$;
+
+revoke all on function do_harita_avcisi.delete_my_account() from public, anon;
+grant execute on function do_harita_avcisi.delete_my_account() to authenticated;
+
 -- Sunucu tarafı (service_role) RLS'ye takılmaz ama tablo yetkisine yine de ihtiyaç duyar.
 grant all on all tables in schema do_harita_avcisi to service_role;
 grant all on all sequences in schema do_harita_avcisi to service_role;

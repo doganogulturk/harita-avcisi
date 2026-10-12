@@ -212,12 +212,19 @@ Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasınd
 3. Settings > API > **Exposed schemas** listesine `do_harita_avcisi` ekleyin; istemci bu şemaya bağlanır (`lib/supabase.ts`'teki `SUPABASE_SCHEMA`).
 4. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
 5. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.
-6. Authentication > URL Configuration ekranına yerel adresinizi ve Vercel alan adınızı ekleyin.
+6. Authentication > URL Configuration ekranına yerel adresinizi ve Vercel alan adınızı ekleyin. Mobil uygulamanın
+   Google girişinden dönebilmesi için Redirect URLs listesinde `com.haritaavcisi.app://auth/callback` de bulunmalı.
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
+
+### Hesap silme
+
+Giriş yapmış oyuncu ana menüde adının altındaki **Hesabı sil** ile hesabını kalıcı olarak silebilir (App Store ve
+Google Play bunu şart koşar). Onaydan sonra `delete_my_account()` fonksiyonu oturumdaki kullanıcının `auth.users`
+satırını siler; skorlar, turlar, cevaplar, düellolar ve odalar `on delete cascade` ile birlikte gider.
 
 ### Veri modeli
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
 import { LeaderboardPanel } from "./LeaderboardPanel";
@@ -38,6 +39,8 @@ type IntroScreenProps = {
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
   onSignOut: () => void;
+  /** Hesap silindi; oyuncu durumunu çıkış yapılmış gibi temizler. */
+  onAccountDeleted: () => void;
 };
 
 /**
@@ -81,6 +84,7 @@ export function IntroScreen({
   onGoogleSignIn,
   onGuestSignIn,
   onSignOut,
+  onAccountDeleted,
 }: IntroScreenProps) {
   const router = useRouter();
   const map = useIntroMap();
@@ -90,6 +94,7 @@ export function IntroScreen({
   const turkeyPrompt = useTurkeyPrompt();
   const [selectedGame, setSelectedGame] = useState<IntroGame | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
 
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
@@ -213,7 +218,7 @@ export function IntroScreen({
     <section className="flex h-full w-full flex-col gap-3 px-4 py-3 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
       <header className="flex shrink-0 items-center justify-between gap-3">
         <Logo />
-        <PlayerBadge onSignOut={onSignOut} player={player} />
+        <PlayerBadge onDeleteAccount={() => setIsDeleteAccountOpen(true)} onSignOut={onSignOut} player={player} />
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
@@ -224,6 +229,17 @@ export function IntroScreen({
           initialBoardId={boardIdFor(choiceFor(map, "ranked"))}
           onClose={() => setIsLeaderboardOpen(false)}
           supabaseConfigured={supabaseConfigured}
+        />
+      )}
+
+      {isDeleteAccountOpen && player && (
+        <DeleteAccountDialog
+          onClose={() => setIsDeleteAccountOpen(false)}
+          onDeleted={() => {
+            setIsDeleteAccountOpen(false);
+            onAccountDeleted();
+          }}
+          player={player}
         />
       )}
 

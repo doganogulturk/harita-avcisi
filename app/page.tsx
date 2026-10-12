@@ -213,6 +213,11 @@ export default function Home() {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
     if (error) return setAuthError("Çıkış yapılamadı. Lütfen tekrar deneyin.");
+    clearPlayer();
+  }
+
+  /** Çıkışta ve hesap silindikten sonra: oyuncuya bağlı her şey sıfırlanır. */
+  function clearPlayer() {
     setPlayer(null);
     round.reset();
     setAuthError(null);
@@ -231,6 +236,7 @@ export default function Home() {
             onGoogleSignIn={signInWithGoogle}
             onGuestSignIn={signInAsGuest}
             onPlay={play}
+            onAccountDeleted={clearPlayer}
             onSignOut={signOut}
             pendingChoice={pendingChoice}
             player={player}
