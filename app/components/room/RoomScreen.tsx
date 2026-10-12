@@ -64,7 +64,7 @@ export function RoomScreen({ code }: { code: string }) {
   );
 
   const shell = (children: React.ReactNode) => (
-    <main className="flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
+    <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
         <button aria-label="Ana sayfa" onClick={goHome} type="button">
           <Logo isHeading={false} />
@@ -110,7 +110,7 @@ export function RoomScreen({ code }: { code: string }) {
 
   if (activeRound) {
     return (
-      <main className="flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
+      <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
         <RoomRound
           onDone={finishRound}
           onSignOut={signOut}

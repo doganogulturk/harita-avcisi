@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
+import { NativeSystemBars } from "./components/NativeSystemBars";
 
 // Yalnızca logo başlığında kullanılır; next/font derleme sırasında indirip siteyle birlikte sunar.
 const displayFont = Stack_Sans_Notch({
@@ -30,7 +31,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html className={displayFont.variable} lang="tr">
-      <body>{children}</body>
+      <body>
+        {children}
+        <NativeSystemBars />
+      </body>
     </html>
   );
 }

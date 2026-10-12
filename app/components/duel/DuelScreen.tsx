@@ -16,7 +16,7 @@ import { DuelResult } from "./DuelResult";
 
 function Shell({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) {
   return (
-    <main className="flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
+    <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       {header}
       {children}
       <RotateOverlay />

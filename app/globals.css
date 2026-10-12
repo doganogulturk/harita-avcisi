@@ -12,6 +12,13 @@ body {
   overscroll-behavior: none;
 }
 
+/* Ekran kenarındaki çentik, kamera deliği, durum çubuğu ve ana ekran çizgisi için boşluk. Sayfa viewport-fit=cover
+   ile ekranın tamamını kapladığından (mobil uygulamada ve ana ekrana eklenmiş sitede) her ekranın kökü bunu taşır;
+   masaüstü tarayıcıda değerler 0'dır. */
+.safe-area {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 .map {
   display: flex;
   align-items: center;

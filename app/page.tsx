@@ -220,10 +220,7 @@ export default function Home() {
   }
 
   return (
-    <main
-      className="flex h-[100dvh] flex-col bg-slate-50 text-slate-900"
-      style={{ paddingLeft: "max(env(safe-area-inset-left), 0px)", paddingRight: "max(env(safe-area-inset-right), 0px)" }}
-    >
+    <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       {/* Her ekran kendi kenar boşluklarını yönetir ve ekranın tamamını kullanır. */}
       <div className="flex min-h-0 w-full flex-1 flex-col">
         {phase === "ready" ? (
