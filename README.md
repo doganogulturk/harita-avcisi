@@ -122,6 +122,10 @@ npm run ios       # derle, kopyala, Xcode'da aç
 npm run android   # derle, kopyala, Android Studio'da aç
 ```
 
+İkon ve açılış ekranı `scripts/generate-app-assets.mjs` ile logodaki nişangahtan üretilir; iOS dosyalarını betik
+kendisi yazar, Android boyutlarını `capacitor-assets` üretir (komut betiğin başında). iOS açılış ekranı tam ekran bir
+resim değil, `LaunchScreen.storyboard`'da düz zemin ve ortada rozettir.
+
 Uygulama yalnızca yatay açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Uygulama kimliği
 (`capacitor.config.ts` → `appId`) şimdilik geçicidir; mağazaya ilk yüklemeden sonra değiştirilemez.
 

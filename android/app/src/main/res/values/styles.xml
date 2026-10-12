@@ -18,5 +18,7 @@
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- Android 12 ve sonrası açılışta uygulama ikonunu bu zeminde gösterir (sayfa zemini, slate-50). -->
+        <item name="windowSplashScreenBackground">#F8FAFC</item>
     </style>
 </resources>
