@@ -3,7 +3,7 @@
 Sorulan ili, plakayı, ülkeyi ya da bayrağı haritada bul. Türkiye'nin 81 ili ve dünyanın 179 ülkesiyle, tek başına
 ya da arkadaşlarınla oynanan bir harita oyunu.
 
-**Oyna:** [harita-avcisi.vercel.app](https://harita-avcisi.vercel.app/)
+**Oyna:** [haritaavcisi.com](https://haritaavcisi.com)
 
 ## Oyunlar
 
@@ -23,9 +23,9 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 
 ## Yasal
 
-[Gizlilik Politikası](https://harita-avcisi.vercel.app/gizlilik) ·
-[KVKK Aydınlatma Metni](https://harita-avcisi.vercel.app/kvkk) ·
-[Kullanım Koşulları](https://harita-avcisi.vercel.app/kullanim-kosullari) ·
-[Hesap Silme](https://harita-avcisi.vercel.app/hesap-silme)
+[Gizlilik Politikası](https://haritaavcisi.com/gizlilik) ·
+[KVKK Aydınlatma Metni](https://haritaavcisi.com/kvkk) ·
+[Kullanım Koşulları](https://haritaavcisi.com/kullanim-kosullari) ·
+[Hesap Silme](https://haritaavcisi.com/hesap-silme)
 
 Geliştirme ve kurulum notları: [docs/GELISTIRME.md](docs/GELISTIRME.md)

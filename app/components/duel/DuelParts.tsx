@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useSyncExternalStore } from "react";
 import { DUEL_MODES, DUEL_RULES, type DuelRule, type DuelSettings } from "@/lib/duel";
 import { flagUrl, type BoardVariant, type GameMode } from "@/lib/game";
+import { shareUrl } from "@/lib/site";
 
 /** Düelloda oyuncunun kendisi hep mavi, rakibi hep turuncu. */
 export type DuelTone = "me" | "opponent";
@@ -146,7 +147,7 @@ const noSubscription = () => () => {};
 /** Paylaşma satırı: kod, bağlantıyı kopyalama ve (telefonda) paylaşma menüsü. */
 export function ShareCode({ code, path, label, shareText }: { code: string; path: string; label: string; shareText: string }) {
   const [isCopied, setIsCopied] = useState(false);
-  const url = typeof window === "undefined" ? path : `${window.location.origin}${path}`;
+  const url = shareUrl(path);
   // Paylaşma menüsü tarayıcıya bağlı; sunucuda çizilen ilk halde yok sayılır, uyuşmazlık olmaz.
   const canShare = useSyncExternalStore(
     noSubscription,

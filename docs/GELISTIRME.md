@@ -215,7 +215,8 @@ Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasınd
 3. Settings > API > **Exposed schemas** listesine `do_harita_avcisi` ekleyin; istemci bu şemaya bağlanır (`lib/supabase.ts`'teki `SUPABASE_SCHEMA`).
 4. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
 5. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.
-6. Authentication > URL Configuration ekranına yerel adresinizi ve Vercel alan adınızı ekleyin. Mobil uygulamanın
+6. Authentication > URL Configuration ekranında Site URL `https://haritaavcisi.com` olmalı. Redirect URLs listesine yerel
+   adresinizi, `https://haritaavcisi.com/**`, `https://www.haritaavcisi.com/**` ve Vercel önizleme adreslerini ekleyin. Mobil uygulamanın
    Google girişinden dönebilmesi için Redirect URLs listesinde `com.haritaavcisi.app://auth/callback` de bulunmalı.
 
 ```bash
