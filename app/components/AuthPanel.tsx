@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
 type AuthPanelProps = {
@@ -40,7 +41,7 @@ export function AuthPanel({
   };
 
   return (
-    <div className="rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8">
+    <div className="rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 short:p-5">
       <button
         className="text-xs font-semibold text-slate-500 underline-offset-2 transition hover:text-cyan-700 hover:underline"
         onClick={onCancel}
@@ -60,7 +61,7 @@ export function AuthPanel({
         {description ?? "Skorunun sıralamada görünmesi için giriş yap. Giriş yapar yapmaz bu tur başlıyor."}
       </p>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-3 short:mt-3 sm:grid-cols-2">
         <button
           className="flex h-12 items-center justify-center gap-3 rounded-xl border border-[#747775] bg-white px-4 text-sm font-medium text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:ring-2 focus-visible:ring-[#0b57d0] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
           disabled={isSigningIn}
@@ -107,6 +108,18 @@ export function AuthPanel({
           </button>
         </form>
       )}
+
+      <p className="mt-4 text-xs text-slate-500 short:mt-3">
+        Giriş yaparak{" "}
+        <Link className="font-semibold underline underline-offset-2 hover:text-cyan-700" href="/kullanim-kosullari">
+          Kullanım Koşulları
+        </Link>
+        &apos;nı kabul etmiş olursun. Adın ve skorun sıralamada herkese görünür; ayrıntılar{" "}
+        <Link className="font-semibold underline underline-offset-2 hover:text-cyan-700" href="/gizlilik">
+          Gizlilik Politikası
+        </Link>
+        &apos;nda.
+      </p>
 
       {authError && <p className="mt-4 text-sm font-medium text-rose-600">{authError}</p>}
       {!supabaseConfigured && <p className="mt-4 text-sm font-medium text-rose-600">Oynamak için Supabase bağlantısı yapılandırılmalıdır.</p>}

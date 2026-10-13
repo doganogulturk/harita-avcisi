@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { DeleteAccountDialog } from "./DeleteAccountDialog";
+import { LEGAL_PAGES } from "./legal/LegalPage";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
 import { LeaderboardPanel } from "./LeaderboardPanel";
@@ -222,6 +224,17 @@ export function IntroScreen({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
+
+      {/* Giriş adımında gizli: paneldeki not aynı sayfalara bağlanıyor, kısa ekranda yer de kalmıyor. */}
+      {!pendingChoice && (
+        <nav aria-label="Yasal sayfalar" className="flex shrink-0 flex-wrap justify-center gap-x-3 text-[11px] text-slate-400 lg:text-xs">
+          {LEGAL_PAGES.map((page) => (
+            <Link className="underline-offset-2 transition hover:text-slate-600 hover:underline" href={page.href} key={page.href}>
+              {page.label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       {isLeaderboardOpen && (
         <LeaderboardPanel
