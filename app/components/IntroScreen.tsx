@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { DeleteAccountDialog } from "./DeleteAccountDialog";
+import { Guide } from "./intro/Guide";
 import { LegalMenu } from "./LegalMenu";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
@@ -17,8 +18,10 @@ import { SoloSetup } from "./intro/SoloSetup";
 import { duelPath } from "@/lib/duel";
 import { boardIdFor, choiceLabel, GAME_DURATION_SECONDS, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
+  setGuideSeen,
   setIntroMap,
   setLastGame,
+  useGuideSeen,
   useIntroMap,
   useLastGame,
   useQuestionPrompt,
@@ -101,6 +104,8 @@ export function IntroScreen({
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const isGuideSeen = useGuideSeen();
+  const [isGuideRequested, setIsGuideRequested] = useState(false);
 
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
@@ -123,6 +128,14 @@ export function IntroScreen({
       window.clearTimeout(doneTimer);
     };
   }, [shouldAnimate]);
+
+  // Tanıtım ilk ziyarette açılış animasyonundan sonra kendiliğinden açılır; giriş yapmış (eski) oyuncuya ve giriş
+  // adımındaki oyuncuya gösterilmez. Bilgi menüsünden her zaman yeniden açılabilir.
+  const isGuideOpen = isGuideRequested || (!isGuideSeen && !player && !pendingChoice && (!shouldAnimate || isCurtainUp));
+  const closeGuide = () => {
+    setGuideSeen();
+    setIsGuideRequested(false);
+  };
 
   const kind: PlayKind = selectedGame === "practice" ? "practice" : "ranked";
   // Kıtaların kendi sıralaması yok; yarışta kapsam 179 ülkelik havuza düşer.
@@ -262,7 +275,7 @@ export function IntroScreen({
               Giriş yap
             </button>
           )}
-          <LegalMenu />
+          <LegalMenu onShowGuide={() => setIsGuideRequested(true)} />
         </div>
       </header>
 
@@ -274,6 +287,21 @@ export function IntroScreen({
           initialBoardId={boardIdFor(choiceFor(map, "ranked"))}
           onClose={() => setIsLeaderboardOpen(false)}
           supabaseConfigured={supabaseConfigured}
+        />
+      )}
+
+      {isGuideOpen && (
+        <Guide
+          canSignIn={!player && supabaseConfigured}
+          onClose={closeGuide}
+          onGoogleSignIn={() => {
+            closeGuide();
+            onGoogleSignIn();
+          }}
+          onGuestSignIn={() => {
+            closeGuide();
+            setIsSignInOpen(true);
+          }}
         />
       )}
 

@@ -98,3 +98,42 @@ export const [useDuelSettingsKey, setDuelSettingsKey] = createPreference<DuelSet
   (value): value is DuelSettingsKey => DUEL_SETTINGS.includes(value),
   "turkey|normal|snatch",
 );
+
+/**
+ * Tanıtım ekranlarının görülüp görülmediği. Diğer seçimlerden farkı: sunucuda ve depolama kapalıyken "görüldü"
+ * sayılır. Böylece sunucu tanıtımı çizmez (geri dönen oyuncuda bir an belirip kaybolmaz) ve depolaması kapalı
+ * tarayıcıda her açılışta tekrar gösterilmez.
+ */
+const GUIDE_SEEN_KEY = "harita-avcisi:guide-seen";
+const guideListeners = new Set<() => void>();
+let isGuideSeenInMemory = false;
+
+function readGuideSeen(): boolean {
+  if (isGuideSeenInMemory) return true;
+  try {
+    return localStorage.getItem(GUIDE_SEEN_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+
+function subscribeGuideSeen(listener: () => void) {
+  guideListeners.add(listener);
+  return () => {
+    guideListeners.delete(listener);
+  };
+}
+
+export function useGuideSeen() {
+  return useSyncExternalStore(subscribeGuideSeen, readGuideSeen, () => true);
+}
+
+export function setGuideSeen() {
+  isGuideSeenInMemory = true;
+  try {
+    localStorage.setItem(GUIDE_SEEN_KEY, "1");
+  } catch {
+    // Depolama kapalı; bu sayfa yaşamı boyunca yine de bir daha gösterilmez.
+  }
+  guideListeners.forEach((listener) => listener());
+}

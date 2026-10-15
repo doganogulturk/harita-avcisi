@@ -11,7 +11,7 @@ işlenip işlenmediği) vardır. Kartın eylem tuşu (**Yarışa başla**, **Ant
 içeri kıvrılan bir sekmedir. En son oynanan oyunun kartı sağ altta "Son oynadığın" diye işaretlenir. Yarış kartında
 **Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** bağlantısı bulunur. Alçak (yatay telefon) ekranlarda
 künyeler gizlenir, düzen 2×2 kalır. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
-kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir.
+kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir (orada tanıtımı yeniden açan **Nasıl oynanır?** de var).
 
 İkinci adım dört oyunda aynı düzendedir: solda üstte yuvarlak **←** tuşu ve oyunun adı, altında Türkiye / Dünya seçimi
 ve oynanacak haritanın küçük önizlemesi; sağda daha geniş panelde oyunun kendi ayarları. Eylem tuşu (**Başla**,
@@ -22,6 +22,12 @@ hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda ha
 
 Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam
 yan paneldeki tek satırlık açıklamayla anlatılır.
+
+İlk ziyarette açılış animasyonundan sonra üç ekranlık bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
+Türkiye ve dünya haritalarında isim, plaka ve bayrak soruları; sorulan yer yeşil yanar), dört oyun, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
+tuşlarla gezilir; **Geç** her ekranda durur. Son ekranın asıl tuşu **Başlayalım** ana ekrandaki oyun seçimine döner; giriş
+yapılmamışsa Google ve misafir girişi seçenek olarak sunulur. Görüldüğü tarayıcıda hatırlanır, giriş yapmış oyuncuya
+gösterilmez; başlıktaki ⓘ menüsünde **Nasıl oynanır?** ile yeniden açılır.
 
 Sayfa ilk açıldığında oyunun adı ekranın ortasında belirir, ardından bu katman çekilerek seçim ekranı açılır.
 Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **←** ile ilk adıma dönüşte

@@ -37,28 +37,34 @@ type GameTopBarProps = {
   onSignOut: () => void;
 };
 
-/**
- * Turu bırakıp ana menüye döner. Yanlışlıkla başlatılan bir tur için tek çıkış yolunun
- * süreyi beklemek ya da 10 soruyu oynamak olmaması gerekiyor; onay sorulmaz.
- */
+const PLATE_SIZES = {
+  md: { plate: "h-9 lg:h-11", strip: "w-5 text-[9px] lg:w-6 lg:text-[10px]", code: "px-3 text-2xl lg:px-4 lg:text-3xl" },
+  sm: { plate: "h-7 lg:h-9", strip: "w-4 text-[8px] lg:w-5 lg:text-[9px]", code: "px-2 text-lg lg:px-3 lg:text-2xl" },
+};
+
 /** Sorulan plaka, gerçek bir plakanın sol ucundaki mavi TR şeridiyle birlikte gösterilir. */
-export function PlateBadge({ plate }: { plate: number }) {
+export function PlateBadge({ plate, size = "md" }: { plate: number; size?: keyof typeof PLATE_SIZES }) {
+  const style = PLATE_SIZES[size];
   return (
     <span
       aria-label={`Plaka ${formatPlate(plate)}`}
-      className="flex h-9 shrink-0 items-stretch overflow-hidden rounded-md border-2 border-slate-900 bg-white shadow-sm lg:h-11"
+      className={`flex shrink-0 items-stretch overflow-hidden rounded-md border-2 border-slate-900 bg-white shadow-sm ${style.plate}`}
       role="img"
     >
-      <span aria-hidden="true" className="flex w-5 items-end justify-center bg-blue-700 pb-0.5 text-[9px] font-bold text-white lg:w-6 lg:text-[10px]">
+      <span aria-hidden="true" className={`flex items-end justify-center bg-blue-700 pb-0.5 font-bold text-white ${style.strip}`}>
         TR
       </span>
-      <span aria-hidden="true" className="flex items-center px-3 font-mono text-2xl leading-none font-bold tracking-wider text-slate-900 tabular-nums lg:px-4 lg:text-3xl">
+      <span aria-hidden="true" className={`flex items-center font-mono leading-none font-bold tracking-wider text-slate-900 tabular-nums ${style.code}`}>
         {formatPlate(plate)}
       </span>
     </span>
   );
 }
 
+/**
+ * Turu bırakıp ana menüye döner. Yanlışlıkla başlatılan bir tur için tek çıkış yolunun
+ * süreyi beklemek ya da 10 soruyu oynamak olmaması gerekiyor; onay sorulmaz.
+ */
 function ExitButton({ onClick, title = "Ana menü · Bu turun skoru kaydedilmez" }: { onClick: () => void; title?: string }) {
   return (
     <button
