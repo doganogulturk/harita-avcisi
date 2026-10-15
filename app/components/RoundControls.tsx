@@ -10,7 +10,7 @@ type RoundControlsProps = {
 
 /** İki kontrol tek bir çerçeveyi paylaşır; aralarındaki çizgi ayırıcıdır. */
 const SEGMENT_CLASS =
-  "flex h-7 items-center text-slate-600 transition hover:bg-slate-100 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-inset focus-visible:outline-none lg:h-8";
+  "hit-area-y flex h-7 items-center text-slate-600 transition hover:bg-slate-100 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-inset focus-visible:outline-none lg:h-8";
 
 const ITEM_CLASS =
   "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none disabled:text-slate-400 disabled:hover:bg-transparent";

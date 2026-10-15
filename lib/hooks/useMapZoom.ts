@@ -7,8 +7,20 @@ type ViewBox = MapBox;
 
 const MAX_ZOOM = 8;
 const BUTTON_ZOOM_STEP = 1.6;
-/** Sürükleme bu eşiği aşarsa işaretçi bırakıldığında seçim değil, kaydırma sayılır. */
-const DRAG_THRESHOLD_PX = 5;
+/** Sürükleme bu eşiği aşarsa işaretçi bırakıldığında seçim değil, kaydırma sayılır. Parmak dokunurken biraz
+    kaydığı için dokunmatikte eşik daha geniştir. */
+const DRAG_THRESHOLD_PX = { mouse: 5, touch: 10 };
+
+type Point = { x: number; y: number };
+
+/** İki parmağın arasındaki uzaklık ve orta noktası (ekran koordinatı). */
+function pinchOf(pointers: Map<number, Point>) {
+  const [first, second] = [...pointers.values()];
+  return {
+    distance: Math.hypot(second.x - first.x, second.y - first.y),
+    center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
+  };
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -38,7 +50,8 @@ function fitToAspect(box: ViewBox, base: ViewBox): ViewBox {
 }
 
 /**
- * Gömülü SVG haritanın viewBox'ını değiştirerek yalnızca haritayı yakınlaştırır.
+ * Gömülü SVG haritanın viewBox'ını değiştirerek yalnızca haritayı yakınlaştırır: tekerlek, sürükleme ve
+ * dokunmatikte iki parmakla sıkıştırma.
  * Sayfanın kendisi etkilenmez; kaydırma sınırları haritanın dışına taşmaz.
  * `homeView` verilirse (ör. kıta antrenmanı) harita o bölgeyle açılır ve "Sıfırla" oraya döner.
  */
@@ -50,7 +63,10 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
   /** Doğru cevabı göstermek için görünüm otomatik kaydırıldıysa, kaydırmadan önceki görünüm. */
   const viewBeforeReveal = useRef<ViewBox | null>(null);
   const dragDistance = useRef(0);
-  const lastPointer = useRef<{ x: number; y: number } | null>(null);
+  const dragThreshold = useRef(DRAG_THRESHOLD_PX.mouse);
+  /** Ekrana değen işaretçilerin (fare ya da parmaklar) son konumları. */
+  const pointers = useRef(new Map<number, Point>());
+  const pinch = useRef<ReturnType<typeof pinchOf> | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isAtHome, setIsAtHome] = useState(true);
 
@@ -176,32 +192,64 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
   }, [applyViewBox, containerRef]);
 
   const startPan = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    dragDistance.current = 0;
-    lastPointer.current = { x: event.clientX, y: event.clientY };
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (pointers.current.size === 0) {
+      dragDistance.current = 0;
+      dragThreshold.current = event.pointerType === "mouse" ? DRAG_THRESHOLD_PX.mouse : DRAG_THRESHOLD_PX.touch;
+    }
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.current.size === 2) {
+      // İkinci parmak değdi: bu artık bir sıkıştırma hareketi, parmaklar kalkınca seçim yapılmaz.
+      pinch.current = pinchOf(pointers.current);
+      dragDistance.current = Number.POSITIVE_INFINITY;
+    }
   };
 
   const movePan = (event: React.PointerEvent<HTMLDivElement>) => {
-    const last = lastPointer.current;
+    const last = pointers.current.get(event.pointerId);
     const svg = svgRef.current;
     const view = viewBox.current;
     if (!last || !svg || !view) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    const userToScreen = svg.getScreenCTM();
+    if (!userToScreen) return;
+
+    if (pointers.current.size >= 2) {
+      const previous = pinch.current;
+      const next = pinchOf(pointers.current);
+      pinch.current = next;
+      const base = baseViewBox.current;
+      const anchor = toUserSpace(svg, previous?.center.x ?? next.center.x, previous?.center.y ?? next.center.y);
+      if (!previous || !base || !anchor || next.distance === 0) return;
+      viewBeforeReveal.current = null;
+
+      // Parmakların altındaki nokta yerinde kalacak biçimde yakınlaştırır, sonra orta noktanın kaydığı kadar kaydırır.
+      const width = clamp((view.width * previous.distance) / next.distance, base.width / MAX_ZOOM, base.width);
+      const ratio = width / view.width;
+      applyViewBox({
+        x: anchor.x - (anchor.x - view.x) * ratio - ((next.center.x - previous.center.x) * ratio) / userToScreen.a,
+        y: anchor.y - (anchor.y - view.y) * ratio - ((next.center.y - previous.center.y) * ratio) / userToScreen.d,
+        width,
+        height: view.height * ratio,
+      });
+      return;
+    }
 
     const deltaX = event.clientX - last.x;
     const deltaY = event.clientY - last.y;
     dragDistance.current += Math.abs(deltaX) + Math.abs(deltaY);
-    lastPointer.current = { x: event.clientX, y: event.clientY };
-    if (dragDistance.current <= DRAG_THRESHOLD_PX) return;
+    if (dragDistance.current <= dragThreshold.current) return;
 
-    const userToScreen = svg.getScreenCTM();
-    if (!userToScreen) return;
     viewBeforeReveal.current = null;
     event.currentTarget.setPointerCapture(event.pointerId);
     applyViewBox({ ...view, x: view.x - deltaX / userToScreen.a, y: view.y - deltaY / userToScreen.d });
   };
 
   const endPan = (event: React.PointerEvent<HTMLDivElement>) => {
-    lastPointer.current = null;
+    pointers.current.delete(event.pointerId);
+    // Bir parmak kalkınca kalan parmak kaldığı yerden kaydırmayı sürdürür.
+    if (pointers.current.size < 2) pinch.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
@@ -216,7 +264,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     ensureVisible,
     restoreAfterReveal,
     /** Sürükleme sonrası gelen tıklamanın seçim sayılmaması için. */
-    wasDragged: () => dragDistance.current > DRAG_THRESHOLD_PX,
+    wasDragged: () => dragDistance.current > dragThreshold.current,
     panHandlers: { onPointerDown: startPan, onPointerMove: movePan, onPointerUp: endPan, onPointerCancel: endPan },
   };
 }

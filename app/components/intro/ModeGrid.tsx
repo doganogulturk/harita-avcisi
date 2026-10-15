@@ -16,6 +16,9 @@ type ModeGridProps = {
   onJoin: (game: "duel" | "room", code: string) => void;
 };
 
+/** Köşe sekmesinin ve onun yer tutucusunun ortak ölçüleri; ikisi aynı boyda olsun diye tek yerde. */
+const CORNER_TAB_SIZE = "gap-1.5 py-2 pr-4 pl-4 text-sm short:py-1.5 short:pr-3 short:pl-3.5 lg:py-3 lg:pr-6 lg:pl-6 lg:text-base";
+
 /** Adım 1: dört oyun, 2×2 büyük kart. Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
 export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
   return (
@@ -59,7 +62,7 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
 
   return (
     <div
-      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl short:p-3 sm:p-5 lg:p-8 ${theme.surface} ${theme.card} ${
+      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-(--card-pad) transition-all duration-200 [--card-pad:1rem] hover:-translate-y-1 hover:shadow-xl short:[--card-pad:0.75rem] sm:[--card-pad:1.25rem] lg:[--card-pad:2rem] ${theme.surface} ${theme.card} ${
         isLast ? `${theme.lastCard} shadow-md` : "border-slate-200"
       }`}
       style={
@@ -83,13 +86,30 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         game={game.id}
       />
 
-      {isLast && (
-        <span
-          className={`pointer-events-none absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[0.7rem] font-bold shadow-sm short:top-2 short:right-2 lg:top-5 lg:right-5 lg:text-xs ${theme.badge}`}
+      {/* Kartın eylem tuşu sağ üst köşeden içeri kıvrılan bir sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve
+          ekran okuyucu için kart tuşu yeterli. İki yanındaki içbükey kıvrımlar sekmeyi kartın kenarına bağlar. */}
+      <div className="absolute top-0 right-0 z-10">
+        <button
+          aria-hidden="true"
+          className={`group/action pill-shine relative flex cursor-pointer items-center rounded-bl-2xl font-bold transition duration-200 group-hover:gap-2.5 hover:brightness-110 active:brightness-95 lg:rounded-bl-3xl ${CORNER_TAB_SIZE} ${theme.badge}`}
+          onClick={onSelect}
+          tabIndex={-1}
+          type="button"
         >
-          Son oynadığın
-        </span>
-      )}
+          {game.cardAction}
+          <svg
+            className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <span aria-hidden="true" className={`corner-fillet top-0 right-full ${theme.badge}`} />
+        <span aria-hidden="true" className={`corner-fillet top-full right-0 ${theme.badge}`} />
+      </div>
 
       <div className="pointer-events-none relative flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:gap-5 short:flex-row short:items-center short:gap-2.5">
         <span
@@ -97,7 +117,13 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         >
           <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-10 lg:w-10" game={game.id} />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
+          {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda
+              kartın iç boşluğu sekmeden yüksek olduğu için gerekmez; orada başlığı aşağı itmesin. */}
+          <span aria-hidden="true" className={`invisible float-right -mt-(--card-pad) -mr-(--card-pad) mb-1 ml-3 flex items-center font-bold lg:hidden ${CORNER_TAB_SIZE}`}>
+            {game.cardAction}
+            <span className="h-4 w-4 lg:h-5 lg:w-5" />
+          </span>
           <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl sm:text-3xl lg:text-5xl">{game.title}</p>
           <p className="mt-1.5 line-clamp-3 text-xs text-slate-500 short:line-clamp-2 sm:text-sm lg:mt-3 lg:max-w-lg lg:text-lg">{game.description}</p>
         </div>
@@ -114,7 +140,7 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
       </div>
 
       {/* Satırın boş kısmı tıklamayı alttaki kart tuşuna geçirir; yalnızca içindeki tuşlar tıklanır. */}
-      <div className="pointer-events-none relative mt-2 flex min-h-9 items-center justify-between gap-2 short:mt-1 lg:mt-4 lg:min-h-12">
+      <div className="pointer-events-none relative mt-2 flex min-h-7 items-center justify-between gap-2 short:mt-1 lg:mt-4 lg:min-h-9">
         {isJoining && onJoin ? (
           <form className="pointer-events-auto relative z-10 flex min-w-0 flex-1 flex-wrap items-center gap-1.5" onSubmit={join}>
             <input
@@ -157,25 +183,9 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
               />
             )}
             {!onShowLeaderboard && !onJoin && <span />}
-            {/* Kart tuşunun görünen yüzü; aynı işi yapar. Klavye ve ekran okuyucu için kart tuşu yeterli. */}
-            <button
-              aria-hidden="true"
-              className={`group/action pill-shine pointer-events-auto relative z-10 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-md transition-all duration-200 group-hover:gap-2.5 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-95 active:shadow-sm short:px-3 short:py-1.5 lg:px-5 lg:py-3 lg:text-base ${theme.badge}`}
-              onClick={onSelect}
-              tabIndex={-1}
-              type="button"
-            >
-              {game.cardAction}
-              <svg
-                className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            {isLast && (
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.7rem] font-bold shadow-sm lg:px-3 lg:py-1 lg:text-xs ${theme.badge}`}>Son oynadığın</span>
+            )}
           </>
         )}
       </div>

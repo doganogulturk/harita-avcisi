@@ -33,7 +33,7 @@ export type GameInfo = {
   description: string;
   facts: string[];
   action: string;
-  /** Kartın sağ altındaki eylem düğmesi. */
+  /** Kartın sağ üst köşesindeki eylem sekmesi. */
   cardAction: string;
   theme: GameTheme;
 };

@@ -32,8 +32,27 @@ type GameMapProps = {
   onSelect: (locationId: string) => void;
 };
 
+/**
+ * Dokunulan nokta bir yere denk gelmezse (çoğunlukla denizde) yakındaki yer aranır: Malta, Singapur, Bahreyn gibi
+ * küçük ülkeler parmağın altında kaybolur. Yalnızca dokunmatikte uygulanır; farenin ıskalaması bilinçlidir.
+ */
+const TAP_TOLERANCE_RADII_PX = [6, 11, 16];
+const TAP_TOLERANCE_DIRECTIONS = 8;
+
+function locationNear(container: HTMLElement, mode: GameMode, clientX: number, clientY: number) {
+  for (const radius of TAP_TOLERANCE_RADII_PX) {
+    for (let step = 0; step < TAP_TOLERANCE_DIRECTIONS; step += 1) {
+      const angle = (step / TAP_TOLERANCE_DIRECTIONS) * 2 * Math.PI;
+      const element = document.elementFromPoint(clientX + radius * Math.cos(angle), clientY + radius * Math.sin(angle));
+      const location = element?.closest<SVGElement>(LOCATION_SELECTOR[mode]);
+      if (location && container.contains(location)) return locationIdOf(location, mode);
+    }
+  }
+  return undefined;
+}
+
 const ZOOM_BUTTON_CLASS =
-  "flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-lg font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40";
+  "flex h-9 w-9 items-center justify-center rounded-lg pointer-coarse:h-11 pointer-coarse:w-11 border border-slate-200 bg-white/90 text-lg font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40";
 
 export function GameMap({
   mode,
@@ -50,6 +69,7 @@ export function GameMap({
   onSelect,
 }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastPointerType = useRef("mouse");
   const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, wasDragged, panHandlers } = useMapZoom(
     containerRef,
     mapMarkup,
@@ -106,7 +126,9 @@ export function GameMap({
         id="game-map"
         onClick={(event) => {
           if (wasDragged()) return;
-          const locationId = selectFromEvent(event.target);
+          const locationId =
+            selectFromEvent(event.target) ??
+            (lastPointerType.current === "mouse" ? undefined : locationNear(event.currentTarget, mode, event.clientX, event.clientY));
           if (locationId) onSelect(locationId);
         }}
         onKeyDown={(event) => {
@@ -119,12 +141,16 @@ export function GameMap({
         }}
         ref={containerRef}
         {...panHandlers}
+        onPointerDown={(event) => {
+          lastPointerType.current = event.pointerType;
+          panHandlers.onPointerDown(event);
+        }}
       />
 
       <div className="absolute right-3 bottom-3 flex flex-col items-end gap-1.5">
         {!isAtHome && (
           <button
-            className="rounded-lg border border-slate-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none"
+            className="rounded-lg border border-slate-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold pointer-coarse:py-2 pointer-coarse:text-xs text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none"
             onClick={reset}
             type="button"
           >

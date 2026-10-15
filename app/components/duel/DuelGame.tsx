@@ -136,7 +136,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
         <div className="flex min-w-0 items-center gap-2">
           <button
             aria-label="Düellodan çık"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
+            className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
             onClick={onExit}
             title="Düellodan çık · 30 saniye içinde dönmezsen hükmen kaybedersin"
             type="button"

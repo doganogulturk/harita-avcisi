@@ -19,6 +19,31 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* Oyun sırasındaki küçük tuşlar (çıkış, Bitir, turu yeniden başlat): dokunmatikte görünüşleri aynı kalır, dokunma
+   alanı en az 44px'e genişler; üst bar haritadan yer çalmaz. hit-area-y yalnızca dikeyde genişler, yan yana bitişik
+   tuşların alanları üst üste binmesin diye. */
+@media (pointer: coarse) {
+  .hit-area,
+  .hit-area-y {
+    position: relative;
+  }
+
+  .hit-area::after,
+  .hit-area-y::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+
+  .hit-area-y::after {
+    width: 100%;
+  }
+}
+
 .map {
   display: flex;
   align-items: center;
@@ -67,12 +92,27 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
-.map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):hover path,
-.map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):focus path,
-.map [data-country-code]:not(.map-correct):not(.map-incorrect):hover,
-.map [data-country-code]:not(.map-correct):not(.map-incorrect):focus {
+/* Dokunmatikte :hover ve tıklamayla gelen :focus dokunulan yerde takılı kalır ve sonraki soruda seçilmiş gibi
+   görünür; bu yüzden vurgu yalnızca fareyle üzerine gelince ve klavyeyle odaklanınca verilir. */
+@media (hover: hover) {
+  .map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):hover path,
+  .map [data-country-code]:not(.map-correct):not(.map-incorrect):hover {
+    fill: #67e8f9;
+    stroke: #0891b2;
+  }
+}
+
+.map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):focus-visible path,
+.map [data-country-code]:not(.map-correct):not(.map-incorrect):focus-visible {
   fill: #67e8f9;
   stroke: #0891b2;
+}
+
+/* Haritada dokunulan yerde iOS/Android'in gri dokunma parlaması ve uzun basınca açılan menü çıkmasın. */
+.map {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 /* Haritada olup oyunda karşılığı olmayan bölgeler; stil verilmezse SVG varsayılanıyla siyah dolar. */
@@ -247,6 +287,23 @@ body {
 .pill-shine:hover::before {
   transform: translateX(360%) skewX(-20deg);
   transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Giriş kartlarının köşe sekmesini kartın üst ve sağ kenarına bağlayan içbükey kıvrım. Zemin rengi sekmeyle aynı
+   sınıftan gelir; maske kare parçadan çeyrek daireyi oyar ve kenara yaslanan köşe kalır. */
+.corner-fillet {
+  --fillet: 1rem;
+  position: absolute;
+  width: var(--fillet);
+  height: var(--fillet);
+  pointer-events: none;
+  mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+@media (min-width: 64rem) {
+  .corner-fillet {
+    --fillet: 1.5rem;
+  }
 }
 
 /* Başlığın iki yanındaki parlayan noktalar. */

@@ -63,7 +63,7 @@ function ExitButton({ onClick, title = "Ana menü · Bu turun skoru kaydedilmez"
   return (
     <button
       aria-label="Turu bırak ve ana menüye dön"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
+      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
       onClick={onClick}
       title={title}
       type="button"
@@ -156,7 +156,7 @@ export function GameTopBar({
               <span className="text-slate-400">/{answers.length}</span>
             </p>
             <button
-              className="shrink-0 rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-sm"
+              className="hit-area shrink-0 rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-sm"
               onClick={onFinishPractice}
               type="button"
             >

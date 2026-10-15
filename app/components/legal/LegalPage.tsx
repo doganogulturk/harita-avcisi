@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "../Logo";
 
-/** Yasal sayfaların sırası; alttaki gezinme ve giriş ekranındaki bağlantılar bunu kullanır. */
+/** Yasal sayfaların sırası; yasal sayfaların altındaki gezinme ve giriş ekranının bilgi menüsü (LegalMenu) bunu kullanır. */
 export const LEGAL_PAGES = [
   { href: "/gizlilik", label: "Gizlilik" },
   { href: "/kvkk", label: "KVKK" },

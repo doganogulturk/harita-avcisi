@@ -7,9 +7,11 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 Giriş ekranı iki adımlıdır. İlk adımda dört oyun 2×2 büyük kart olarak durur: **Yarış**, **Antrenman**, **Düello**
 ve **Oda**. Her kartın kendi rengi, simgesi, bir cümlelik açıklaması ve künyesi (soru sayısı, süre, sıralamaya
-işlenip işlenmediği) vardır. En son oynanan oyunun kartı "Son oynadığın" diye işaretlenir. Yarış kartında
+işlenip işlenmediği) vardır. Kartın eylem tuşu (**Yarışa başla**, **Antrenmana başla**...) sağ üst köşeden
+içeri kıvrılan bir sekmedir. En son oynanan oyunun kartı sağ altta "Son oynadığın" diye işaretlenir. Yarış kartında
 **Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** bağlantısı bulunur. Alçak (yatay telefon) ekranlarda
-künyeler gizlenir, düzen 2×2 kalır.
+künyeler gizlenir, düzen 2×2 kalır. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
+kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir.
 
 İkinci adım dört oyunda aynı düzendedir: solda oynanacak harita, sağda en üstte Türkiye / Dünya seçimi, altında
 oyunun kendi ayarları ve en altta büyük eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**). **← Oyun modu**
@@ -94,7 +96,8 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 
 ### Harita
 
-Harita tekerlek, sürükleme ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
+Harita tekerlek, sürükleme, iki parmakla sıkıştırma ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Dokunmatikte
+parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar yakındaki yer seçilir; farede bu tolerans yoktur. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
 
 ### Uygulama olarak yükleme
 
