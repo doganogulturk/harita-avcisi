@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
+import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
 import { modeOptions, variantFor } from "./DuelSetup";
@@ -22,6 +23,8 @@ type RoomOptions = Omit<RoomSettings, "mode">;
 
 /** Adım 2, Oda: ad, mod, tur sayısı, süre ve katılımcı sınırı. Giriş yoksa önce giriş adımı gelir. */
 export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack }: RoomSetupProps) {
+  // Oda sunucuda kurulur; bağlantı yokken tuş kapalıdır.
+  const isOnline = useIsOnline();
   const router = useRouter();
   const [options, setOptions] = useState<RoomOptions>({
     name: "",
@@ -76,10 +79,10 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
 
   return (
     <SetupShell
-      actionLabel={isBusy ? "Kuruluyor…" : player ? gameInfo("room").action : "Giriş yap ve kur"}
+      actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("room").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("room")}
-      isActionDisabled={isBusy || !supabaseConfigured}
+      isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
       map={map}
       note="Her tur 10 soru ve 120 saniye, soruları herkese aynı. Süre sen başlatınca işler; turlar genel sıralamaya da işlenir."
       onAction={() => (player ? void create() : validationError ? setError(validationError) : setIsAuthStep(true))}
@@ -89,6 +92,8 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
       <Field htmlFor="room-name" label="Oda adı">
         <input
           className="w-full rounded-xl border border-slate-300 px-4 py-2 outline-none short:px-3 short:py-1.5 short:text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+          autoComplete="off"
+          enterKeyHint="done"
           id="room-name"
           maxLength={ROOM_NAME_MAX}
           onChange={(event) => update({ name: event.target.value })}

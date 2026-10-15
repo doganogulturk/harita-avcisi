@@ -6,6 +6,7 @@ import { SignInPanel } from "../SignInPanel";
 import { DUEL_MODES, DUEL_RULES, duelPath, type DuelRule } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
+import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences";
 import { gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
@@ -30,6 +31,8 @@ type DuelSetupProps = {
 
 /** Adım 2, Düello: mod ve kural. Giriş yoksa önce giriş adımı gelir, giriş biter bitmez düello kurulur. */
 export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack }: DuelSetupProps) {
+  // Düello sunucuda kurulur; bağlantı yokken tuş kapalıdır.
+  const isOnline = useIsOnline();
   const router = useRouter();
   const [, storedVariant, rule] = useDuelSettingsKey().split("|") as [GameMode, BoardVariant, DuelRule];
   const variant = variantFor(map, storedVariant);
@@ -70,10 +73,10 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
 
   return (
     <SetupShell
-      actionLabel={isBusy ? "Kuruluyor…" : player ? gameInfo("duel").action : "Giriş yap ve kur"}
+      actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("duel").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("duel")}
-      isActionDisabled={isBusy || !supabaseConfigured}
+      isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
       map={map}
       note="Kurunca bir kod ve bağlantı alırsın; rakibin açınca ikiniz de hazır deyip başlarsınız."
       onAction={() => (player ? void create() : setIsAuthStep(true))}

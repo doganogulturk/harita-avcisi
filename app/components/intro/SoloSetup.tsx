@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { flagUrl, type GameMode, type PlayKind, type TurkeyPrompt, type WorldPrompt } from "@/lib/game";
+import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { setQuestionPrompt, setTurkeyPrompt, setWorldScope } from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
 import { CONTINENTS, continentInfo, countryCount, isContinentScope, scopeCountryCount, type WorldScope } from "@/lib/world-countries";
@@ -52,6 +53,9 @@ type SoloSetupProps = {
 
 /** Adım 2, Yarış ve Antrenman: soru tipi ve (dünyada) kapsam. */
 export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocked, isReady, needsSignIn, onMapChange, onBack, onStart }: SoloSetupProps) {
+  // Yarış turu sunucuda açılır; bağlantı yokken başlatılırsa skoru kaydedilemez. Antrenman bağlantısız da oynanır.
+  const isOnline = useIsOnline();
+  const isBlockedOffline = kind === "ranked" && !isOnline;
   const poolScopes: { id: WorldScope; label: string }[] = [
     { id: "normal", label: "Normal" },
     { id: "hard", label: kind === "ranked" ? "Zor" : "Tümü" },
@@ -59,9 +63,9 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
 
   return (
     <SetupShell
-      actionLabel={!isReady ? "Harita hazırlanıyor..." : needsSignIn ? "Giriş yap ve başla" : "Başla"}
+      actionLabel={isBlockedOffline ? "Bağlantı yok" : !isReady ? "Harita hazırlanıyor..." : needsSignIn ? "Giriş yap ve başla" : "Başla"}
       game={gameInfo(kind)}
-      isActionDisabled={!isReady}
+      isActionDisabled={!isReady || isBlockedOffline}
       map={map}
       onAction={onStart}
       onBack={onBack}

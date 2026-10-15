@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GameMap, streakCelebration } from "./components/GameMap";
+import { GameMap, nextQuestionCountdown, streakCelebration } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { ResultScreen } from "./components/ResultScreen";
@@ -106,7 +106,7 @@ export default function Home() {
   const [readyModes, setReadyModes] = useState<GameMode[]>([]);
 
   const { mapMarkup, mapError } = useMapMarkup(mode);
-  const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId, isResultSettled } = useLeaderboard({
+  const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId, isResultSettled, saveResult, retrySave } = useLeaderboard({
     player,
     roundId,
     serverRound,
@@ -247,6 +247,10 @@ export default function Home() {
     cancelPendingChoice();
   }
 
+  // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
+  const celebration = streakCelebration(answerState, round.streak);
+  const countdown = nextQuestionCountdown(answerState, round.remainingQuestionSeconds, !isPractice && questionIndex === questions.length - 1);
+
   return (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       {/* Her ekran kendi kenar boşluklarını yönetir ve ekranın tamamını kullanır. */}
@@ -274,6 +278,8 @@ export default function Home() {
             durationMs={completionDurationMs}
             boardId={boardId}
             leaderboardError={leaderboardError}
+            onRetrySave={retrySave}
+            saveResult={saveResult}
             leaderboards={leaderboards}
             missedLocationIds={
               // "Sen de" işareti yalnızca oynanan modun listesinde anlamlı.
@@ -296,6 +302,8 @@ export default function Home() {
         ) : (
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
             <GameTopBar
+              celebration={celebration}
+              countdown={countdown}
               answers={answers}
               answerState={answerState}
               choice={choice}
@@ -307,13 +315,14 @@ export default function Home() {
               question={currentQuestion}
               questionCount={questions.length}
               remainingGameSeconds={round.remainingGameSeconds}
-              remainingQuestionSeconds={round.remainingQuestionSeconds}
               score={score}
             />
             <GameMap
               activeLocationIds={continent ? continentLocationIds(continent) : null}
               answerState={answerState}
-              celebration={streakCelebration(answerState, round.streak)}
+              celebration={celebration}
+              countdown={countdown}
+              areNoticesInHeaderWhenNarrow
               homeView={continent ? continentInfo(continent).view : null}
               isInteractive
               mapError={mapError}

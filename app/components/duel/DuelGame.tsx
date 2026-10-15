@@ -203,6 +203,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
       <div className="relative flex min-h-0 flex-1">
         <GameMap
           answerState={isEnded ? (mine?.correct ? "correct" : "incorrect") : null}
+          countdown={isEnded ? `${position + 1 >= DUEL_QUESTIONS ? "Sonuçlar" : "Sonraki soru"} · ${nextInSeconds} sn` : null}
           isInteractive
           mapError={mapError}
           mapMarkup={mapMarkup}
@@ -249,11 +250,6 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
           </div>
         )}
 
-        {isEnded && (
-          <div className="pointer-events-none absolute right-16 bottom-3 rounded-full bg-cyan-100 px-4 py-2 text-xs font-bold text-cyan-800 lg:bottom-6 lg:text-sm">
-            {position + 1 >= DUEL_QUESTIONS ? "Sonuçlar" : "Sonraki soru"}: {nextInSeconds} sn
-          </div>
-        )}
 
         {!opponent.online && (
           <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 rounded-xl bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 shadow">

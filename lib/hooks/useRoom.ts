@@ -46,9 +46,12 @@ export function useRoom(code: string, player: Player | null) {
     let isActive = true;
     let timer: number | undefined;
     let hasJoined = false;
+    let isPolling = false;
 
     const poll = async () => {
+      isPolling = true;
       const { data, error } = await supabase.rpc(hasJoined ? "get_room" : "join_room", { p_code: code });
+      isPolling = false;
       if (!isActive) return;
       if (error) {
         if (!hasJoined) return setFatalError(error.message || "Odaya bağlanılamadı.");
@@ -60,10 +63,21 @@ export function useRoom(code: string, player: Player | null) {
       timer = window.setTimeout(() => void poll(), status === "finished" ? FINISHED_POLL_MS : ACTIVE_POLL_MS);
     };
 
+    // Uygulamaya dönülünce ya da bağlantı gelince pano beklemeden yenilenir (bitmiş odada yoklama 10 saniyede bir).
+    const pollNow = () => {
+      if (document.visibilityState !== "visible" || isPolling || !hasJoined) return;
+      window.clearTimeout(timer);
+      void poll();
+    };
+
     void poll();
+    document.addEventListener("visibilitychange", pollNow);
+    window.addEventListener("online", pollNow);
     return () => {
       isActive = false;
       window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", pollNow);
+      window.removeEventListener("online", pollNow);
     };
   }, [apply, code, isPaused, playerId]);
 

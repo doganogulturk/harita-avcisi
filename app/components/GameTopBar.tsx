@@ -23,7 +23,6 @@ type GameTopBarProps = {
   answerState: AnswerState;
   answers: AnswerState[];
   questionCount: number;
-  remainingQuestionSeconds: number;
   remainingGameSeconds: number;
   score: number;
   /** Verilmezse turu yeniden başlatma / tur değiştirme kontrolleri gösterilmez (oda turu tek seferliktir). */
@@ -35,6 +34,12 @@ type GameTopBarProps = {
   /** Çıkış tuşunun açıklaması; turdan çıkmanın sonucu moda göre değişir. */
   exitTitle?: string;
   onSignOut: () => void;
+  /**
+   * Seri kutlaması ve sonraki soruya geri sayım (GameMap'teki streakCelebration / nextQuestionCountdown). Dikey
+   * telefonda haritanın üstünde değil, üst barın ikinci satırının ortasında gösterilir.
+   */
+  celebration?: string | null;
+  countdown?: string | null;
 };
 
 const PLATE_SIZES = {
@@ -96,7 +101,56 @@ function timeTone(remainingGameSeconds: number, tones: [danger: string, warning:
   return tones[2];
 }
 
-/** Oyun sırasında haritaya azami alan bırakmak için tüm durum bilgisini tek satırda toplar. */
+/** Sorulan şey: ülke / il adı, bayrak ya da plaka; bayrak ve plakada cevaptan sonra yanında adı. */
+function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { choice: PlayChoice; question: Question | undefined; answerState: AnswerState; isNarrow?: boolean }) {
+  const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-sm" : "text-base lg:text-2xl"}`;
+  if (question && isFlagChoice(choice) && "code" in question) {
+    return (
+      <>
+        <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
+        {/* Yeni soruda eski bayrak bir an bile görünmesin diye her ülke için ayrı öğe. */}
+        <Image
+          alt="Sorulan ülkenin bayrağı"
+          className="h-9 w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm lg:h-11"
+          height={44}
+          key={question.code}
+          src={flagUrl(question.code)}
+          unoptimized
+          width={59}
+        />
+        {/* Adı cevaptan sonra göster; oyuncu yanlış bildiği bayrağı da öğrensin. */}
+        {answerState && <span className={answerName}>{question.name}</span>}
+      </>
+    );
+  }
+  if (question && isPlateChoice(choice) && "plate" in question) {
+    return (
+      <>
+        <h1 className="sr-only">Bu plaka hangi ilin?</h1>
+        <PlateBadge key={question.plate} plate={question.plate} />
+        {/* İlin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği plakayı da öğrensin. */}
+        {answerState && <span className={answerName}>{question.city}</span>}
+      </>
+    );
+  }
+  return (
+    <h1
+      className={`text-center leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-lg" : "line-clamp-1 text-xl lg:text-3xl"}`}
+    >
+      {question && questionName(question)}
+    </h1>
+  );
+}
+
+const NARROW_BUTTON =
+  "hit-area flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none";
+
+/**
+ * Oyun sırasındaki üst bar. Yatay ekranda haritaya azami alan bırakmak için tek satırdır. Dikey telefonda yukarıda yer
+ * bol olduğu için iki satırdır: üstte solda turdan çık / antrenmanı bitir, tam ortada soru, sağda yeni tur; altta solda
+ * doğru sayısı, ortada bildirimler (seri, sonraki soru), sağda kalan süre. İki düzen aynı anda çizilir, ekran
+ * genişliğine göre biri gizlenir (gizlenen ekran okuyucuya da görünmez).
+ */
 export function GameTopBar({
   player,
   choice,
@@ -105,7 +159,6 @@ export function GameTopBar({
   answerState,
   answers,
   questionCount,
-  remainingQuestionSeconds,
   remainingGameSeconds,
   score,
   onFinishPractice,
@@ -113,57 +166,110 @@ export function GameTopBar({
   exitTitle,
   roundLabel,
   onSignOut,
+  celebration = null,
+  countdown = null,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
+  const timeClass = timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"]);
 
   return (
     <header className="shrink-0 border-b border-slate-200 bg-white">
-      {/* Üç sütun: soru adı, yanlardaki içerik ne kadar geniş olursa olsun tam ortada kalır. */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 lg:gap-6 lg:px-5 lg:py-3">
+      {/* Dikey telefon. Yanlar eşit genişlikte (1fr) olduğu için soru ekranın tam ortasında durur; soru en fazla ekranın
+          kalanı kadar genişler ve gerekirse iki satıra iner. */}
+      <div className="px-3 pt-2 pb-1.5 sm:hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <div className="flex justify-start">
+            {isPractice ? (
+              <button className={NARROW_BUTTON} onClick={onFinishPractice} type="button">
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Bitir
+              </button>
+            ) : (
+              <button aria-label="Turu bırak ve ana menüye dön" className={NARROW_BUTTON} onClick={onExit} title={exitTitle} type="button">
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+                  <path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Çık
+              </button>
+            )}
+          </div>
+
+          <div className="flex max-w-[calc(100vw-11rem)] min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
+          </div>
+
+          <div className="flex min-w-0 justify-end">
+            {onPlay ? (
+              isPractice ? (
+                <button aria-label="Antrenmanı yeniden başlat" className={`${NARROW_BUTTON} px-2.5`} onClick={() => onPlay(choice)} title="Yeniden başlat" type="button">
+                  <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4.5h4.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              ) : (
+                <RoundControls choice={choice} isCompact onPlay={onPlay} />
+              )
+            ) : (
+              roundLabel && <span className="truncate rounded-full bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-800">{roundLabel}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-1.5 grid min-h-7 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title="Doğru">
+            <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>
+              <ScoreValue score={score} />
+              <span className="text-slate-400">/{isPractice ? answers.length : questionCount}</span>
+            </span>
+          </p>
+
+          <div aria-live="polite" className="flex items-center justify-center gap-1.5">
+            {celebration && (
+              <span className="streak-pop rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-amber-950" key={celebration}>
+                {celebration}
+              </span>
+            )}
+            {countdown && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums">{countdown}</span>}
+          </div>
+
+          <p className={`flex items-center justify-end gap-1 text-sm font-bold tabular-nums ${isPractice ? "text-slate-400" : timeClass}`}>
+            {isPractice ? (
+              "Süre yok"
+            ) : (
+              <>
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l2.5 2M9 2h6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {formatTime(remainingGameSeconds)}
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Yatay ekran ve masaüstü: tek satır, üç sütun; soru adı yanlardaki içerik ne kadar geniş olursa olsun ortada
+          kalır. Telefonda oyuncunun resmi ve adı gösterilmez. */}
+      <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 sm:grid lg:gap-6 lg:px-5 lg:py-3">
         <div className="flex min-w-0 items-center gap-2 lg:gap-3">
           <ExitButton onClick={onExit} title={exitTitle} />
-          <PlayerBadge align="left" onSignOut={onSignOut} player={player} size="sm" />
+          <div className="hidden lg:block">
+            <PlayerBadge align="left" onSignOut={onSignOut} player={player} size="sm" />
+          </div>
         </div>
 
         <div className="flex min-w-0 items-center justify-center gap-2 lg:gap-3">
-          {question && isFlagChoice(choice) && "code" in question ? (
-            <>
-              <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
-              {/* Yeni soruda eski bayrak bir an bile görünmesin diye her ülke için ayrı öğe. */}
-              <Image
-                alt="Sorulan ülkenin bayrağı"
-                className="h-9 w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm lg:h-11"
-                height={44}
-                key={question.code}
-                src={flagUrl(question.code)}
-                unoptimized
-                width={59}
-              />
-              {/* Adı cevaptan sonra göster; oyuncu yanlış bildiği bayrağı da öğrensin. */}
-              {answerState && <span className="truncate text-base font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
-            </>
-          ) : question && isPlateChoice(choice) && "plate" in question ? (
-            <>
-              <h1 className="sr-only">Bu plaka hangi ilin?</h1>
-              <PlateBadge key={question.plate} plate={question.plate} />
-              {/* İlin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği plakayı da öğrensin. */}
-              {answerState && <span className="truncate text-base font-bold text-cyan-700 lg:text-2xl">{question.city}</span>}
-            </>
-          ) : (
-            <h1 className="truncate text-center text-xl leading-tight font-bold tracking-tight text-cyan-700 lg:text-3xl">
-              {question && questionName(question)}
-            </h1>
-          )}
-          {answerState && (
-            <span className="shrink-0 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-cyan-800 lg:text-xs">
-              Sonraki: {remainingQuestionSeconds} sn
-            </span>
-          )}
+          <QuestionPrompt answerState={answerState} choice={choice} question={question} />
         </div>
 
         {isPractice ? (
           <div className="flex items-center justify-end gap-3 lg:gap-5">
-            <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase md:inline lg:text-xs">
+            <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase lg:inline lg:text-xs">
               {choiceLabel(choice)}
             </span>
             <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title="Doğru / cevaplanan">
@@ -180,7 +286,8 @@ export function GameTopBar({
           </div>
         ) : (
           <div className="flex items-center justify-end gap-3 lg:gap-5">
-            <div aria-label="Soru ilerlemesi" className="hidden shrink-0 items-center gap-1 md:flex">
+            {/* Yalnızca geniş ekranda: yatay telefonda uzun soru adlarıyla çakışır, puan zaten "2/10" diye yazıyor. */}
+            <div aria-label="Soru ilerlemesi" className="hidden shrink-0 items-center gap-1 lg:flex">
               {Array.from({ length: questionCount }, (_, index) => (
                 <span
                   className={`h-2 w-3 rounded-full lg:w-4 ${answers[index] === "correct" ? "bg-emerald-500" : answers[index] === "incorrect" ? "bg-rose-500" : "bg-slate-200"}`}
@@ -194,9 +301,7 @@ export function GameTopBar({
               <span className="text-slate-400">/{questionCount}</span>
             </p>
 
-            <p className={`shrink-0 text-sm font-bold tabular-nums lg:text-xl ${timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"])}`}>
-              {formatTime(remainingGameSeconds)}
-            </p>
+            <p className={`shrink-0 text-sm font-bold tabular-nums lg:text-xl ${timeClass}`}>{formatTime(remainingGameSeconds)}</p>
 
             {onPlay ? (
               <RoundControls choice={choice} onPlay={onPlay} />

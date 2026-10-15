@@ -130,6 +130,18 @@ boyuta indiği için:
 
 Mobil uygulama ise şimdilik yalnızca yatay açılır (aşağıda).
 
+### Sağlamlık
+
+- **Arka plana alma:** Turun saati duvar saatidir (`Date.now`); telefon kilitlenip açılınca ya da uygulamadan çıkıp
+  dönülünce süre kaldığı yerden doğru işler ve kaydedilen süre sunucunun ölçtüğüyle uyuşur. Düello ve odada uygulamaya
+  dönülünce ya da bağlantı gelince durum sıradaki yoklamayı beklemeden hemen sorulur.
+- **Bağlantı kopması:** Bağlantı yokken ekranın altında bir uyarı durur (`ConnectionBanner`). Antrenman bağlantısız da
+  oynanır; yarış, düello ve oda tuşları "Bağlantı yok" diyerek kapanır. Yarış skoru kaydedilemezse sonuç ekranında
+  **Tekrar dene** çıkar ve bağlantı gelince kendiliğinden yeniden denenir. Tur başlarken sunucuda açılamadıysa skor
+  sonradan kaydedilemez; sonuç ekranı bunu söyler.
+- **Klavye:** Dokunmatik cihazda bir yazı alanına odaklanılınca klavye açıldıktan sonra alan ekranın ortasına kaydırılır
+  (`KeyboardFocus`); yatay telefonda alt kartlardaki kod alanı klavyenin altında kalmaz.
+
 ### Paylaşım
 
 Site bağlantısı LinkedIn, WhatsApp ya da X'te paylaşılınca logolu, Türkiye haritalı bir önizleme kartı çıkar

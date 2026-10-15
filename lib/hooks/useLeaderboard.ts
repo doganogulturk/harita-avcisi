@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getSupabaseClient, SUPABASE_SCHEMA } from "@/lib/supabase";
 import {
   BOARDS,
@@ -110,16 +110,27 @@ export function useLeaderboards(isOpen: boolean) {
 }
 
 /**
+ * Kaydın sonucu: "saved" kaydedildi, "failed" sunucuya ulaşılamadı ya da reddetti (yeniden denenebilir),
+ * "no-round" tur başlarken sunucuda açılamadı (çoğunlukla bağlantı yoktu); süreyi sunucu turun açıldığı andan
+ * ölçtüğü için bu tur sonradan kaydedilemez.
+ */
+export type SaveResult = "saved" | "failed" | "no-round";
+
+/**
  * Tur bitince sonucu kaydeder, tüm sıralamaları çeker ve realtime güncellemelere abone olur.
  * Sonuç tabloya doğrudan yazılmaz; sunucudaki finish_round turu ve süresini doğrulayıp kaydeder.
+ * Kayıt başarısızsa `retrySave` yeniden dener; bağlantı geri gelince de kendiliğinden yeniden denenir.
  */
 export function useLeaderboard({ player, roundId, serverRound, isFinished, choice, answers, durationMs }: FinishedRound) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards>(EMPTY_LEADERBOARDS);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   // Kaydı denenmiş (başarılı ya da değil) son tur; istatistikler bu turun cevaplarını da içersin diye beklenir.
   const [settledRoundId, setSettledRoundId] = useState<number | null>(null);
-  // Effect yeniden çalışsa da (StrictMode, oturum yenilenmesi) tur başına tek kayıt; yeniden çalışan effect aynı kaydı bekler.
-  const save = useRef<{ roundId: number; succeeded: Promise<boolean> } | null>(null);
+  const [saveOutcome, setSaveOutcome] = useState<{ roundId: number; result: SaveResult } | null>(null);
+  // "Tekrar dene" ya da bağlantının gelmesi bunu artırır; effect aynı tur için kaydı yeniden dener.
+  const [saveAttempt, setSaveAttempt] = useState(0);
+  // Effect yeniden çalışsa da (StrictMode, oturum yenilenmesi) deneme başına tek kayıt; yeniden çalışan effect aynı kaydı bekler.
+  const save = useRef<{ roundId: number; attempt: number; result: Promise<SaveResult> } | null>(null);
 
   useEffect(() => {
     if (!isFinished || !player || !serverRound) return;
@@ -133,29 +144,28 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
       const loaded = await fetchLeaderboards(supabase);
       if (!isActive) return;
       if (!loaded) return setLeaderboardError("Sıralama yüklenemedi. Lütfen tekrar deneyin.");
+      setLeaderboardError(null);
       setLeaderboards(loaded);
     };
 
     const saveResultAndLoadLeaderboards = async () => {
-      if (save.current?.roundId !== roundId) {
-        const succeeded = serverRound.then(async (serverRoundId) => {
-          if (!serverRoundId) return false;
+      if (save.current?.roundId !== roundId || save.current.attempt !== saveAttempt) {
+        const result = serverRound.then(async (serverRoundId): Promise<SaveResult> => {
+          if (!serverRoundId) return "no-round";
           const { error } = await supabase.rpc("finish_round", {
             p_round_id: serverRoundId,
             p_duration_ms: durationMs,
             p_answers: answers,
           });
-          return !error;
+          return error ? "failed" : "saved";
         });
-        save.current = { roundId, succeeded: succeeded.catch(() => false) };
+        save.current = { roundId, attempt: saveAttempt, result: result.catch((): SaveResult => "failed") };
       }
-      const succeeded = await save.current.succeeded;
+      const result = await save.current.result;
       if (!isActive) return;
       setSettledRoundId(roundId);
-      if (!succeeded) {
-        setLeaderboardError("Skor kaydedilemedi. Lütfen tekrar deneyin.");
-        return;
-      }
+      setSaveOutcome({ roundId, result });
+      // Kayıt olmasa da sıralama gösterilir (bağlantı varsa).
       await loadLeaderboards();
       // Beklerken effect temizlendiyse abone olunmaz; aksi halde temizlikten sonra açılan kanal hiç kapanmaz.
       if (!isActive) return;
@@ -167,12 +177,30 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
       isActive = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [answers, durationMs, isFinished, player, roundId, serverRound]);
+  }, [answers, durationMs, isFinished, player, roundId, saveAttempt, serverRound]);
+
+  const saveResult = saveOutcome?.roundId === roundId ? saveOutcome.result : null;
+  const retrySave = useCallback(() => setSaveAttempt((attempt) => attempt + 1), []);
+
+  // Kayıt bağlantı yüzünden olmadıysa bağlantı gelince kendiliğinden yeniden denenir.
+  useEffect(() => {
+    if (saveResult !== "failed") return;
+    window.addEventListener("online", retrySave);
+    return () => window.removeEventListener("online", retrySave);
+  }, [retrySave, saveResult]);
 
   const resetLeaderboards = () => {
     setLeaderboards(EMPTY_LEADERBOARDS);
     setLeaderboardError(null);
   };
 
-  return { leaderboards, leaderboardError, resetLeaderboards, playedBoardId: boardIdFor(choice), isResultSettled: settledRoundId === roundId };
+  return {
+    leaderboards,
+    leaderboardError,
+    resetLeaderboards,
+    playedBoardId: boardIdFor(choice),
+    isResultSettled: settledRoundId === roundId,
+    saveResult,
+    retrySave,
+  };
 }

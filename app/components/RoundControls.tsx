@@ -6,6 +6,8 @@ import { BOARDS, boardIdFor, choiceForBoard, type PlayChoice } from "@/lib/game"
 type RoundControlsProps = {
   choice: PlayChoice;
   onPlay: (choice: PlayChoice) => void;
+  /** Dikey telefonda tur adı yazılmaz, yalnızca açılır listenin oku görünür; ad zaten açılan listede işaretli. */
+  isCompact?: boolean;
 };
 
 /** İki kontrol tek bir çerçeveyi paylaşır; aralarındaki çizgi ayırıcıdır. */
@@ -20,7 +22,7 @@ const ITEM_CLASS =
  * Açılır listenin üzerinde oynanan turun adı yazdığı için üst bar aynı zamanda
  * "hangi moddayım" bilgisini de verir.
  */
-export function RoundControls({ choice, onPlay }: RoundControlsProps) {
+export function RoundControls({ choice, onPlay, isCompact = false }: RoundControlsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const currentBoardId = boardIdFor(choice);
@@ -64,7 +66,7 @@ export function RoundControls({ choice, onPlay }: RoundControlsProps) {
           onClick={() => setIsOpen((open) => !open)}
           type="button"
         >
-          {currentLabel}
+          {isCompact ? <span className="sr-only">{currentLabel} · başka tur</span> : currentLabel}
           <svg aria-hidden="true" className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

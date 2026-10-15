@@ -32,6 +32,10 @@ type GameMapProps = {
   opponentLocation?: string | null;
   /** Haritanın üstünde bir an beliren kutlama (ör. "🔥 3 seri"); değiştikçe yeniden oynar. */
   celebration?: string | null;
+  /** Cevaptan sonra haritanın üst ortasında duran geri sayım, ör. "Sonraki soru · 2 sn". */
+  countdown?: string | null;
+  /** Bildirimler dikey telefonda üst barda gösteriliyorsa (GameTopBar) haritanın üstünde dar ekranda gizlenir. */
+  areNoticesInHeaderWhenNarrow?: boolean;
   onSelect: (locationId: string) => void;
 };
 
@@ -56,6 +60,11 @@ function locationNear(container: HTMLElement, mode: GameMode, clientX: number, c
 
 /** Seri bu sayıya ulaşınca her doğru cevapta haritanın üstünde kısa bir kutlama belirir. */
 const STREAK_CELEBRATION_FROM = 3;
+
+/** Cevaptan sonraki geri sayım; son soruda sonuç ekranına geçişi söyler. Cevap yokken gösterilmez. */
+export function nextQuestionCountdown(answerState: AnswerState, seconds: number, isLastQuestion: boolean): string | null {
+  return answerState ? `${isLastQuestion ? "Sonuçlar" : "Sonraki soru"} · ${seconds} sn` : null;
+}
 
 /** Doğru cevaptan sonra gösterilecek seri kutlaması; seri kısaysa ya da cevap yanlışsa yok. */
 export function streakCelebration(answerState: AnswerState, streak: number): string | null {
@@ -110,6 +119,8 @@ export function GameMap({
   pendingLocation = null,
   opponentLocation = null,
   celebration = null,
+  countdown = null,
+  areNoticesInHeaderWhenNarrow = false,
   onSelect,
 }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -203,14 +214,26 @@ export function GameMap({
         }}
       />
 
-      {celebration && (
-        <div aria-live="polite" className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center lg:top-5">
-          <p
-            className="streak-pop rounded-full bg-amber-400 px-4 py-1.5 font-display text-lg font-bold whitespace-nowrap text-amber-950 shadow-lg shadow-amber-500/30 lg:px-5 lg:py-2 lg:text-2xl"
-            key={celebration}
-          >
-            {celebration}
-          </p>
+      {/* Haritanın üst ortası: seri kutlaması ve altında sonraki soruya geri sayım. Üst bar dar ekranda kalabalık olduğu
+          için geri sayım burada durur. Dokunmalar haritaya geçer. */}
+      {(celebration || countdown) && (
+        <div
+          aria-live="polite"
+          className={`pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-center gap-2 lg:top-5 ${areNoticesInHeaderWhenNarrow ? "max-sm:hidden" : ""}`}
+        >
+          {celebration && (
+            <p
+              className="streak-pop rounded-full bg-amber-400 px-4 py-1.5 font-display text-lg font-bold whitespace-nowrap text-amber-950 shadow-lg shadow-amber-500/30 lg:px-5 lg:py-2 lg:text-2xl"
+              key={celebration}
+            >
+              {celebration}
+            </p>
+          )}
+          {countdown && (
+            <p className="rounded-full border border-cyan-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
+              {countdown}
+            </p>
+          )}
         </div>
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { GameMap, streakCelebration } from "../GameMap";
+import { GameMap, nextQuestionCountdown, streakCelebration } from "../GameMap";
 import { GameTopBar } from "../GameTopBar";
 import { duelChoice, questionForLocation } from "@/lib/duel";
 import { flagUrl, isFlagChoice, type Player, type Question } from "@/lib/game";
@@ -64,9 +64,14 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
     );
   }, [answerRecords, completionDurationMs, onDone, round, roundId, score, status]);
 
+  const celebration = streakCelebration(play.answerState, play.streak);
+  const countdown = nextQuestionCountdown(play.answerState, play.remainingQuestionSeconds, play.questionIndex === play.questions.length - 1);
+
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
       <GameTopBar
+        celebration={celebration}
+        countdown={countdown}
         answerState={play.answerState}
         answers={play.answers}
         choice={choice}
@@ -85,13 +90,14 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
         question={play.currentQuestion}
         questionCount={play.questions.length}
         remainingGameSeconds={play.remainingGameSeconds}
-        remainingQuestionSeconds={play.remainingQuestionSeconds}
         roundLabel={`${state.name} · Tur ${round}/${state.round_count}`}
         score={play.score}
       />
       <GameMap
         answerState={play.answerState}
-        celebration={streakCelebration(play.answerState, play.streak)}
+        celebration={celebration}
+        countdown={countdown}
+        areNoticesInHeaderWhenNarrow
         isInteractive
         mapError={mapError}
         mapMarkup={mapMarkup}

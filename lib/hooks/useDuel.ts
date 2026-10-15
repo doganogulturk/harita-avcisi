@@ -36,9 +36,12 @@ export function useDuel(code: string, player: Player | null) {
 
     let isActive = true;
     let timer: number | undefined;
+    let isPolling = false;
 
     const poll = async (isFirst: boolean) => {
+      isPolling = true;
       const { data, error } = await supabase.rpc(isFirst ? "join_duel" : "duel_tick", { p_code: code });
+      isPolling = false;
       if (!isActive) return;
       if (error) {
         if (isFirst) return setFatalError(error.message || "Düelloya katılınamadı.");
@@ -51,10 +54,22 @@ export function useDuel(code: string, player: Player | null) {
       timer = window.setTimeout(() => void poll(false), status === "playing" ? PLAYING_POLL_MS : IDLE_POLL_MS);
     };
 
+    // Uygulamaya dönülünce (telefon kilidi, başka uygulama) sıradaki yoklamayı beklemeden durum hemen sorulur; yanıt
+    // bekleyen bir yoklama varsa o zaten bir sonrakini kuracak.
+    const pollNow = () => {
+      if (document.visibilityState !== "visible" || isPolling) return;
+      window.clearTimeout(timer);
+      void poll(false);
+    };
+
     void poll(true);
+    document.addEventListener("visibilitychange", pollNow);
+    window.addEventListener("online", pollNow);
     return () => {
       isActive = false;
       window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", pollNow);
+      window.removeEventListener("online", pollNow);
     };
   }, [apply, code, playerId]);
 

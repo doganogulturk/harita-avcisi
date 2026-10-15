@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
+import { ConnectionBanner } from "./components/ConnectionBanner";
+import { KeyboardFocus } from "./components/KeyboardFocus";
 import { NativeSystemBars } from "./components/NativeSystemBars";
 import { SITE_URL } from "@/lib/site";
 
@@ -41,6 +43,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html className={displayFont.variable} lang="tr">
       <body>
         {children}
+        <ConnectionBanner />
+        <KeyboardFocus />
         <NativeSystemBars />
       </body>
     </html>

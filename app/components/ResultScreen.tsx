@@ -17,7 +17,7 @@ import {
   type PlayChoice,
   type Player,
 } from "@/lib/game";
-import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
+import { type Leaderboards, type SaveResult } from "@/lib/hooks/useLeaderboard";
 
 type ResultScreenProps = {
   player: Player | null;
@@ -32,6 +32,9 @@ type ResultScreenProps = {
   leaderboards: Leaderboards;
   boardId: BoardId;
   leaderboardError: string | null;
+  /** Yarış skorunun kaydı: null sürüyor; "failed" yeniden denenebilir; "no-round" tur sunucuda açılamamıştı. */
+  saveResult: SaveResult | null;
+  onRetrySave: () => void;
   /** Tüm oyuncuların bu modda en çok yanlış yaptığı yerler; `undefined` yükleniyor, `null` yüklenemedi. */
   mostMissed: LocationStat[] | null | undefined;
   /** Listenin ait olduğu mod: yarışta sıralamada seçili sekme, antrenmanda oynanan mod. */
@@ -132,6 +135,29 @@ function PrimaryButton({ label, onClick }: { label: string; onClick: () => void 
   );
 }
 
+/** Skor kaydedilemediyse özetin altında: neden ve (yapılabiliyorsa) yeniden deneme. Kaydedildiyse ya da sürüyorsa yok. */
+function SaveNotice({ result, onRetry }: { result: SaveResult | null; onRetry: () => void }) {
+  if (result !== "failed" && result !== "no-round") return null;
+  return (
+    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 short:py-2" role="alert">
+      {result === "failed" ? (
+        <>
+          <p className="font-semibold">Skorun kaydedilemedi.</p>
+          <p className="mt-0.5 text-xs text-rose-700">Bağlantı gelince kendiliğinden yeniden denenir.</p>
+          <button className="mt-2 font-bold text-rose-700 underline underline-offset-4 hover:text-rose-900" onClick={onRetry} type="button">
+            Tekrar dene
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="font-semibold">Bu tur kaydedilemedi.</p>
+          <p className="mt-0.5 text-xs text-rose-700">Tur başlarken bağlantı kurulamadı; sıralamaya girmek için yeni bir tur oyna.</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 const RESULT_LINK_CLASS = "text-sm font-semibold underline-offset-4 transition hover:underline";
 
 /** Asıl tuşun altındaki iki bağlantı: aynı oyunun ayar ekranında başka bir tur seçmek ve ana menüye dönmek. */
@@ -161,6 +187,8 @@ export function ResultScreen({
   leaderboards,
   boardId,
   leaderboardError,
+  saveResult,
+  onRetrySave,
   mostMissed,
   mostMissedChoice,
   missedLocationIds,
@@ -223,6 +251,8 @@ export function ResultScreen({
                 <StatTile label="Süre" value={duration} />
               </dl>
             </div>
+
+            <SaveNotice onRetry={onRetrySave} result={saveResult} />
 
             {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
                 ayar ekranında seçilir. */}

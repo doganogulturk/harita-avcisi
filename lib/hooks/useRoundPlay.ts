@@ -27,6 +27,14 @@ type RoundOptions = {
 };
 
 /**
+ * Turun saati duvar saatidir (Date.now), performance.now değil: telefon kilitlenince ya da uygulama arka plana
+ * alınınca bazı tarayıcılarda performance.now durur. Sunucu turun süresini duvar saatiyle ölçer ve kaydedilen süre
+ * ondan belirgin biçimde kısaysa sonucu reddeder; arka plana alınan yarışın skoru böyle kaybolurdu. Süre de oyuncu
+ * uygulamadan çıktığında işlemeye devam eder; yarışta adil olan budur.
+ */
+const now = () => Date.now();
+
+/**
  * Tek bir turun oynanışı: sorular sırayla sorulur, cevaptan sonra doğru cevap 3 saniye gösterilir,
  * süreli turda toplam süre 120 saniyedir. Puan, seri ve süre burada tutulur. Ana sayfadaki yarış ve
  * antrenman turları da odadaki turlar da bu kancayla oynanır; soruların nereden geldiği (tarayıcıda
@@ -58,7 +66,7 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
 
   const currentQuestion = questions[questionIndex];
   const isRoundComplete = answers.length === questions.length;
-  const elapsedMs = () => (startedAt.current === null ? 0 : performance.now() - startedAt.current);
+  const elapsedMs = () => (startedAt.current === null ? 0 : now() - startedAt.current);
 
   const start = useCallback((nextQuestions: Question[]) => {
     setQuestions(nextQuestions);
@@ -73,7 +81,7 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
     setCompletionDurationMs(0);
     setRemainingGameSeconds(GAME_DURATION_SECONDS);
     setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
-    startedAt.current = performance.now();
+    startedAt.current = now();
     setRoundKey((current) => current + 1);
     setStatus("playing");
   }, []);
@@ -91,7 +99,7 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
   useEffect(() => {
     if (status !== "playing" || isRoundComplete || !timed) return;
     const updateRemaining = () => {
-      const elapsed = startedAt.current === null ? 0 : performance.now() - startedAt.current;
+      const elapsed = startedAt.current === null ? 0 : now() - startedAt.current;
       const remainingSeconds = Math.max(0, Math.ceil((GAME_DURATION_MS - elapsed) / 1000));
       setRemainingGameSeconds(remainingSeconds);
       if (remainingSeconds === 0) {
@@ -101,15 +109,20 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
     };
     updateRemaining();
     const timer = window.setInterval(updateRemaining, 250);
-    return () => window.clearInterval(timer);
+    // Uygulamaya ya da sekmeye dönülünce kalan süre beklemeden güncellensin.
+    document.addEventListener("visibilitychange", updateRemaining);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", updateRemaining);
+    };
   }, [isRoundComplete, status, timed]);
 
   // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
   useEffect(() => {
     if (status !== "playing" || !answerState) return;
-    const transitionStartedAt = performance.now();
+    const transitionStartedAt = now();
     const countdown = window.setInterval(
-      () => setRemainingQuestionSeconds(Math.max(0, Math.ceil((QUESTION_TRANSITION_MS - (performance.now() - transitionStartedAt)) / 1000))),
+      () => setRemainingQuestionSeconds(Math.max(0, Math.ceil((QUESTION_TRANSITION_MS - (now() - transitionStartedAt)) / 1000))),
       100,
     );
     const timer = window.setTimeout(() => {

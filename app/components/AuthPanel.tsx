@@ -104,6 +104,8 @@ export function AuthPanel({
             autoFocus
             className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
             disabled={isSigningIn}
+            autoComplete="nickname"
+            enterKeyHint="go"
             id="guest-name"
             maxLength={40}
             onChange={(event) => setGuestName(event.target.value)}
