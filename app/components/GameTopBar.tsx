@@ -81,6 +81,15 @@ function ExitButton({ onClick, title = "Ana menü · Bu turun skoru kaydedilmez"
   );
 }
 
+/** Puan her arttığında bir an büyüyüp yeşile döner (globals.css, .score-bump); `key` animasyonu yeniden başlatır. */
+function ScoreValue({ score }: { score: number }) {
+  return (
+    <span className={score > 0 ? "score-bump" : ""} key={score}>
+      {score}
+    </span>
+  );
+}
+
 function timeTone(remainingGameSeconds: number, tones: [danger: string, warning: string, calm: string]) {
   if (remainingGameSeconds <= 10) return tones[0];
   if (remainingGameSeconds <= 30) return tones[1];
@@ -158,7 +167,7 @@ export function GameTopBar({
               {choiceLabel(choice)}
             </span>
             <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title="Doğru / cevaplanan">
-              {score}
+              <ScoreValue score={score} />
               <span className="text-slate-400">/{answers.length}</span>
             </p>
             <button
@@ -181,7 +190,7 @@ export function GameTopBar({
             </div>
 
             <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl">
-              {score}
+              <ScoreValue score={score} />
               <span className="text-slate-400">/{questionCount}</span>
             </p>
 

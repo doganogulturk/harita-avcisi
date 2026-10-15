@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GameMap } from "./components/GameMap";
+import { GameMap, streakCelebration } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { ResultScreen } from "./components/ResultScreen";
@@ -153,11 +153,13 @@ export default function Home() {
     });
   }, [choice, phase, questionIndex, questions]);
 
-  // Dikeyde başlatılan tur, telefon yan çevrilince başlar; süre çevirirken işlemesin.
+  // Dikeyde başlatılan süreli tur, telefon yan çevrilince (ya da "Dikeyde devam et" denince) başlar; süre çevirirken
+  // işlemesin. Antrenman süresiz olduğu için dikeyde de hemen başlar.
   const landscape = useLandscapeGate(beginRound);
 
   function startGame(nextChoice: PlayChoice) {
-    landscape.request(nextChoice);
+    if (nextChoice.kind === "practice") beginRound(nextChoice);
+    else landscape.request(nextChoice);
   }
 
   function beginRound(nextChoice: PlayChoice) {
@@ -311,6 +313,7 @@ export default function Home() {
             <GameMap
               activeLocationIds={continent ? continentLocationIds(continent) : null}
               answerState={answerState}
+              celebration={streakCelebration(answerState, round.streak)}
               homeView={continent ? continentInfo(continent).view : null}
               isInteractive
               mapError={mapError}
@@ -324,8 +327,8 @@ export default function Home() {
         )}
       </div>
 
-      {/* Menüler ve sonuç dikeyde de kullanılır; uyarı yalnızca harita ekranında ya da yan çevrilmeyi bekleyen turda. */}
-      {(phase === "playing" || landscape.isWaiting) && <RotateOverlay onCancel={landscape.isWaiting ? landscape.cancel : undefined} />}
+      {/* Menüler, sonuç ve antrenman dikeyde de kullanılır; uyarı yalnızca süreli turda ya da yan çevrilmeyi bekleyen turda. */}
+      {((phase === "playing" && !isPractice) || landscape.isWaiting) && <RotateOverlay onCancel={landscape.isWaiting ? landscape.cancel : undefined} />}
     </main>
   );
 }

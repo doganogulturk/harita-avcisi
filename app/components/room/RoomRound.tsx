@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { GameMap } from "../GameMap";
+import { GameMap, streakCelebration } from "../GameMap";
 import { GameTopBar } from "../GameTopBar";
 import { duelChoice, questionForLocation } from "@/lib/duel";
 import { flagUrl, isFlagChoice, type Player, type Question } from "@/lib/game";
@@ -91,6 +91,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
       />
       <GameMap
         answerState={play.answerState}
+        celebration={streakCelebration(play.answerState, play.streak)}
         isInteractive
         mapError={mapError}
         mapMarkup={mapMarkup}

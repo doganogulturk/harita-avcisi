@@ -145,6 +145,102 @@ body {
   stroke: #be123c !important;
 }
 
+/* Cevaba canlı tepki: doğru yer bir an büyüyüp yerine oturur, yanlış tıklanan yer sarsılır. Her yer kendi kutusunun
+   ortasından ölçeklenir; GameMap doğru yeri komşularının üstünde çizilsin diye grubun sonuna taşır. */
+@keyframes map-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes map-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.map .map-correct,
+.map .map-incorrect {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.map .map-correct {
+  animation: map-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.map .map-incorrect {
+  animation: map-shake 380ms ease-in-out;
+}
+
+/* Seri kutlaması ve puanın artışı (GameMap, GameTopBar). */
+@keyframes streak-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  40% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+
+.streak-pop {
+  animation: streak-pop 1.8s ease-out both;
+}
+
+@keyframes score-bump {
+  40% {
+    transform: scale(1.35);
+    color: #059669;
+  }
+}
+
+.score-bump {
+  display: inline-block;
+  animation: score-bump 420ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Seri rozeti hareketsiz durur; cevap gösterimi bitince kendiliğinden kalkar. */
+  .map .map-correct,
+  .map .map-incorrect,
+  .score-bump,
+  .streak-pop {
+    animation: none;
+  }
+}
+
 /* Düello: cevap verildi, soru henüz kapanmadı. */
 .map g.map-pending path,
 .map .map-pending {

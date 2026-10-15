@@ -1,11 +1,17 @@
 "use client";
 
+import { allowPortraitPlay, usePortraitPlayAllowed } from "@/lib/hooks/useLandscapeGate";
+
 /**
- * Mobilde dikey moddayken tüm ekranı kaplayan "telefonunu yan çevir" uyarısı. Menüler dikeyde de kullanılır; uyarı
- * yalnızca harita ekranlarında (oyun, düello) ve dikeyde başlatılıp yan çevrilmeyi bekleyen turda çizilir.
+ * Süreli oyunlarda (yarış, düello, oda turu) dikey moddayken tüm ekranı kaplayan "telefonunu yan çevir" uyarısı.
+ * Menüler ve antrenman dikeyde de kullanılır. Harita dikeyde yarı boyuta indiği için süreli oyunda yatay önerilir,
+ * ama seçim oyuncunundur: "Dikeyde devam et" denirse uyarı bir daha çıkmaz (allowPortraitPlay).
  * `onCancel` verilirse tur henüz başlamamıştır: uyarı turun yan çevirince başlayacağını söyler ve vazgeçme tuşu çıkar.
  */
 export function RotateOverlay({ onCancel }: { onCancel?: () => void } = {}) {
+  const isPortraitAllowed = usePortraitPlayAllowed();
+  if (isPortraitAllowed) return null;
+
   const enterLandscape = async () => {
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
@@ -24,12 +30,18 @@ export function RotateOverlay({ onCancel }: { onCancel?: () => void } = {}) {
       </svg>
       <p className="text-xl font-bold">Telefonunu yan çevir</p>
       <p className="max-w-xs text-sm text-slate-300">
-        {onCancel
-          ? "Harita geniş olduğu için oyun yatay oynanır. Telefonunu çevirdiğinde başlar; süre o ana kadar işlemez."
-          : "Harita geniş olduğu için Harita Avcısı yatay modda oynanır."}
+        Yatayda harita iki kat büyük olur; süreli oyunda küçük yerleri yakınlaştırmadan bulursun.
+        {onCancel && " Tur, telefonunu çevirdiğinde başlar; süre o ana kadar işlemez."}
       </p>
       <button className="rounded-full bg-cyan-500 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-400" onClick={enterLandscape} type="button">
         Yatay moda geç
+      </button>
+      <button
+        className="rounded-full border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400 hover:text-white"
+        onClick={allowPortraitPlay}
+        type="button"
+      >
+        Dikeyde devam et
       </button>
       {onCancel && (
         <button className="text-sm font-semibold text-slate-400 underline-offset-4 transition hover:text-white hover:underline" onClick={onCancel} type="button">

@@ -114,10 +114,21 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 ### Harita
 
 Harita tekerlek, sürükleme, iki parmakla sıkıştırma ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Dokunmatikte
-parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar yakındaki yer seçilir; farede bu tolerans yoktur. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır. Menüler, ayarlar, sonuçlar, düello sonucu ve oda panosu dikeyde de
-kullanılır; "Telefonunu yan çevir" uyarısı yalnızca harita ekranında (oyun, düello lobisi ve oyunu, oda turu) çıkar.
-Dikeyde başlatılan yarış, antrenman ya da oda turu hemen başlamaz: uyarı "çevirdiğinde başlar" der, süre telefon yan
-çevrilene kadar işlemez, **Vazgeç** isteği bırakır (`lib/hooks/useLandscapeGate.ts`).
+parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar yakındaki yer seçilir; farede bu tolerans yoktur. Cevaba canlı tepki verilir: doğru yer bir an büyüyüp
+yerine oturur, yanlış tıklanan yer sarsılır, puan yeşil yanıp büyür. Üç ve daha uzun doğru serisinde haritanın üstünde
+"🔥 3 seri" rozeti belirir. Android'de (tarayıcı ve uygulama) doğru cevapta kısa, yanlışta çift titreşim olur
+(`lib/haptics.ts`); iPhone Safari titreşimi desteklemez. Hareket azaltma açıksa animasyonlar oynamaz. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner.
+
+**Yön.** Menüler, ayarlar, sonuçlar, düello sonucu ve oda panosu dikeyde de kullanılır. Harita dikeyde yaklaşık yarı
+boyuta indiği için:
+
+- **Antrenman** dikeyde serbesttir; haritanın sol altında kapatılabilir bir "Yan çevirirsen harita büyür" ipucu durur.
+- **Süreli oyunlarda** (yarış, düello lobisi ve oyunu, oda turu) dikeyde "Telefonunu yan çevir" ekranı çıkar. Dikeyde
+  başlatılan tur hemen başlamaz; süre telefon yan çevrilene kadar işlemez, **Vazgeç** isteği bırakır. Oyuncu
+  **Dikeyde devam et** derse tur hemen başlar ve bu tercih tarayıcıda hatırlanır, ekran bir daha çıkmaz
+  (`lib/hooks/useLandscapeGate.ts`).
+
+Mobil uygulama ise şimdilik yalnızca yatay açılır (aşağıda).
 
 ### Paylaşım
 

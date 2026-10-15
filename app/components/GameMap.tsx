@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { vibrate } from "@/lib/haptics";
 import { useMapZoom } from "@/lib/hooks/useMapZoom";
 import {
   correctLocationId,
@@ -29,6 +30,8 @@ type GameMapProps = {
   pendingLocation?: string | null;
   /** Düello: rakibin tıkladığı yer (sunucu ancak oyuncu cevapladıktan ya da soru bittikten sonra verir). */
   opponentLocation?: string | null;
+  /** Haritanın üstünde bir an beliren kutlama (ör. "🔥 3 seri"); değiştikçe yeniden oynar. */
+  celebration?: string | null;
   onSelect: (locationId: string) => void;
 };
 
@@ -51,6 +54,46 @@ function locationNear(container: HTMLElement, mode: GameMode, clientX: number, c
   return undefined;
 }
 
+/** Seri bu sayıya ulaşınca her doğru cevapta haritanın üstünde kısa bir kutlama belirir. */
+const STREAK_CELEBRATION_FROM = 3;
+
+/** Doğru cevaptan sonra gösterilecek seri kutlaması; seri kısaysa ya da cevap yanlışsa yok. */
+export function streakCelebration(answerState: AnswerState, streak: number): string | null {
+  return answerState === "correct" && streak >= STREAK_CELEBRATION_FROM ? `🔥 ${streak} seri` : null;
+}
+
+/** Dikey ipucu bir kez kapatılınca sayfa açık kaldıkça bir daha gösterilmez (turlar arasında da). */
+let isRotateHintDismissed = false;
+
+/**
+ * Dikeyde oynanırken haritanın sol altındaki küçük ipucu: yatayda harita iki kat büyür. Yalnızca dikey telefonda
+ * görünür (portrait:max-lg); oyuncu kapatabilir. Dokunmalar haritaya geçmesin diye kendi alanı tıklanabilir.
+ */
+function RotateHint() {
+  const [isDismissed, setIsDismissed] = useState(isRotateHintDismissed);
+  if (isDismissed) return null;
+  return (
+    <div className="absolute bottom-3 left-3 z-10 hidden items-center gap-1 rounded-full border border-slate-200 bg-white/90 py-1 pr-1 pl-3 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur portrait:max-lg:flex">
+      <svg aria-hidden="true" className="h-4 w-4 text-cyan-600" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+        <rect height="14" rx="2" width="20" x="2" y="5" />
+        <path d="M9 2.5 12 5 9 7.5" />
+      </svg>
+      Yan çevirirsen harita büyür
+      <button
+        aria-label="İpucunu kapat"
+        className="hit-area flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        onClick={() => {
+          isRotateHintDismissed = true;
+          setIsDismissed(true);
+        }}
+        type="button"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 const ZOOM_BUTTON_CLASS =
   "flex h-9 w-9 items-center justify-center rounded-lg pointer-coarse:h-11 pointer-coarse:w-11 border border-slate-200 bg-white/90 text-lg font-bold text-slate-600 shadow-sm backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 focus:ring-2 focus:ring-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40";
 
@@ -66,6 +109,7 @@ export function GameMap({
   homeView = null,
   pendingLocation = null,
   opponentLocation = null,
+  celebration = null,
   onSelect,
 }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -101,9 +145,21 @@ export function GameMap({
       location.classList.toggle("map-incorrect", answerState === "incorrect" && isSameLocation(mode, locationId, selectedLocation));
       location.classList.toggle("map-pending", answerState === null && isSameLocation(mode, locationId, pendingLocation));
       location.classList.toggle("map-opponent", isSameLocation(mode, locationId, opponentLocation));
-      if (answerState !== null && isCorrect) ensureVisible(location);
+      if (answerState !== null && isCorrect) {
+        // Büyüme animasyonu komşu yerlerin altında kalmasın: SVG'de sonra çizilen üstte durur. Zaten sondaysa
+        // dokunulmaz; taşımak animasyonu baştan başlatır.
+        if (location.parentNode && location.parentNode.lastElementChild !== location) location.parentNode.appendChild(location);
+        ensureVisible(location);
+      }
     });
   }, [answerState, ensureVisible, mapMarkup, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
+
+  // Oyuncu cevap verdiği anda kısa bir titreşim (Android). Düelloda oyuncu cevaplamadan biten soruda titremez.
+  const previousAnswerState = useRef<AnswerState>(null);
+  useEffect(() => {
+    if (answerState && !previousAnswerState.current && selectedLocation) vibrate(answerState === "correct" ? "correct" : "incorrect");
+    previousAnswerState.current = answerState;
+  }, [answerState, selectedLocation]);
 
   const selectFromEvent = (target: EventTarget) => {
     const location = (target as Element).closest<SVGElement>(LOCATION_SELECTOR[mode]);
@@ -146,6 +202,19 @@ export function GameMap({
           panHandlers.onPointerDown(event);
         }}
       />
+
+      {celebration && (
+        <div aria-live="polite" className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center lg:top-5">
+          <p
+            className="streak-pop rounded-full bg-amber-400 px-4 py-1.5 font-display text-lg font-bold whitespace-nowrap text-amber-950 shadow-lg shadow-amber-500/30 lg:px-5 lg:py-2 lg:text-2xl"
+            key={celebration}
+          >
+            {celebration}
+          </p>
+        </div>
+      )}
+
+      <RotateHint />
 
       <div className="absolute right-3 bottom-3 flex flex-col items-end gap-1.5">
         {!isAtHome && (

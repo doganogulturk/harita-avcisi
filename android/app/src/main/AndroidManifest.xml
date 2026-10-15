@@ -47,4 +47,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Cevaba kısa titreşimle tepki (lib/haptics.ts, navigator.vibrate). Kurulumda onay istemeyen sıradan bir izin. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

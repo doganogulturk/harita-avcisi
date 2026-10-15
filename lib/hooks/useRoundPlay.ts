@@ -166,6 +166,8 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
     answerState,
     selectedLocation,
     score,
+    /** Şu anki doğru serisi; yanlış cevapta sıfırlanır. */
+    streak,
     bestStreak,
     completionDurationMs,
     remainingGameSeconds,
