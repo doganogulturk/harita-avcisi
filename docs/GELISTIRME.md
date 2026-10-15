@@ -55,7 +55,10 @@ ekranını açar (antrenmanda **Tekrar antrenman** ve **Başka antrenman seç**)
 sütundur: solda özet ve tuşlar, sağda sıralama ve en çok yanlış yapılanlar.
 
 Tur bittiğinde o modda **en çok yanlış yapılan 5 yer** gösterilir: tüm oyuncuların yarış turlarındaki cevaplarından,
-yanlış oranına göre. Her yerin yanında en çok neyle karıştırıldığı yazar; oyuncunun o turda kendisinin de yanlış
+yanlış oranının güvenilir alt sınırına (Wilson, %95) göre. Yalnızca orana göre sıralanınca bir kez sorulup bir kez
+yanlış bilinen yer (1/1, %100), yedi kez sorulup altısında yanlış bilinen yerin (6/7) önüne geçiyordu; bu ölçü az
+sorulan yerleri geri iter. Sıralama tarayıcıda yapılır (`useMostMissed.ts`). Her yerin altında en çok neyle
+karıştırıldığı yazar ("Tunceli sanılıyor"); oyuncunun o turda kendisinin de yanlış
 yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada Normal, Zor ve Bayrak ayrı değerlendirilir.
 Giriş ekranındaki Yarış kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
@@ -215,7 +218,7 @@ app/
     AuthPanel.tsx       Yarış öncesi giriş adımı (Google / misafir)
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
     GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
-    ResultScreen.tsx    Tam ekran sonuç: özet, tekrar oyna / başka tur seç / paylaş, en çok yanlış yapılanlar, sıralama; antrenman özeti
+    ResultScreen.tsx    Tam ekran sonuç: skor ve yanında seri / süre, tekrar oyna + paylaş, başka tur seç, en çok yanlış yapılanlar, sıralama; antrenman özeti
     Logo.tsx            Nişangah rozetli oyun adı (giriş ve sonuç ekranlarının başlığı)
     MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
     Leaderboard.tsx     Sekmeli sıralama listesi
@@ -266,7 +269,8 @@ Tüm varlıklar projeyle birlikte sunulur; çalışma zamanında dış bir CDN'e
 | `flags/*.svg` | [lipis/flag-icons](https://github.com/lipis/flag-icons) 7.5.0 | MIT |
 | Başlık yazı tipi | [Stack Sans Notch](https://fonts.google.com/specimen/Stack+Sans+Notch), `next/font` ile derlemede gömülür | OFL 1.1 |
 
-Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasında ISO 3166-1 alpha-2 `id` değeri üzerinden eşleştirilir; bayrak dosyaları da aynı ISO koduyla adlandırılır. Kıta görünümleri `world.svg` koordinatlarıyla `world-countries.ts` içinde sabit tanımlıdır: bazı ülkelerin şekilleri denizaşırı topraklarını da içerdiği için kutudan türetilmez.
+Türkiye haritasında Kıbrıs vardı; hiç sorulmadığı (ve kuzeyi "00" koduyla tıklanabildiği) için haritadan çıkarıldı ve
+haritanın görünüm kutusu Türkiye'ye göre daraltıldı. Tıklanabilir alanlar Türkiye haritasında `data-plakakodu`, dünya haritasında ISO 3166-1 alpha-2 `id` değeri üzerinden eşleştirilir; bayrak dosyaları da aynı ISO koduyla adlandırılır. Kıta görünümleri `world.svg` koordinatlarıyla `world-countries.ts` içinde sabit tanımlıdır: bazı ülkelerin şekilleri denizaşırı topraklarını da içerdiği için kutudan türetilmez.
 
 ## Supabase ve oturum açma
 

@@ -57,7 +57,9 @@ const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 short:p-
  */
 const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 short:gap-3 md:min-h-0 md:overflow-y-auto`;
 /** Skor ve istatistik kutuları: alt alta; alçak ekranda yan yana. */
-const SCORE_ROW = "flex flex-col gap-5 short:flex-row short:items-center short:gap-3";
+const SCORE_ROW = "flex items-center gap-4";
+/** Skorun kendisi; sağındaki istatistiklere yer kalsın diye dar sütunda bir boy küçük. */
+const SCORE_NUMBER = "text-6xl short:text-5xl lg:text-7xl";
 const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase";
 
 /**
@@ -94,22 +96,12 @@ function ResultShell({
   );
 }
 
-/** `shortLabel`: alçak ekranda skorun yanındaki dar kutuya sığan kısa etiket. */
-function StatTile({ label, shortLabel, value, note }: { label: string; shortLabel?: string; value: string; note?: string | null }) {
+/** Skorun sağında alt alta duran küçük satır: solda ne olduğu, sağda değeri. */
+function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3 short:px-2.5 short:py-1.5">
-      <dt className="text-xs text-slate-500">
-        {shortLabel ? (
-          <>
-            <span className="short:hidden">{label}</span>
-            <span className="hidden short:inline">{shortLabel}</span>
-          </>
-        ) : (
-          label
-        )}
-      </dt>
-      <dd className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900 short:text-lg">{value}</dd>
-      {note && <dd className="mt-0.5 text-xs font-semibold tabular-nums text-cyan-700">{note}</dd>}
+    <div className="flex items-baseline justify-between gap-2 rounded-xl bg-slate-50 px-3 py-1.5 lg:py-2">
+      <dt className="truncate text-xs text-slate-500">{label}</dt>
+      <dd className="text-lg font-bold tabular-nums text-slate-900 lg:text-xl">{value}</dd>
     </div>
   );
 }
@@ -119,14 +111,18 @@ function SummaryHeading({ eyebrow, title }: { eyebrow: string; title: string }) 
   return (
     <div>
       <p className={RESULT_EYEBROW}>{eyebrow}</p>
-      <h1 className="mt-2 font-display text-4xl leading-none font-bold text-slate-900 short:mt-1 short:text-2xl">{title}</h1>
+      <h1 className="mt-1 font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl lg:text-4xl">{title}</h1>
     </div>
   );
 }
 
-function PrimaryButton({ label, onClick }: { label: string; onClick: () => void }) {
+/** Paylaş tuşunun yanında yarım genişlikte duran asıl tuş: yazısı ve iç boşluğu daha küçük. */
+const COMPACT_PRIMARY_CLASS =
+  "flex w-full items-center justify-center gap-1.5 rounded-2xl bg-cyan-600 px-3 py-3 text-base font-bold whitespace-nowrap text-white shadow-lg shadow-cyan-600/20 transition-all duration-200 hover:gap-2.5 hover:bg-cyan-500 active:scale-[0.98] focus-visible:ring-4 focus-visible:ring-cyan-200 focus-visible:outline-none short:py-2.5";
+
+function PrimaryButton({ label, onClick, isCompact = false }: { label: string; onClick: () => void; isCompact?: boolean }) {
   return (
-    <button className={PRIMARY_BUTTON_CLASS} onClick={onClick} type="button">
+    <button className={isCompact ? COMPACT_PRIMARY_CLASS : PRIMARY_BUTTON_CLASS} onClick={onClick} type="button">
       {label}
       <svg aria-hidden="true" className="h-5 w-5 transition-transform duration-200" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
         <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -232,22 +228,22 @@ export function ResultScreen({
           <aside className={SUMMARY_CARD}>
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
 
-            {/* Alçak ekranda skor ve istatistikler yan yana durur; tuşlar kaydırmadan görünsün. */}
+            {/* Skor solda, en uzun seri ve süre sağında alt alta. */}
             <div className={SCORE_ROW}>
-              <div className="short:shrink-0">
+              <div className="shrink-0">
                 <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-                  <span className="text-7xl short:text-5xl">{score}</span>
+                  <span className={SCORE_NUMBER}>{score}</span>
                   <span className="text-3xl text-slate-400 short:text-2xl">/{questionCount}</span>
                 </p>
                 {personalBest && (
-                  <p className="mt-2 text-sm font-semibold text-cyan-700 tabular-nums short:mt-1 short:text-xs">
+                  <p className="mt-1.5 text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums lg:text-sm">
                     En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
                   </p>
                 )}
               </div>
 
-              <dl className="grid grid-cols-2 gap-3 short:flex-1 short:gap-2">
-                <StatTile label="En uzun seri" shortLabel="Seri" value={String(bestStreak)} />
+              <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <StatTile label="En uzun seri" value={String(bestStreak)} />
                 <StatTile label="Süre" value={duration} />
               </dl>
             </div>
@@ -257,8 +253,11 @@ export function ResultScreen({
             {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
                 ayar ekranında seçilir. */}
             <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
-              <PrimaryButton label={`Tekrar oyna · ${BOARDS.find((board) => board.id === playedBoardId)?.label ?? ""}`} onClick={() => onPlay(choice)} />
-              <ShareScoreButton text={shareText} />
+              {/* Aynı turu tekrar oynamak ve skoru paylaşmak yan yana; ikisi de tur biter bitmez yapılan işler. */}
+              <div className="grid grid-cols-2 gap-2">
+                <PrimaryButton isCompact label="Tekrar oyna" onClick={() => onPlay(choice)} />
+                <ShareScoreButton isCompact text={shareText} />
+              </div>
               <ResultLinks chooseLabel="Başka tur seç" onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
           </aside>
@@ -333,18 +332,16 @@ function PracticeResult({
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />
 
             <div className={SCORE_ROW}>
-              <div className="short:shrink-0">
+              <div className="shrink-0">
                 <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-                  <span className="text-7xl short:text-5xl">{score}</span>
+                  <span className={SCORE_NUMBER}>{score}</span>
                   <span className="text-3xl text-slate-400 short:text-2xl">/{answeredCount}</span>
                 </p>
-                {/* Alçak ekranda gizli: alttaki yarış daveti aynı şeyi söylüyor. */}
-                <p className="mt-2 text-sm text-slate-500 short:hidden">Antrenman sonuçları sıralamaya kaydedilmez.</p>
               </div>
 
-              <dl className="grid grid-cols-3 gap-3 short:flex-1 short:gap-2">
+              <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <StatTile label="Başarı" value={`%${accuracy}`} />
-                <StatTile label="En uzun seri" shortLabel="Seri" value={String(bestStreak)} />
+                <StatTile label="En uzun seri" value={String(bestStreak)} />
                 <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
               </dl>
             </div>

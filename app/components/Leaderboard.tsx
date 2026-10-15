@@ -52,12 +52,12 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
   const isTop = rank <= 3;
 
   return (
-    <li className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
+    <li className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm sm:gap-3 ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
       {/*
         İsim ve çubuk, isim sütununun taban genişliğinden artan alanı 1'e 9 paylaşır: çubuk her satırda
         aynı genişlikte ve aynı hizadan başlar, isme de o artan alanın onda biri kadar ek yer kalır.
       */}
-      <span className="flex min-w-0 shrink grow basis-40 items-center gap-3 sm:basis-52">
+      <span className="flex min-w-0 shrink grow basis-40 items-center gap-2 sm:basis-52 sm:gap-3">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${isTop ? MEDAL_STYLES[rank] : "text-slate-400"}`}
         >
@@ -83,7 +83,8 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
           <span className="shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Sen</span>
         )}
       </span>
-      <span className="min-w-0 shrink grow-[9] basis-0" title="Süre (0-120 sn)">
+      {/* Çubuğun içindeki süre yazısı kadar yer her zaman ayrılır; dar ekranda isim kısalır, çubuk puanın üstüne taşmaz. */}
+      <span className="min-w-[3.25rem] shrink grow-[9] basis-0" title="Süre (0-120 sn)">
         <DurationBar durationMs={entry.duration_ms} isCurrentPlayer={isCurrentPlayer} />
       </span>
       <span className="w-16 shrink-0 text-right font-bold tabular-nums text-slate-900">{entry.score} puan</span>
@@ -107,23 +108,22 @@ export function Leaderboard({
 
   return (
     <div>
-      <div className={`flex flex-wrap items-center gap-3 ${showTitle ? "justify-between" : "justify-center"}`}>
-        {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
-        {/* Dar kartlarda beş sekme sığmazsa alt satıra geçer; köşeler bu yüzden tam yuvarlak değil. */}
-        <div className="flex flex-wrap justify-center gap-1 rounded-2xl bg-slate-100 p-1" role="tablist">
-          {BOARDS.map((board) => (
-            <button
-              aria-selected={boardId === board.id}
-              className={`rounded-full px-3 py-1.5 text-sm font-bold transition sm:px-4 ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
-              key={board.id}
-              onClick={() => onBoardChange(board.id)}
-              role="tab"
-              type="button"
-            >
-              {board.label}
-            </button>
-          ))}
-        </div>
+      {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
+      {/* Beş sekme tek satırda: başlık ayrı satırda durur, sekmeler kartın tam genişliğini yazılarının boyuna göre paylaşır;
+          dikey telefonda yazı ve iç boşluk küçülür. */}
+      <div className={`flex gap-0.5 rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
+        {BOARDS.map((board) => (
+          <button
+            aria-selected={boardId === board.id}
+            className={`flex-auto rounded-full px-1.5 py-1.5 text-[11px] font-bold whitespace-nowrap transition sm:px-3 sm:text-sm ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
+            key={board.id}
+            onClick={() => onBoardChange(board.id)}
+            role="tab"
+            type="button"
+          >
+            {board.label}
+          </button>
+        ))}
       </div>
 
       <div className={`overflow-y-auto pr-1 ${tall ? "mt-4 max-h-[28rem]" : "mt-3 max-h-[20rem]"}`}>

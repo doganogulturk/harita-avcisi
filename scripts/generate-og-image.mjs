@@ -43,9 +43,9 @@ const html = `<!doctype html>
   .tagline { margin-top: 28px; max-width: 500px; font-size: 32px; line-height: 1.3; font-weight: 600; color: #334155; }
   .modes { display: flex; gap: 12px; }
   .mode { padding: 10px 20px; border-radius: 999px; font-size: 24px; font-weight: 700; }
-  .map { position: absolute; right: 40px; bottom: 110px; width: 540px; }
+  .map { position: absolute; right: 40px; bottom: 150px; width: 540px; }
   .map svg { display: block; width: 100%; height: auto; }
-  .map g[data-plakakodu] path, .map path[id^="_"], .map #guney-kibris path, .map #kuzey-kibris path {
+  .map g[data-plakakodu] path {
     fill: #e2e8f0; stroke: #94a3b8; stroke-width: 0.75; vector-effect: non-scaling-stroke;
   }
   .map g[data-plakakodu="${HIGHLIGHTED_PLATE}"] path { fill: #34d399; stroke: #047857; }

@@ -28,7 +28,9 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
         En çok yanlış yapılanlar
         {modeLabel && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 tracking-normal normal-case">{modeLabel}</span>}
       </p>
-      <p className="mt-1.5 text-sm text-slate-500">Tüm oyuncuların yarış turlarından, yanlış oranına göre (yanlış / sorulma).</p>
+      <p className="mt-1.5 text-sm text-slate-500">
+        Tüm oyuncuların yarış turlarından (yanlış / sorulma). Az sorulmuş yerler, oranları yüksek olsa da geride kalır.
+      </p>
 
       {stats === undefined ? (
         <p className="py-10 text-center text-sm text-slate-500">Yükleniyor...</p>
@@ -37,9 +39,8 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
       ) : (
         <ol className="mt-4 space-y-1.5">
           {stats.map((stat, index) => (
-            // Tek satır: yer ve rozet solda, en çok karıştırıldığı yer ortada, oran sağda.
-            // Dar ekranda ortadaki bilgi kısalır, yerin adı ve oran kesilmez.
-            <li className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 sm:px-4" key={stat.location_id}>
+            // Solda sıra ve yer, yerin altında en çok neyle karıştırıldığı; sağda oran. Telefonda da tek satıra sığar.
+            <li className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 sm:px-4" key={stat.location_id}>
               <span className="w-5 shrink-0 text-sm font-bold text-slate-400 tabular-nums">{index + 1}</span>
               {showFlag && (
                 <Image
@@ -51,18 +52,19 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
                   width={27}
                 />
               )}
-              <span className="flex shrink-0 items-center gap-2 font-bold text-slate-900">
-                {showPlate && <span className="font-mono text-cyan-700 tabular-nums">{formatPlate(Number(stat.location_id))}</span>}
-                {locationName(mode, stat.location_id)}
-                {missedLocationIds.includes(stat.location_id) && (
-                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">Sen de</span>
-                )}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-right text-xs text-slate-500">
-                En çok karıştırılan: <span className="font-semibold text-slate-700">{locationName(mode, stat.most_confused_with)}</span>
-                {stat.confused_count > 1 && ` (${stat.confused_count} kez)`}
-              </span>
-              <span className="w-24 shrink-0 text-right tabular-nums">
+              <div className="min-w-0 flex-1">
+                <p className="flex min-w-0 items-center gap-2 font-bold text-slate-900">
+                  {showPlate && <span className="font-mono text-cyan-700 tabular-nums">{formatPlate(Number(stat.location_id))}</span>}
+                  <span className="truncate">{locationName(mode, stat.location_id)}</span>
+                  {missedLocationIds.includes(stat.location_id) && (
+                    <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">Sen de</span>
+                  )}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  <span className="font-semibold text-slate-700">{locationName(mode, stat.most_confused_with)}</span> sanılıyor
+                </p>
+              </div>
+              <span className="shrink-0 text-right tabular-nums">
                 <span className="text-base font-bold text-rose-600">%{Math.round(Number(stat.wrong_rate) * 100)}</span>
                 <span className="ml-1.5 text-xs text-slate-500">
                   {stat.wrong}/{stat.asked}
