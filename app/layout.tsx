@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
 import { NativeSystemBars } from "./components/NativeSystemBars";
+import { SITE_URL } from "@/lib/site";
 
 // Yalnızca logo başlığında kullanılır; next/font derleme sırasında indirip siteyle birlikte sunar.
 const displayFont = Stack_Sans_Notch({
@@ -11,9 +12,16 @@ const displayFont = Stack_Sans_Notch({
   display: "swap",
 });
 
+const DESCRIPTION = "Türkiye'nin 81 ilini ve dünyanın 179 ülkesini haritada ne kadar hızlı bulursun? Yarış, antrenman, düello ve oda.";
+
 export const metadata: Metadata = {
+  // Paylaşım görseli (app/opengraph-image.png, scripts/generate-og-image.mjs) tam adresle verilsin diye.
+  metadataBase: new URL(SITE_URL),
   title: "Harita Avcısı",
-  description: "Türkiye şehirleri ve dünya ülkeleri için hızlı harita bulma oyunu.",
+  description: DESCRIPTION,
+  // Bağlantı LinkedIn, WhatsApp ya da X'te paylaşılınca çıkan kart. Görseli Next.js opengraph-image.png'den ekler.
+  openGraph: { type: "website", siteName: "Harita Avcısı", locale: "tr_TR", title: "Harita Avcısı", description: DESCRIPTION },
+  twitter: { card: "summary_large_image", title: "Harita Avcısı", description: DESCRIPTION },
   applicationName: "Harita Avcısı",
   // iOS'ta "Ana Ekrana Ekle" ile eklenen uygulamanın adı ve tam ekran açılması; simge app/apple-icon.png.
   appleWebApp: { capable: true, title: "Harita Avcısı", statusBarStyle: "default" },

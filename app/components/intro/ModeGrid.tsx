@@ -2,11 +2,10 @@
 
 import { type FormEvent, useState } from "react";
 import { type IntroGame } from "@/lib/intro-preferences";
-import { CORNER_TAB_SIZE, CornerTab } from "../CornerTab";
+import { CORNER_TAB_SIZE, CornerTab, CornerTile } from "../CornerTab";
 import { GameIcon, GAMES, type GameInfo } from "./games";
 
 type ModeGridProps = {
-  lastGame: IntroGame | "none";
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
   introDelayMs: number;
   /** Kartlar arasındaki açılış gecikmesi farkı. */
@@ -18,14 +17,13 @@ type ModeGridProps = {
 };
 
 /** Adım 1: dört oyun, 2×2 büyük kart (dikey telefonda alt alta). Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
-export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
+export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
   return (
     <div className="grid min-h-0 w-full flex-1 grid-cols-1 grid-rows-4 gap-3 sm:grid-cols-2 sm:grid-rows-2 lg:gap-5">
       {GAMES.map((game, index) => (
         <ModeCard
           delayMs={introDelayMs + introStepMs * index}
           game={game}
-          isLast={lastGame === game.id}
           key={game.id}
           onJoin={game.id === "duel" || game.id === "room" ? (code) => onJoin(game.id as "duel" | "room", code) : undefined}
           onSelect={() => onSelect(game.id)}
@@ -38,18 +36,23 @@ export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShow
 
 type ModeCardProps = {
   game: GameInfo;
-  isLast: boolean;
   delayMs: number;
   onSelect: () => void;
   onShowLeaderboard?: () => void;
   onJoin?: (code: string) => void;
 };
 
-function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCardProps) {
+function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCardProps) {
   const { theme } = game;
   const [isJoining, setIsJoining] = useState(false);
   const [code, setCode] = useState("");
   const [joinError, setJoinError] = useState<string | null>(null);
+
+  const secondary = onShowLeaderboard
+    ? { label: "Sıralamayı gör", icon: "trophy" as const, onClick: onShowLeaderboard }
+    : onJoin
+      ? { label: "Kodla katıl", icon: "code" as const, onClick: () => setIsJoining(true) }
+      : null;
 
   const join = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,9 +63,7 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
 
   return (
     <div
-      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-(--card-pad) transition-all duration-200 [--card-pad:1rem] hover:-translate-y-1 hover:shadow-xl short:[--card-pad:0.75rem] sm:[--card-pad:1.25rem] lg:[--card-pad:2rem] ${theme.surface} ${theme.card} ${
-        isLast ? `${theme.lastCard} shadow-md` : "border-slate-200"
-      }`}
+      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-(--card-pad) transition-all duration-200 [--card-pad:1rem] [--tile:3rem] hover:-translate-y-1 hover:shadow-xl short:[--card-pad:0.75rem] short:[--tile:2.5rem] sm:[--card-pad:1.25rem] sm:[--tile:3.25rem] lg:[--card-pad:2rem] lg:[--tile:5rem] border-slate-200 ${theme.surface} ${theme.card}`}
       style={
         {
           "--intro-delay": `${delayMs}ms`,
@@ -84,19 +85,34 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         game={game.id}
       />
 
+      {/* Oyunun simgesi sol üst köşeye yapışık bir karodur; sekmelerle aynı biçimde ama tuş değil. */}
+      <div className="absolute top-0 left-0 z-10">
+        <CornerTile colorClass={theme.tile}>
+          <GameIcon className="h-6 w-6 short:h-5 short:w-5 sm:h-7 sm:w-7 lg:h-10 lg:w-10" game={game.id} />
+        </CornerTile>
+      </div>
+
       {/* Kartın eylem tuşu sağ üst köşedeki sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve ekran okuyucu için kart
           tuşu yeterli. */}
       <div className="absolute top-0 right-0 z-10">
         <CornerTab colorClass={theme.badge} isDecorative label={game.cardAction} onClick={onSelect} />
       </div>
 
-      <div className="pointer-events-none relative flex min-w-0 flex-row items-start gap-3 sm:gap-4 lg:mt-7 lg:gap-5 short:items-center short:gap-2.5">
-        <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl short:h-9 short:w-9 short:rounded-xl lg:h-20 lg:w-20 lg:rounded-3xl ${theme.tile}`}
-        >
-          <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-10 lg:w-10" game={game.id} />
-        </span>
+      {/* İkincil iş (Sıralamayı gör, Kodla katıl) çaprazdaki sol alt köşede, daha küçük ve soluk tonda bir sekmedir. Kod
+          alanı açıkken sekme çekilir, alan alt satırda açılır. */}
+      {secondary && !isJoining && (
+        <div className="absolute bottom-0 left-0 z-10">
+          <CornerTab colorClass={theme.soft} corner="bottom-left" icon={<SecondaryIcon icon={secondary.icon} />} label={secondary.label} onClick={secondary.onClick} size="sm" />
+        </div>
+      )}
+
+      <div className="pointer-events-none relative flex min-w-0 lg:mt-7">
         <div className="min-w-0 flex-1">
+          {/* Köşe karosunun yer tutucusu: başlık ve açıklama karonun altına girmeden sağından akar. */}
+          <span
+            aria-hidden="true"
+            className="float-left -mt-(--card-pad) -ml-(--card-pad) mr-3 mb-1 h-(--tile) w-(--tile) lg:-mt-[calc(var(--card-pad)+1.75rem)] lg:mr-5"
+          />
           {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda kart
               yüksek olduğu için başlık bloğu sekmenin altından başlar (lg:mt-7); yer tutucu orada başlığı itmesin. */}
           <span aria-hidden="true" className={`invisible float-right -mt-(--card-pad) -mr-(--card-pad) mb-1 ml-3 flex items-center font-bold lg:hidden ${CORNER_TAB_SIZE}`}>
@@ -118,7 +134,8 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         ))}
       </div>
 
-      {/* Satırın boş kısmı tıklamayı alttaki kart tuşuna geçirir; yalnızca içindeki tuşlar tıklanır. */}
+      {/* Satırın boş kısmı tıklamayı alttaki kart tuşuna geçirir; yalnızca içindeki tuşlar tıklanır. Kod alanı açılınca
+          satır aynı yükseklikte kalır: kart taşarsa odaklanan alan kartın içeriğini yukarı kaydırır. */}
       <div className="pointer-events-none relative mt-2 flex min-h-7 items-center justify-between gap-2 short:mt-1 lg:mt-4 lg:min-h-9">
         {isJoining && onJoin ? (
           <form className="pointer-events-auto relative z-10 flex min-w-0 flex-1 flex-wrap items-center gap-1.5" onSubmit={join}>
@@ -126,7 +143,11 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
               aria-label={`${game.title} kodu`}
               autoCapitalize="characters"
               autoFocus
-              className="w-28 min-w-0 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-center font-mono text-sm font-bold tracking-[0.2em] uppercase outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 lg:w-36 lg:text-base"
+              autoComplete="off"
+              autoCorrect="off"
+              className={`h-9 w-28 min-w-0 rounded-full border-2 bg-white px-3 short:h-8 text-center font-mono text-sm font-bold tracking-[0.2em] text-slate-900 uppercase outline-none focus:ring-2 lg:h-11 lg:w-36 lg:text-base ${theme.outline}`}
+              enterKeyHint="go"
+              spellCheck={false}
               maxLength={6}
               onChange={(event) => {
                 setCode(event.target.value);
@@ -135,12 +156,15 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
               placeholder="KX7P2M"
               value={code}
             />
-            <button className={`rounded-xl px-3 py-1.5 text-sm font-bold ${theme.badge}`} type="submit">
+            <button
+              className={`hit-area h-9 rounded-full px-4 text-sm font-bold shadow-sm short:h-8 transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-11 lg:px-5 lg:text-base ${theme.badge}`}
+              type="submit"
+            >
               Katıl
             </button>
             <button
               aria-label="Vazgeç"
-              className="rounded-full px-2 py-1 text-sm font-semibold text-slate-400 hover:text-slate-700"
+              className="hit-area flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               onClick={() => {
                 setIsJoining(false);
                 setJoinError(null);
@@ -152,34 +176,22 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
             {joinError && <span className="w-full text-xs font-semibold text-rose-600">{joinError}</span>}
           </form>
         ) : (
-          <>
-            {onShowLeaderboard && <CardLink className={theme.link} label="Sıralamayı gör" onClick={onShowLeaderboard} />}
-            {onJoin && (
-              <CardLink
-                className="text-slate-500 decoration-slate-300 hover:text-slate-800 hover:decoration-slate-500"
-                label="Kodla katıl"
-                onClick={() => setIsJoining(true)}
-              />
-            )}
-            {!onShowLeaderboard && !onJoin && <span />}
-            {isLast && (
-              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.7rem] font-bold shadow-sm lg:px-3 lg:py-1 lg:text-xs ${theme.badge}`}>Son oynadığın</span>
-            )}
-          </>
+          // Sol altta ikincil sekme durur (yukarıda); satır onun yüksekliğini korur.
+          <span />
         )}
       </div>
     </div>
   );
 }
 
-function CardLink({ label, className, onClick }: { label: string; className: string; onClick: () => void }) {
+function SecondaryIcon({ icon }: { icon: "trophy" | "code" }) {
   return (
-    <button
-      className={`pointer-events-auto relative z-10 text-sm font-semibold underline underline-offset-4 transition focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-base ${className}`}
-      onClick={onClick}
-      type="button"
-    >
-      {label}
-    </button>
+    <svg aria-hidden="true" className="h-3.5 w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} viewBox="0 0 24 24">
+      {icon === "trophy" ? (
+        <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
+      ) : (
+        <path d="M5 9h14M5 15h14M10 3 8 21M16 3l-2 18" />
+      )}
+    </svg>
   );
 }

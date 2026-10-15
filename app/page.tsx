@@ -10,6 +10,7 @@ import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { type IntroGame } from "@/lib/intro-preferences";
 import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
@@ -186,9 +187,19 @@ export default function Home() {
     round.reset();
   }
 
+  // Ana menü açıldığında doğrudan bir oyunun ayar ekranıyla başlasın mı (sonuçtaki "Başka tur seç").
+  const [introStartGame, setIntroStartGame] = useState<IntroGame | null>(null);
+
   function goHome() {
+    setIntroStartGame(null);
     round.reset();
     setAuthError(null);
+  }
+
+  /** Sonuç ekranından, oynanan oyunun (Yarış / Antrenman) ayar ekranına: başka bir tur orada seçilir. */
+  function chooseAnother() {
+    goHome();
+    setIntroStartGame(isPractice ? "practice" : "ranked");
   }
 
   function cancelPendingChoice() {
@@ -226,7 +237,7 @@ export default function Home() {
     clearPlayer();
   }
 
-  /** Çıkışta ve hesap silindikten sonra: oyuncuya bağlı her şey sıfırlanır. */
+  /** Çıkışta: oyuncuya bağlı her şey sıfırlanır. */
   function clearPlayer() {
     setPlayer(null);
     round.reset();
@@ -246,7 +257,7 @@ export default function Home() {
             onGoogleSignIn={signInWithGoogle}
             onGuestSignIn={signInAsGuest}
             onPlay={play}
-            onAccountDeleted={clearPlayer}
+            startGame={introStartGame}
             onSignOut={signOut}
             pendingChoice={pendingChoice}
             player={player}
@@ -271,6 +282,7 @@ export default function Home() {
             mostMissed={mostMissed}
             mostMissedChoice={statsChoice}
             onBoardChange={setBoardId}
+            onChooseAnother={chooseAnother}
             onHome={goHome}
             onPlay={play}
             onSignOut={signOut}

@@ -6,7 +6,7 @@ import { SignInPanel } from "../SignInPanel";
 import { DUEL_MODES, DUEL_RULES, duelPath, type DuelRule } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
-import { setDuelSettingsKey, setLastGame, useDuelSettingsKey } from "@/lib/intro-preferences";
+import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences";
 import { gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
 
@@ -50,7 +50,6 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
       setIsAuthStep(false);
       return;
     }
-    setLastGame("duel");
     router.push(duelPath(result.code));
   };
 

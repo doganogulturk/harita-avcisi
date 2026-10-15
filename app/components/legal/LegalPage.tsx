@@ -19,8 +19,11 @@ export function ContactEmail() {
 
 type LegalPageProps = {
   title: string;
-  /** Görünen son güncelleme tarihi, ör. "13 Ekim 2026". */
-  updated: string;
+  /**
+   * Görünen son güncelleme tarihi, ör. "13 Ekim 2026". Gizlilik, KVKK ve koşullarda okurun hangi sürümü okuduğunu
+   * bilmesi için gerekir; yalnızca nasıl yapılır anlatan sayfada (hesap silme) verilmez.
+   */
+  updated?: string;
   children: React.ReactNode;
 };
 
@@ -42,7 +45,7 @@ export function LegalPage({ title, updated, children }: LegalPageProps) {
         </header>
 
         <h1 className="mt-10 font-display text-4xl leading-tight font-bold">{title}</h1>
-        <p className="mt-2 text-sm text-slate-500">Son güncelleme: {updated}</p>
+        {updated && <p className="mt-2 text-sm text-slate-500">Son güncelleme: {updated}</p>}
 
         <article className="legal mt-8">{children}</article>
 

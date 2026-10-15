@@ -47,18 +47,10 @@ function createPreference<T extends string>(key: string, isValid: (value: string
 /** Giriş ekranının ilk adımındaki dört oyun. */
 export type IntroGame = "ranked" | "practice" | "duel" | "room";
 
-const GAMES: IntroGame[] = ["ranked", "practice", "duel", "room"];
 const MAPS: GameMode[] = ["turkey", "world"];
 const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag"];
 const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 const SCOPES: WorldScope[] = ["normal", "hard", "africa", "america", "asia", "europe"];
-
-/** En son başlatılan (ya da kurulan) oyun; ilk adımda o kart "Son oynadığın" diye işaretlenir. */
-export const [useLastGame, setLastGame] = createPreference<IntroGame | "none">(
-  "harita-avcisi:intro-last-game",
-  (value): value is IntroGame => (GAMES as string[]).includes(value),
-  "none",
-);
 
 /** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
 export const [useIntroMap, setIntroMap] = createPreference<GameMode>(

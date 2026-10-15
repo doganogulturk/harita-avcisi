@@ -17,10 +17,11 @@ export type GameTheme = {
   selected: string;
   /** Kartın çerçevesi ve gölgesi (fareyle üzerine gelince). */
   card: string;
-  /** "Son oynadığın" kartının çerçevesi. */
-  lastCard: string;
   badge: string;
-  link: string;
+  /** Kartın sol altındaki ikincil sekme (Sıralamayı gör, Kodla katıl): asıl sekmenin soluk tonu. */
+  soft: string;
+  /** Kod alanının çerçeve ve odak rengi. */
+  outline: string;
   watermark: string;
   /** Kartın üzerinden süzülen ışığın rengi (globals.css, .card-sweep). */
   glow: string;
@@ -52,9 +53,9 @@ export const GAMES: GameInfo[] = [
       selected: "border-cyan-600 bg-cyan-600 text-white",
       tile: "bg-cyan-100 text-cyan-700",
       card: "hover:border-cyan-300 hover:shadow-cyan-900/10 focus-within:border-cyan-300",
-      lastCard: "border-cyan-300",
       badge: "bg-cyan-600 text-white",
-      link: "text-cyan-700 decoration-cyan-300 hover:text-cyan-800 hover:decoration-cyan-600",
+      soft: "bg-cyan-100 text-cyan-800",
+      outline: "border-cyan-300 text-cyan-700 hover:border-cyan-500 hover:bg-cyan-50 focus-visible:ring-cyan-200 focus:border-cyan-500 focus:ring-cyan-100",
       watermark: "text-cyan-600",
       glow: "rgb(6 182 212 / 0.14)",
     },
@@ -71,9 +72,9 @@ export const GAMES: GameInfo[] = [
       selected: "border-amber-400 bg-amber-400 text-amber-950",
       tile: "bg-amber-100 text-amber-700",
       card: "hover:border-amber-300 hover:shadow-amber-900/10 focus-within:border-amber-300",
-      lastCard: "border-amber-300",
       badge: "bg-amber-400 text-amber-950",
-      link: "text-amber-700 decoration-amber-300 hover:text-amber-800 hover:decoration-amber-600",
+      soft: "bg-amber-100 text-amber-900",
+      outline: "border-amber-300 text-amber-800 hover:border-amber-500 hover:bg-amber-50 focus-visible:ring-amber-200 focus:border-amber-500 focus:ring-amber-100",
       watermark: "text-amber-500",
       glow: "rgb(245 158 11 / 0.16)",
     },
@@ -90,9 +91,9 @@ export const GAMES: GameInfo[] = [
       selected: "border-orange-500 bg-orange-500 text-white",
       tile: "bg-orange-100 text-orange-600",
       card: "hover:border-orange-300 hover:shadow-orange-900/10 focus-within:border-orange-300",
-      lastCard: "border-orange-300",
       badge: "bg-orange-500 text-white",
-      link: "text-orange-600 decoration-orange-300 hover:text-orange-700 hover:decoration-orange-500",
+      soft: "bg-orange-100 text-orange-700",
+      outline: "border-orange-300 text-orange-600 hover:border-orange-500 hover:bg-orange-50 focus-visible:ring-orange-200 focus:border-orange-500 focus:ring-orange-100",
       watermark: "text-orange-500",
       glow: "rgb(249 115 22 / 0.14)",
     },
@@ -113,9 +114,9 @@ export const GAMES: GameInfo[] = [
       selected: "border-violet-600 bg-violet-600 text-white",
       tile: "bg-violet-100 text-violet-700",
       card: "hover:border-violet-300 hover:shadow-violet-900/10 focus-within:border-violet-300",
-      lastCard: "border-violet-300",
       badge: "bg-violet-600 text-white",
-      link: "text-violet-700 decoration-violet-300 hover:text-violet-800 hover:decoration-violet-600",
+      soft: "bg-violet-100 text-violet-700",
+      outline: "border-violet-300 text-violet-700 hover:border-violet-500 hover:bg-violet-50 focus-visible:ring-violet-200 focus:border-violet-500 focus:ring-violet-100",
       watermark: "text-violet-600",
       glow: "rgb(139 92 246 / 0.14)",
     },

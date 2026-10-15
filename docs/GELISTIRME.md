@@ -7,9 +7,10 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 Giriş ekranı iki adımlıdır. İlk adımda dört oyun 2×2 büyük kart olarak durur: **Yarış**, **Antrenman**, **Düello**
 ve **Oda**. Her kartın kendi rengi, simgesi, bir cümlelik açıklaması ve künyesi (soru sayısı, süre, sıralamaya
-işlenip işlenmediği) vardır. Kartın eylem tuşu (**Yarışa başla**, **Antrenmana başla**...) sağ üst köşeden
-içeri kıvrılan bir sekmedir. En son oynanan oyunun kartı sağ altta "Son oynadığın" diye işaretlenir. Yarış kartında
-**Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** bağlantısı bulunur. Alçak (yatay telefon) ekranlarda
+işlenip işlenmediği) vardır. Oyunun simgesi sol üst köşeye yapışık bir karodur. Kartın eylem tuşu
+(**Yarışa başla**, **Antrenmana başla**...) sağ üst köşeden içeri kıvrılan bir sekmedir. Yarış kartında **Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** çaprazdaki sol alt köşeden içeri kıvrılan, daha küçük
+ve soluk tonda bir sekmedir; kartın asıl işi sağ üstteki dolgulu sekmedir. Kod alanı açılınca sekme çekilir, alan
+kartın alt satırında açılır. Alçak (yatay telefon) ekranlarda
 künyeler gizlenir, düzen 2×2 kalır. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
 kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir (orada tanıtımı yeniden açan **Nasıl oynanır?** de var).
 
@@ -48,6 +49,10 @@ kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821"
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
 
 Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
+
+Tur bitince sonuç ekranında asıl tuş **Tekrar oyna** aynı turu yeniden başlatır; **Başka tur seç** Yarış'ın ayar
+ekranını açar (antrenmanda **Tekrar antrenman** ve **Başka antrenman seç**). Yatay telefonda sonuç ekranı iki
+sütundur: solda özet ve tuşlar, sağda sıralama ve en çok yanlış yapılanlar.
 
 Tur bittiğinde o modda **en çok yanlış yapılan 5 yer** gösterilir: tüm oyuncuların yarış turlarındaki cevaplarından,
 yanlış oranına göre. Her yerin yanında en çok neyle karıştırıldığı yazar; oyuncunun o turda kendisinin de yanlış
@@ -114,6 +119,20 @@ kullanılır; "Telefonunu yan çevir" uyarısı yalnızca harita ekranında (oyu
 Dikeyde başlatılan yarış, antrenman ya da oda turu hemen başlamaz: uyarı "çevirdiğinde başlar" der, süre telefon yan
 çevrilene kadar işlemez, **Vazgeç** isteği bırakır (`lib/hooks/useLandscapeGate.ts`).
 
+### Paylaşım
+
+Site bağlantısı LinkedIn, WhatsApp ya da X'te paylaşılınca logolu, Türkiye haritalı bir önizleme kartı çıkar
+(`app/opengraph-image.png`, 1200×630; başlık ve açıklama `app/layout.tsx`'te). Görsel derlemede değil, sitedeki başlık
+yazı tipiyle bilgisayardaki Chrome'da üretilir; logo ya da tanıtım cümlesi değişirse yeniden çalıştırılır:
+
+```bash
+node scripts/generate-og-image.mjs
+```
+
+Yarış sonucundaki **Skorumu paylaş** (antrenman skoru karşılaştırılabilir olmadığı için orada yok) telefonda sistemin paylaşma menüsünü açar ("Harita Avcısı'nda Dünya · Normal
+yarışında 9/10 yaptım, süre 00:47. Sıralamada 3. sıradayım. Sen kaç yaparsın?" ve site bağlantısı); menü yoksa
+(masaüstü tarayıcı, Android uygulaması) aynı metni panoya kopyalar.
+
 ### Uygulama olarak yükleme
 
 Site telefona ve tablete uygulama gibi eklenebilir; ana ekranda **Harita Avcısı** adıyla nişangah simgesi görünür
@@ -173,7 +192,7 @@ app/
     AuthPanel.tsx       Yarış öncesi giriş adımı (Google / misafir)
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
     GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
-    ResultScreen.tsx    Tam ekran sonuç: özet ve yeni tur tuşları, en çok yanlış yapılanlar, sıralama; antrenman özeti
+    ResultScreen.tsx    Tam ekran sonuç: özet, tekrar oyna / başka tur seç / paylaş, en çok yanlış yapılanlar, sıralama; antrenman özeti
     Logo.tsx            Nişangah rozetli oyun adı (giriş ve sonuç ekranlarının başlığı)
     MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
     Leaderboard.tsx     Sekmeli sıralama listesi
@@ -244,8 +263,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 
 ### Hesap silme
 
-Giriş yapmış oyuncu ana menüde adının altındaki **Hesabı sil** ile hesabını kalıcı olarak silebilir (App Store ve
-Google Play bunu şart koşar). Onaydan sonra `delete_my_account()` fonksiyonu oturumdaki kullanıcının `auth.users`
+Giriş yapmış oyuncu hesabını uygulamanın içinden kalıcı olarak silebilir (App Store ve Google Play bunu şart koşar):
+ana menüdeki ⓘ → **Hesap silme** sayfasının sonundaki **Hesabımı sil** (`legal/AccountDeletionPanel.tsx`). Tuş ana
+ekranda durmaz; orada görünmesi insanı silmeye yöneltir. Onaydan sonra `delete_my_account()` fonksiyonu oturumdaki kullanıcının `auth.users`
 satırını siler; skorlar, turlar, cevaplar, düellolar ve odalar `on delete cascade` ile birlikte gider.
 
 ### Veri modeli

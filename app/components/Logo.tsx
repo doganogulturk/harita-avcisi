@@ -33,7 +33,7 @@ export function Logo({ size = "header", isHeading = true }: { size?: keyof typeo
           <circle cx="12" cy="12" fill="currentColor" r="1.5" stroke="none" />
         </svg>
       </span>
-      <span className={`intro-reveal font-display leading-none font-bold tracking-[-0.03em] text-slate-900 ${style.text}`}>
+      <span className={`intro-reveal font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap text-slate-900 ${style.text}`}>
         harita <span className="text-cyan-700">avcısı</span>
       </span>
     </Tag>

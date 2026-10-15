@@ -5,7 +5,6 @@ import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createRoom } from "@/lib/hooks/useRoom";
-import { setLastGame } from "@/lib/intro-preferences";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
 import { modeOptions, variantFor } from "./DuelSetup";
 import { formatMinutes, gameInfo } from "./games";
@@ -58,7 +57,6 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
       setIsAuthStep(false);
       return;
     }
-    setLastGame("room");
     router.push(roomPath(result.code));
   };
 

@@ -4,8 +4,6 @@ import { type Player } from "@/lib/game";
 type PlayerBadgeProps = {
   player: Player | null;
   onSignOut: () => void;
-  /** Verilirse "Çıkış yap"ın yanında "Hesabı sil" de çıkar; yalnızca ana menüde, oyun sırasında değil. */
-  onDeleteAccount?: () => void;
   /** "right": ad solda, avatar sağda (ekran başlıkları). "left": avatar solda (oyun üst barı). */
   align?: "left" | "right";
   size?: "sm" | "md";
@@ -21,7 +19,7 @@ const INITIAL_SIZE = {
   md: "text-base",
 };
 
-export function PlayerBadge({ player, onSignOut, onDeleteAccount, align = "right", size = "md" }: PlayerBadgeProps) {
+export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }: PlayerBadgeProps) {
   if (!player) return null;
 
   const avatar = player.avatarUrl ? (
@@ -50,16 +48,6 @@ export function PlayerBadge({ player, onSignOut, onDeleteAccount, align = "right
       <button className={`${linkClass} hover:text-slate-600`} onClick={onSignOut} type="button">
         Çıkış yap
       </button>
-      {onDeleteAccount && (
-        <>
-          <span aria-hidden="true" className={`text-slate-300 ${size === "sm" ? "text-[10px] lg:text-xs" : "text-xs"}`}>
-            {" · "}
-          </span>
-          <button className={`${linkClass} hover:text-rose-600`} onClick={onDeleteAccount} type="button">
-            Hesabı sil
-          </button>
-        </>
-      )}
     </div>
   );
 

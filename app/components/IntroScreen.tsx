@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
-import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { Guide } from "./intro/Guide";
 import { LegalMenu } from "./LegalMenu";
 import { PlayButton } from "./PlayButton";
@@ -20,10 +19,8 @@ import { boardIdFor, choiceLabel, GAME_DURATION_SECONDS, turkeyChoice, worldChoi
 import {
   setGuideSeen,
   setIntroMap,
-  setLastGame,
   useGuideSeen,
   useIntroMap,
-  useLastGame,
   useQuestionPrompt,
   useTurkeyPrompt,
   useWorldScope,
@@ -44,8 +41,8 @@ type IntroScreenProps = {
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
   onSignOut: () => void;
-  /** Hesap silindi; oyuncu durumunu çıkış yapılmış gibi temizler. */
-  onAccountDeleted: () => void;
+  /** Verilirse menü bu oyunun ayar ekranıyla (adım 2) açılır; sonuç ekranındaki "Başka tur seç". */
+  startGame?: IntroGame | null;
 };
 
 /**
@@ -92,17 +89,17 @@ export function IntroScreen({
   onGoogleSignIn,
   onGuestSignIn,
   onSignOut,
-  onAccountDeleted,
+  startGame = null,
 }: IntroScreenProps) {
   const router = useRouter();
   const map = useIntroMap();
-  const lastGame = useLastGame();
   const storedScope = useWorldScope();
   const prompt = useQuestionPrompt();
   const turkeyPrompt = useTurkeyPrompt();
-  const [selectedGame, setSelectedGame] = useState<IntroGame | null>(null);
+  // Menünün açıldığı adım ilk çizimde donar; sonradan gelen prop değişikliği adımı değiştirmez.
+  const [openedAtGame] = useState(startGame);
+  const [selectedGame, setSelectedGame] = useState<IntroGame | null>(openedAtGame);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const isGuideSeen = useGuideSeen();
   const [isGuideRequested, setIsGuideRequested] = useState(false);
@@ -150,12 +147,14 @@ export function IntroScreen({
   // Adım 2 tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez): telefonda geri hareketi ve Android'in geri
   // tuşu siteden çıkmak yerine oyun seçimine döner. Kayıttan dönülünce (geri / ileri) adım kayıttaki oyuna uyar.
   useEffect(() => {
-    // Oyundan menüye dönüldüğünde geçmişte adım 2 kaydı kalmış olabilir; menü adım 1'le açıldığı için temizlenir.
+    // Oyundan menüye dönüldüğünde geçmişte eski bir adım 2 kaydı kalmış olabilir; temizlenir.
     if (window.history.state?.[INTRO_STEP_KEY]) window.history.replaceState({ [INTRO_STEP_KEY]: null }, "");
+    // Doğrudan adım 2 ile açıldıysa o adım da geçmişe eklenir; geri hareketi oyun seçimine dönsün.
+    if (openedAtGame) window.history.pushState({ [INTRO_STEP_KEY]: openedAtGame }, "");
     const syncWithHistory = (event: PopStateEvent) => setSelectedGame((event.state?.[INTRO_STEP_KEY] as IntroGame | undefined) ?? null);
     window.addEventListener("popstate", syncWithHistory);
     return () => window.removeEventListener("popstate", syncWithHistory);
-  }, []);
+  }, [openedAtGame]);
 
   const goBack = () => {
     if (window.history.state?.[INTRO_STEP_KEY]) window.history.back();
@@ -177,7 +176,6 @@ export function IntroScreen({
   };
 
   const start = () => {
-    setLastGame(kind);
     onPlay(choiceFor(map, kind));
   };
 
@@ -247,7 +245,6 @@ export function IntroScreen({
       <ModeGrid
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
-        lastGame={lastGame}
         onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
         onSelect={selectGame}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
@@ -264,7 +261,7 @@ export function IntroScreen({
           </button>
         </h1>
         <div className="flex shrink-0 items-center gap-2 lg:gap-3">
-          <PlayerBadge onDeleteAccount={() => setIsDeleteAccountOpen(true)} onSignOut={onSignOut} player={player} />
+          <PlayerBadge onSignOut={onSignOut} player={player} />
           {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
           {!player && supabaseConfigured && !pendingChoice && (
             <button
@@ -307,16 +304,6 @@ export function IntroScreen({
 
       {isSignInOpen && !player && <SignInDialog onClose={() => setIsSignInOpen(false)} />}
 
-      {isDeleteAccountOpen && player && (
-        <DeleteAccountDialog
-          onClose={() => setIsDeleteAccountOpen(false)}
-          onDeleted={() => {
-            setIsDeleteAccountOpen(false);
-            onAccountDeleted();
-          }}
-          player={player}
-        />
-      )}
 
       {shouldAnimate && !isCurtainUp && <IntroCurtain />}
     </section>

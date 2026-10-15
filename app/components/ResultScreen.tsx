@@ -1,15 +1,14 @@
-import Image from "next/image";
 import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
 import { PlayerBadge } from "./PlayerBadge";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
+import { ShareScoreButton } from "./ShareScoreButton";
 import {
   boardIdFor,
   BOARDS,
   choiceForBoard,
   choiceLabel,
-  flagUrl,
   formatTime,
   GAME_DURATION_SECONDS,
   QUESTIONS_PER_ROUND,
@@ -41,23 +40,27 @@ type ResultScreenProps = {
   missedLocationIds: string[];
   onBoardChange: (boardId: BoardId) => void;
   onPlay: (choice: PlayChoice) => void;
+  /** Oynanan oyunun (Yarış ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
+  onChooseAnother: () => void;
   onHome: () => void;
   onSignOut: () => void;
 };
 
 /** Giriş ekranındaki kartlarla aynı çerçeve. */
-const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 lg:p-7";
+const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 short:p-4 lg:p-7";
 /**
  * Sol özet kartı: iki sütunlu düzende ekranın yüksekliğini doldurur, tuşlar altına yaslanır.
- * Alçak ekranda içerik sığmazsa kart kendi içinde kayar.
+ * Alçak ekranda (yatay telefon) aralıklar daralır; içerik yine sığmazsa kart kendi içinde kayar.
  */
-const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 lg:min-h-0 lg:overflow-y-auto`;
+const SUMMARY_CARD = `${RESULT_CARD} flex flex-col gap-5 short:gap-3 md:min-h-0 md:overflow-y-auto`;
+/** Skor ve istatistik kutuları: alt alta; alçak ekranda yan yana. */
+const SCORE_ROW = "flex flex-col gap-5 short:flex-row short:items-center short:gap-3";
 const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase";
 
 /**
  * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır. Solda boydan boya turun özeti ve yeni tur
- * tuşları, sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar; sağ sütun kendi içinde kayar.
- * Dar ekranda her şey tek sütunda aynı sırayla alt alta gelir ve sayfa kayar; sıralama yine önce görünür.
+ * tuşları, sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar; iki sütun da kendi içinde kayar.
+ * Yatay telefonda da iki sütundur. Dikey telefonda her şey tek sütunda alt alta gelir ve sayfa kayar.
  */
 function ResultShell({
   player,
@@ -73,26 +76,36 @@ function ResultShell({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 lg:gap-5 lg:overflow-hidden lg:px-8 lg:py-5">
+    <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 short:gap-2 short:py-2 md:overflow-hidden lg:gap-5 lg:px-8 lg:py-5">
       <header className="flex shrink-0 items-center justify-between gap-3">
         <button aria-label="Ana menü" className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
           <Logo isHeading={false} />
         </button>
         <PlayerBadge onSignOut={onSignOut} player={player} />
       </header>
-      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
+      <div className="grid gap-3 md:min-h-0 md:flex-1 md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         {aside}
-        <div className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:gap-5 lg:overflow-y-auto">{children}</div>
+        <div className="flex min-w-0 flex-col gap-3 md:min-h-0 md:overflow-y-auto lg:gap-5">{children}</div>
       </div>
     </section>
   );
 }
 
-function StatTile({ label, value, note }: { label: string; value: string; note?: string | null }) {
+/** `shortLabel`: alçak ekranda skorun yanındaki dar kutuya sığan kısa etiket. */
+function StatTile({ label, shortLabel, value, note }: { label: string; shortLabel?: string; value: string; note?: string | null }) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3">
-      <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900">{value}</dd>
+    <div className="rounded-2xl bg-slate-50 px-4 py-3 short:px-2.5 short:py-1.5">
+      <dt className="text-xs text-slate-500">
+        {shortLabel ? (
+          <>
+            <span className="short:hidden">{label}</span>
+            <span className="hidden short:inline">{shortLabel}</span>
+          </>
+        ) : (
+          label
+        )}
+      </dt>
+      <dd className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900 short:text-lg">{value}</dd>
       {note && <dd className="mt-0.5 text-xs font-semibold tabular-nums text-cyan-700">{note}</dd>}
     </div>
   );
@@ -103,7 +116,7 @@ function SummaryHeading({ eyebrow, title }: { eyebrow: string; title: string }) 
   return (
     <div>
       <p className={RESULT_EYEBROW}>{eyebrow}</p>
-      <h1 className="mt-2 font-display text-4xl leading-none font-bold text-slate-900 short:text-3xl">{title}</h1>
+      <h1 className="mt-2 font-display text-4xl leading-none font-bold text-slate-900 short:mt-1 short:text-2xl">{title}</h1>
     </div>
   );
 }
@@ -119,122 +132,20 @@ function PrimaryButton({ label, onClick }: { label: string; onClick: () => void 
   );
 }
 
-/** Yeni oyun tuşları haritaya göre gruplanır; her tuş bir sıralamaya karşılık gelir. */
-const NEW_GAME_GROUPS: { title: string; icon: "turkey" | "world"; boards: { id: BoardId; label: string }[] }[] = [
-  {
-    title: "Türkiye",
-    icon: "turkey",
-    boards: [
-      { id: "turkey", label: "Şehir" },
-      { id: "turkey-plates", label: "Plaka" },
-    ],
-  },
-  {
-    title: "Dünya",
-    icon: "world",
-    boards: [
-      { id: "world", label: "Normal" },
-      { id: "world-hard", label: "Zor" },
-      { id: "world-flags", label: "Bayrak" },
-    ],
-  },
-];
+const RESULT_LINK_CLASS = "text-sm font-semibold underline-offset-4 transition hover:underline";
 
-/** Başlık: ortada yazı, iki yanında turkuazdan saydama solan çizgiler ve parlayan noktalar. */
-function NewGameHeading() {
+/** Asıl tuşun altındaki iki bağlantı: aynı oyunun ayar ekranında başka bir tur seçmek ve ana menüye dönmek. */
+function ResultLinks({ chooseLabel, onChooseAnother, onHome }: { chooseLabel: string; onChooseAnother: () => void; onHome: () => void }) {
   return (
-    <div aria-hidden="true" className="flex items-center gap-3">
-      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-cyan-500" />
-      <span className="glow-dot h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgb(6_182_212/0.6)]" />
-      <span className="font-display text-lg font-bold tracking-[0.18em] text-slate-900 uppercase">Yeni oyun</span>
-      <span className="glow-dot h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgb(6_182_212/0.6)]" />
-      <span className="h-px flex-1 bg-gradient-to-l from-transparent via-cyan-300 to-cyan-500" />
+    <div className="flex items-center justify-center gap-5">
+      <button className={`${RESULT_LINK_CLASS} text-cyan-700 hover:text-cyan-800`} onClick={onChooseAnother} type="button">
+        {chooseLabel}
+      </button>
+      <span aria-hidden="true" className="h-1 w-1 rounded-full bg-slate-300" />
+      <button className={`${RESULT_LINK_CLASS} text-slate-500 hover:text-cyan-700`} onClick={onHome} type="button">
+        Ana menü
+      </button>
     </div>
-  );
-}
-
-function GroupIcon({ icon }: { icon: "turkey" | "world" }) {
-  if (icon === "turkey") {
-    return <Image alt="" className="h-3 w-auto rounded-[2px] shadow-sm" height={12} src={flagUrl("tr")} unoptimized width={16} />;
-  }
-  return (
-    <svg aria-hidden="true" className="h-3.5 w-3.5 text-cyan-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
-    </svg>
-  );
-}
-
-/**
- * Yarış sonucunun yeni oyun tuşları. Tuşların çerçevesinde bir ışık döner; aynı anda dönmesinler
- * diye her biri farklı bir anda başlar. Az önce oynanan tur, üzerinden ışık süzülen dolu turkuaz
- * tuşla öne çıkar ve "tekrar oyna" işini görür.
- */
-function NewGameSection({ playedBoardId, onPlay }: { playedBoardId: BoardId; onPlay: (choice: PlayChoice) => void }) {
-  let buttonIndex = 0;
-  return (
-    <section aria-label="Yeni oyun" className="flex flex-col gap-4">
-      <NewGameHeading />
-      {NEW_GAME_GROUPS.map((group) => (
-        <div key={group.title}>
-          <p className="mb-2 flex items-center justify-center gap-1.5 text-[11px] font-bold tracking-[0.2em] text-slate-500 uppercase">
-            <GroupIcon icon={group.icon} />
-            {group.title}
-          </p>
-          <div className={`grid gap-2 ${group.boards.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-            {group.boards.map((option) => {
-              const board = BOARDS.find((candidate) => candidate.id === option.id) ?? BOARDS[0];
-              const isPlayed = option.id === playedBoardId;
-              const delay = `${-0.55 * buttonIndex++}s`;
-              return (
-                <button
-                  aria-label={isPlayed ? `${option.label}, tekrar oyna` : undefined}
-                  className={`group flex items-center justify-center gap-1.5 rounded-2xl px-2 py-3 font-display text-base font-bold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none ${
-                    isPlayed
-                      ? "shimmer bg-gradient-to-br from-cyan-500 to-cyan-700 text-white shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-500/40"
-                      : "sweep sweep-cyan text-slate-800 shadow-sm hover:text-cyan-700 hover:shadow-md hover:shadow-cyan-500/20"
-                  }`}
-                  key={option.id}
-                  onClick={() => onPlay(choiceForBoard(board))}
-                  // Dönen ışık ve süzülen parıltı, tuşların hepsinde aynı anda olmasın.
-                  style={{ "--sweep-delay": delay, "--shimmer-delay": delay } as React.CSSProperties}
-                  title={isPlayed ? "Tekrar oyna" : undefined}
-                  type="button"
-                >
-                  {isPlayed && (
-                    <svg
-                      aria-hidden="true"
-                      className="h-4 w-4 shrink-0 transition-transform duration-500 group-hover:-rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4.5h-4.5" />
-                    </svg>
-                  )}
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </section>
-  );
-}
-
-function HomeLink({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      className="w-fit self-center text-sm font-semibold text-slate-500 underline-offset-4 transition hover:text-cyan-700 hover:underline"
-      onClick={onClick}
-      type="button"
-    >
-      Ana menü
-    </button>
   );
 }
 
@@ -255,6 +166,7 @@ export function ResultScreen({
   missedLocationIds,
   onBoardChange,
   onPlay,
+  onChooseAnother,
   onHome,
   onSignOut,
 }: ResultScreenProps) {
@@ -267,6 +179,7 @@ export function ResultScreen({
         durationMs={durationMs}
         missedLocationIds={missedLocationIds}
         mostMissed={mostMissed}
+        onChooseAnother={onChooseAnother}
         onHome={onHome}
         onPlay={onPlay}
         onSignOut={onSignOut}
@@ -278,6 +191,11 @@ export function ResultScreen({
 
   // Sıralamadaki satır en yüksek puanlı tura ait; süresi bu turunkinden uzun olabilir.
   const personalBest = leaderboards[playedBoardId].find((entry) => entry.user_id === player?.id);
+  const rank = personalBest ? leaderboards[playedBoardId].indexOf(personalBest) + 1 : 0;
+  const duration = formatTime(Math.round(durationMs / 1000));
+  const shareText = `Harita Avcısı'nda ${choiceLabel(choice)} yarışında ${score}/${questionCount} yaptım, süre ${duration}.${
+    rank > 0 ? ` Sıralamada ${rank}. sıradayım.` : ""
+  } Sen kaç yaparsın?`;
 
   return (
     <ResultShell
@@ -286,26 +204,32 @@ export function ResultScreen({
           <aside className={SUMMARY_CARD}>
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
 
-            <div>
-              <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-                <span className="text-7xl short:text-6xl">{score}</span>
-                <span className="text-3xl text-slate-400">/{questionCount}</span>
-              </p>
-              {personalBest && (
-                <p className="mt-2 text-sm font-semibold text-cyan-700 tabular-nums">
-                  En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
+            {/* Alçak ekranda skor ve istatistikler yan yana durur; tuşlar kaydırmadan görünsün. */}
+            <div className={SCORE_ROW}>
+              <div className="short:shrink-0">
+                <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
+                  <span className="text-7xl short:text-5xl">{score}</span>
+                  <span className="text-3xl text-slate-400 short:text-2xl">/{questionCount}</span>
                 </p>
-              )}
+                {personalBest && (
+                  <p className="mt-2 text-sm font-semibold text-cyan-700 tabular-nums short:mt-1 short:text-xs">
+                    En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
+                  </p>
+                )}
+              </div>
+
+              <dl className="grid grid-cols-2 gap-3 short:flex-1 short:gap-2">
+                <StatTile label="En uzun seri" shortLabel="Seri" value={String(bestStreak)} />
+                <StatTile label="Süre" value={duration} />
+              </dl>
             </div>
 
-            <dl className="grid grid-cols-2 gap-3">
-              <StatTile label="En uzun seri" value={String(bestStreak)} />
-              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
-            </dl>
-
-            <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
-              <NewGameSection onPlay={onPlay} playedBoardId={playedBoardId} />
-              <HomeLink onClick={onHome} />
+            {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
+                ayar ekranında seçilir. */}
+            <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
+              <PrimaryButton label={`Tekrar oyna · ${BOARDS.find((board) => board.id === playedBoardId)?.label ?? ""}`} onClick={() => onPlay(choice)} />
+              <ShareScoreButton text={shareText} />
+              <ResultLinks chooseLabel="Başka tur seç" onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
           </aside>
       }
@@ -344,6 +268,7 @@ type PracticeResultProps = {
   mostMissed: LocationStat[] | null | undefined;
   missedLocationIds: string[];
   onPlay: (choice: PlayChoice) => void;
+  onChooseAnother: () => void;
   onHome: () => void;
   onSignOut: () => void;
 };
@@ -362,6 +287,7 @@ function PracticeResult({
   mostMissed,
   missedLocationIds,
   onPlay,
+  onChooseAnother,
   onHome,
   onSignOut,
 }: PracticeResultProps) {
@@ -376,23 +302,26 @@ function PracticeResult({
           <aside className={SUMMARY_CARD}>
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />
 
-            <div>
-              <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
-                <span className="text-7xl short:text-6xl">{score}</span>
-                <span className="text-3xl text-slate-400">/{answeredCount}</span>
-              </p>
-              <p className="mt-2 text-sm text-slate-500">Antrenman sonuçları sıralamaya kaydedilmez.</p>
+            <div className={SCORE_ROW}>
+              <div className="short:shrink-0">
+                <p className="font-display leading-none font-bold text-slate-900 tabular-nums">
+                  <span className="text-7xl short:text-5xl">{score}</span>
+                  <span className="text-3xl text-slate-400 short:text-2xl">/{answeredCount}</span>
+                </p>
+                {/* Alçak ekranda gizli: alttaki yarış daveti aynı şeyi söylüyor. */}
+                <p className="mt-2 text-sm text-slate-500 short:hidden">Antrenman sonuçları sıralamaya kaydedilmez.</p>
+              </div>
+
+              <dl className="grid grid-cols-3 gap-3 short:flex-1 short:gap-2">
+                <StatTile label="Başarı" value={`%${accuracy}`} />
+                <StatTile label="En uzun seri" shortLabel="Seri" value={String(bestStreak)} />
+                <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
+              </dl>
             </div>
 
-            <dl className="grid grid-cols-3 gap-3">
-              <StatTile label="Başarı" value={`%${accuracy}`} />
-              <StatTile label="En uzun seri" value={String(bestStreak)} />
-              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
-            </dl>
-
-            <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
+            <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
               <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
-              <HomeLink onClick={onHome} />
+              <ResultLinks chooseLabel="Başka antrenman seç" onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
 
             {/* Antrenmandan yarışa davet. Giriş yapılmamışsa yarış tuşu giriş adımını açar; bu yüzden önceden söylenir. */}

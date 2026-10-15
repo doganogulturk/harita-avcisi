@@ -248,7 +248,9 @@ body {
 /* Giriş ekranındaki oyun kartları: fareyle üzerine gelince kartın renginde bir ışık bir kez süzülür. */
 .card-sweep {
   isolation: isolate;
-  overflow: hidden;
+  /* hidden değil clip: köşedeki silik simge kartın dışına taşar; hidden kartı kaydırılabilir bırakır ve kod alanına
+     odaklanınca tarayıcı içeriği yukarı kaydırabilir. clip kırpar ama kaydırmaya izin vermez. */
+  overflow: clip;
 }
 
 .card-sweep::before {
@@ -300,9 +302,27 @@ body {
   mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
 }
 
+/* Küçük sekmenin kıvrımı daha dar; sol alttaki sekmenin kıvrımları ters yöne bakar (dolu kalan köşe sol alt). */
+.corner-fillet-sm {
+  --fillet: 0.75rem;
+}
+
+.corner-fillet-bl {
+  mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+/* Sol üstteki karonun kıvrımları: dolu kalan köşe sol üst. */
+.corner-fillet-tl {
+  mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
 @media (min-width: 64rem) {
   .corner-fillet {
     --fillet: 1.5rem;
+  }
+
+  .corner-fillet-sm {
+    --fillet: 1rem;
   }
 }
 
