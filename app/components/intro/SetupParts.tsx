@@ -81,7 +81,7 @@ export function SetupShell({
         <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[58%] lg:w-[30rem] xl:w-[34rem]">
           <div className="flex shrink-0 items-start justify-between gap-3">
             <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">Ayarlar</p>
-            <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} label={actionLabel} onClick={onAction} />
+            <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col px-4 pt-3 pb-4 short:px-3 short:pt-2 short:pb-3 lg:px-7 lg:pt-4 lg:pb-7">

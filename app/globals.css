@@ -386,29 +386,26 @@ body {
   transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Giriş kartlarının köşe sekmesini kartın üst ve sağ kenarına bağlayan içbükey kıvrım. Zemin rengi sekmeyle aynı
-   sınıftan gelir; maske kare parçadan çeyrek daireyi oyar ve kenara yaslanan köşe kalır. */
+/* Köşe sekmelerini ve karoyu kabın kenarlarına bağlayan içbükey kıvrım (CornerTab.tsx, Fillet). SVG dolu köşesi sağ
+   üsttedir; sol alttaki sekme için ters çevrilir, sol üstteki karo için aynalanır. */
 .corner-fillet {
   --fillet: 1rem;
   position: absolute;
   width: var(--fillet);
   height: var(--fillet);
   pointer-events: none;
-  mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
 }
 
-/* Küçük sekmenin kıvrımı daha dar; sol alttaki sekmenin kıvrımları ters yöne bakar (dolu kalan köşe sol alt). */
 .corner-fillet-sm {
   --fillet: 0.75rem;
 }
 
 .corner-fillet-bl {
-  mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  rotate: 180deg;
 }
 
-/* Sol üstteki karonun kıvrımları: dolu kalan köşe sol üst. */
 .corner-fillet-tl {
-  mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  scale: -1 1;
 }
 
 @media (min-width: 64rem) {

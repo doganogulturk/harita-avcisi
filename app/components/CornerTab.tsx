@@ -25,8 +25,10 @@ const CORNERS = {
 
 type CornerTabProps = {
   label: string;
-  /** Zemin ve yazı rengi (oyunun `theme.badge` ya da `theme.soft` sınıfı); içbükey kıvrımlar da aynı zemini alır. */
+  /** Zemin ve yazı rengi (oyunun `theme.badge` ya da `theme.soft` sınıfı). */
   colorClass: string;
+  /** İçbükey kıvrımların dolgusu, zeminle aynı renk (`theme.badgeFill` / `theme.softFill`). */
+  fillClass: string;
   onClick: () => void;
   /** Sekmenin oturduğu köşe; asıl iş sağ üstte, ikincil iş sol altta. */
   corner?: keyof typeof CORNERS;
@@ -46,9 +48,9 @@ type CornerTabProps = {
  * kabın köşesine konur; kabın yuvarlaklığı sekmenin dış köşesini kırpar, iki yanındaki içbükey kıvrımlar
  * (globals.css, .corner-fillet) sekmeyi kabın iki kenarına bağlar.
  */
-export function CornerTab({ label, colorClass, onClick, corner = "top-right", size = "md", icon, disabled = false, isDecorative = false }: CornerTabProps) {
+export function CornerTab({ label, colorClass, fillClass, onClick, corner = "top-right", size = "md", icon, disabled = false, isDecorative = false }: CornerTabProps) {
   const shape = CORNERS[corner];
-  const filletClass = `corner-fillet ${size === "sm" ? "corner-fillet-sm" : ""} ${shape.filletClass} ${colorClass}`;
+  const filletClass = `corner-fillet ${size === "sm" ? "corner-fillet-sm" : ""} ${shape.filletClass} ${fillClass}`;
   return (
     <div className={`relative z-10 shrink-0 transition-opacity ${disabled ? "opacity-50" : ""}`}>
       <button
@@ -76,8 +78,8 @@ export function CornerTab({ label, colorClass, onClick, corner = "top-right", si
           </svg>
         )}
       </button>
-      <span aria-hidden="true" className={`${filletClass} ${shape.fillets[0]}`} />
-      <span aria-hidden="true" className={`${filletClass} ${shape.fillets[1]}`} />
+      <Fillet className={`${filletClass} ${shape.fillets[0]}`} />
+      <Fillet className={`${filletClass} ${shape.fillets[1]}`} />
     </div>
   );
 }
@@ -86,13 +88,26 @@ export function CornerTab({ label, colorClass, onClick, corner = "top-right", si
  * Köşeye yapışık süs (giriş kartlarındaki oyun simgesi): sekmelerle aynı biçimde sol üst köşeden içeri kıvrılır ama tuş
  * değildir; tıklama alttaki kart tuşuna geçer. Boyu kabın `--tile` değişkeninden gelir; içerik onun yanından akar.
  */
-export function CornerTile({ colorClass, children }: { colorClass: string; children: React.ReactNode }) {
-  const filletClass = `corner-fillet corner-fillet-tl ${colorClass}`;
+export function CornerTile({ colorClass, fillClass, children }: { colorClass: string; fillClass: string; children: React.ReactNode }) {
+  const filletClass = `corner-fillet corner-fillet-tl ${fillClass}`;
   return (
     <div aria-hidden="true" className="pointer-events-none relative">
       <div className={`flex h-(--tile) w-(--tile) items-center justify-center rounded-br-2xl lg:rounded-br-3xl ${colorClass}`}>{children}</div>
-      <span className={`${filletClass} top-0 left-full`} />
-      <span className={`${filletClass} top-full left-0`} />
+      <Fillet className={`${filletClass} top-0 left-full`} />
+      <Fillet className={`${filletClass} top-full left-0`} />
     </div>
+  );
+}
+
+/**
+ * İçbükey kıvrım: kenarları çeyrek daireyle oyulmuş küçük kare; dolu kalan köşe sağ üst. Diğer köşeler için CSS'te
+ * döndürülür (globals.css, .corner-fillet-bl / -tl). SVG ile çizilir: aynı şekil maske (radial-gradient) ile
+ * çizildiğinde Safari karenin kenarında ince bir çizgi bırakıyordu.
+ */
+function Fillet({ className }: { className: string }) {
+  return (
+    <svg aria-hidden="true" className={className} preserveAspectRatio="none" viewBox="0 0 16 16">
+      <path d="M0 0H16V16A16 16 0 0 0 0 0Z" />
+    </svg>
   );
 }

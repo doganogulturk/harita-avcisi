@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { DUEL_MODES, DUEL_RULES, type DuelRule, type DuelSettings } from "@/lib/duel";
 import { flagUrl, type BoardVariant, type GameMode } from "@/lib/game";
+import { shareLink, useCanShare } from "@/lib/share";
 import { shareUrl } from "@/lib/site";
 
 /** Düelloda oyuncunun kendisi hep mavi, rakibi hep turuncu. */
@@ -142,18 +143,11 @@ export function DuelSettingsPicker({ value, onChange }: { value: DuelSettings; o
   );
 }
 
-const noSubscription = () => () => {};
-
-/** Paylaşma satırı: kod, bağlantıyı kopyalama ve (telefonda) paylaşma menüsü. */
+/** Paylaşma satırı: kod, bağlantıyı kopyalama ve (telefonda ve mobil uygulamada) paylaşma menüsü. */
 export function ShareCode({ code, path, label, shareText }: { code: string; path: string; label: string; shareText: string }) {
   const [isCopied, setIsCopied] = useState(false);
   const url = shareUrl(path);
-  // Paylaşma menüsü tarayıcıya bağlı; sunucuda çizilen ilk halde yok sayılır, uyuşmazlık olmaz.
-  const canShare = useSyncExternalStore(
-    noSubscription,
-    () => typeof navigator.share === "function",
-    () => false,
-  );
+  const canShare = useCanShare();
 
   const copy = async () => {
     try {
@@ -175,7 +169,7 @@ export function ShareCode({ code, path, label, shareText }: { code: string; path
       {canShare && (
         <button
           className="font-semibold text-cyan-700 underline-offset-4 hover:underline"
-          onClick={() => void navigator.share({ title: "Harita Avcısı", text: shareText, url }).catch(() => {})}
+          onClick={() => void shareLink({ text: shareText, url })}
           type="button"
         >
           Paylaş

@@ -20,6 +20,13 @@ export type GameTheme = {
   badge: string;
   /** Kartın sol altındaki ikincil sekme (Sıralamayı gör, Kodla katıl): asıl sekmenin soluk tonu. */
   soft: string;
+  /**
+   * Köşe sekmelerinin ve karonun içbükey kıvrımlarının (SVG) dolgu rengi; sırasıyla badge, soft ve tile zeminiyle aynı.
+   * Tailwind sınıfları tam yazılır diye ayrı alanlar.
+   */
+  badgeFill: string;
+  softFill: string;
+  tileFill: string;
   /** Kod alanının çerçeve ve odak rengi. */
   outline: string;
   watermark: string;
@@ -55,6 +62,9 @@ export const GAMES: GameInfo[] = [
       card: "hover:border-cyan-300 hover:shadow-cyan-900/10 focus-within:border-cyan-300",
       badge: "bg-cyan-600 text-white",
       soft: "bg-cyan-100 text-cyan-800",
+      badgeFill: "fill-cyan-600",
+      softFill: "fill-cyan-100",
+      tileFill: "fill-cyan-100",
       outline: "border-cyan-300 text-cyan-700 hover:border-cyan-500 hover:bg-cyan-50 focus-visible:ring-cyan-200 focus:border-cyan-500 focus:ring-cyan-100",
       watermark: "text-cyan-600",
       glow: "rgb(6 182 212 / 0.14)",
@@ -74,6 +84,9 @@ export const GAMES: GameInfo[] = [
       card: "hover:border-amber-300 hover:shadow-amber-900/10 focus-within:border-amber-300",
       badge: "bg-amber-400 text-amber-950",
       soft: "bg-amber-100 text-amber-900",
+      badgeFill: "fill-amber-400",
+      softFill: "fill-amber-100",
+      tileFill: "fill-amber-100",
       outline: "border-amber-300 text-amber-800 hover:border-amber-500 hover:bg-amber-50 focus-visible:ring-amber-200 focus:border-amber-500 focus:ring-amber-100",
       watermark: "text-amber-500",
       glow: "rgb(245 158 11 / 0.16)",
@@ -93,6 +106,9 @@ export const GAMES: GameInfo[] = [
       card: "hover:border-orange-300 hover:shadow-orange-900/10 focus-within:border-orange-300",
       badge: "bg-orange-500 text-white",
       soft: "bg-orange-100 text-orange-700",
+      badgeFill: "fill-orange-500",
+      softFill: "fill-orange-100",
+      tileFill: "fill-orange-100",
       outline: "border-orange-300 text-orange-600 hover:border-orange-500 hover:bg-orange-50 focus-visible:ring-orange-200 focus:border-orange-500 focus:ring-orange-100",
       watermark: "text-orange-500",
       glow: "rgb(249 115 22 / 0.14)",
@@ -116,6 +132,9 @@ export const GAMES: GameInfo[] = [
       card: "hover:border-violet-300 hover:shadow-violet-900/10 focus-within:border-violet-300",
       badge: "bg-violet-600 text-white",
       soft: "bg-violet-100 text-violet-700",
+      badgeFill: "fill-violet-600",
+      softFill: "fill-violet-100",
+      tileFill: "fill-violet-100",
       outline: "border-violet-300 text-violet-700 hover:border-violet-500 hover:bg-violet-50 focus-visible:ring-violet-200 focus:border-violet-500 focus:ring-violet-100",
       watermark: "text-violet-600",
       glow: "rgb(139 92 246 / 0.14)",

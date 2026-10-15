@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Leaderboard } from "./Leaderboard";
 import { useLeaderboards } from "@/lib/hooks/useLeaderboard";
 import { type BoardId } from "@/lib/game";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
 type LeaderboardPanelProps = {
   /** Panel açılırken öne gelen sekme; oyuncunun o an seçtiği tur. */
@@ -18,6 +19,7 @@ type LeaderboardPanelProps = {
  * oyun sırasında açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
  */
 export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConfigured, onClose }: LeaderboardPanelProps) {
+  useBackHandler(onClose, BACK_PRIORITY.dialog);
   const [boardId, setBoardId] = useState<BoardId>(initialBoardId);
   const { leaderboards, leaderboardError, isLoading } = useLeaderboards(supabaseConfigured);
 

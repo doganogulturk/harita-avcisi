@@ -13,6 +13,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { DuelGame } from "./DuelGame";
 import { DuelLobby } from "./DuelLobby";
 import { DuelResult } from "./DuelResult";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
 /**
  * Düellonun çerçevesi. "Yan çevir" uyarısı lobide ve oyunda çizilir: iki oyuncu hazır deyince geri sayım başlar,
@@ -52,6 +53,11 @@ export function DuelScreen({ code }: { code: string }) {
   const supabaseConfigured = getSupabaseClient() !== null;
 
   const goHome = () => router.push("/");
+  const exitDuel = () => {
+    if (window.confirm("Düellodan çıkarsan ve 30 saniye içinde dönmezsen hükmen kaybedersin. Çıkmak istiyor musun?")) goHome();
+  };
+  // Android geri tuşu oyun sırasında çıkış tuşuyla aynı işi yapar (onay sorar); lobide ve sonuçta geçmişte geri gidilir.
+  useBackHandler(exitDuel, BACK_PRIORITY.screen, state?.status === "playing");
 
   const signOut = async () => {
     await getSupabaseClient()?.auth.signOut();
@@ -123,9 +129,7 @@ export function DuelScreen({ code }: { code: string }) {
         {warning}
         <DuelGame
           onAnswer={(position, selected) => void answer(position, selected)}
-          onExit={() => {
-            if (window.confirm("Düellodan çıkarsan ve 30 saniye içinde dönmezsen hükmen kaybedersin. Çıkmak istiyor musun?")) goHome();
-          }}
+          onExit={exitDuel}
           serverNow={serverNow}
           state={state}
         />

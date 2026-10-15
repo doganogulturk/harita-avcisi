@@ -63,8 +63,10 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<!-- Menüler ve antrenman dikeyde de kullanılır; süreli oyunda "Yatay moda geç" ekranı yataya kilitler (RotateOverlay). -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
+		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>

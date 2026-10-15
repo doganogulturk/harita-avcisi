@@ -6,6 +6,7 @@ import { PlateBadge } from "../GameTopBar";
 import { Logo } from "../Logo";
 import { flagUrl, GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { provinces } from "@/lib/turkish-plates";
 import { countries } from "@/lib/world-countries";
 import { GameIcon, GAMES } from "./games";
@@ -52,6 +53,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
     },
   ];
   const isLast = index === slides.length - 1;
+  useBackHandler(onClose, BACK_PRIORITY.dialog);
   const goTo = (next: number) => setIndex(Math.max(0, Math.min(slides.length - 1, next)));
 
   useEffect(() => {

@@ -87,7 +87,7 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
 
       {/* Oyunun simgesi sol üst köşeye yapışık bir karodur; sekmelerle aynı biçimde ama tuş değil. */}
       <div className="absolute top-0 left-0 z-10">
-        <CornerTile colorClass={theme.tile}>
+        <CornerTile colorClass={theme.tile} fillClass={theme.tileFill}>
           <GameIcon className="h-6 w-6 short:h-5 short:w-5 sm:h-7 sm:w-7 lg:h-10 lg:w-10" game={game.id} />
         </CornerTile>
       </div>
@@ -95,14 +95,14 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
       {/* Kartın eylem tuşu sağ üst köşedeki sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve ekran okuyucu için kart
           tuşu yeterli. */}
       <div className="absolute top-0 right-0 z-10">
-        <CornerTab colorClass={theme.badge} isDecorative label={game.cardAction} onClick={onSelect} />
+        <CornerTab colorClass={theme.badge} fillClass={theme.badgeFill} isDecorative label={game.cardAction} onClick={onSelect} />
       </div>
 
       {/* İkincil iş (Sıralamayı gör, Kodla katıl) çaprazdaki sol alt köşede, daha küçük ve soluk tonda bir sekmedir. Kod
           alanı açıkken sekme çekilir, alan alt satırda açılır. */}
       {secondary && !isJoining && (
         <div className="absolute bottom-0 left-0 z-10">
-          <CornerTab colorClass={theme.soft} corner="bottom-left" icon={<SecondaryIcon icon={secondary.icon} />} label={secondary.label} onClick={secondary.onClick} size="sm" />
+          <CornerTab colorClass={theme.soft} corner="bottom-left" fillClass={theme.softFill} icon={<SecondaryIcon icon={secondary.icon} />} label={secondary.label} onClick={secondary.onClick} size="sm" />
         </div>
       )}
 

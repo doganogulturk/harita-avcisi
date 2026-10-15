@@ -131,7 +131,7 @@ boyuta indiği için:
   **Dikeyde devam et** derse tur hemen başlar ve bu tercih tarayıcıda hatırlanır, ekran bir daha çıkmaz
   (`lib/hooks/useLandscapeGate.ts`).
 
-Mobil uygulama ise şimdilik yalnızca yatay açılır (aşağıda).
+Mobil uygulama da aynı davranır; orada "Yatay moda geç" ekranı yataya kendisi kilitler (aşağıda).
 
 ### Sağlamlık
 
@@ -162,7 +162,7 @@ yarışında 9/10 yaptım, süre 00:47. Sıralamada 3. sıradayım. Sen kaç yap
 ### Uygulama olarak yükleme
 
 Site telefona ve tablete uygulama gibi eklenebilir; ana ekranda **Harita Avcısı** adıyla nişangah simgesi görünür
-ve tarayıcı çubukları olmadan, yatay açılır.
+ve tarayıcı çubukları olmadan, telefonun tutuluşuna göre açılır.
 
 - **Android (Chrome):** menü (⋮) → **Uygulamayı yükle** ya da **Ana ekrana ekle**.
 - **iPhone / iPad (Safari):** Paylaş → **Ana Ekrana Ekle**.
@@ -188,7 +188,22 @@ npm run android   # derle, kopyala, Android Studio'da aç
 kendisi yazar, Android boyutlarını `capacitor-assets` üretir (komut betiğin başında). iOS açılış ekranı tam ekran bir
 resim değil, `LaunchScreen.storyboard`'da düz zemin ve ortada rozettir.
 
-Uygulama yalnızca yatay açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Uygulama kimliği
+Uygulama sitedeki gibi dikeyde de açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Süreli oyunun
+"yan çevir" ekranındaki **Yatay moda geç** uygulamada ekranı yataya kilitler (`@capacitor/screen-orientation`;
+telefonun yön kilidi açık olsa bile döner); oyun ekranı kapanınca kilit kalkar.
+
+Uygulamaya özgü davranışlar:
+
+- **Android geri tuşu** (`NativeBackButton`, `lib/hooks/useBackHandler.ts`): önce açık pencere (giriş, sıralama,
+  tanıtım, hesap silme) kapanır; oyundan ve sonuçtan ana menüye, giriş adımından ayarlara dönülür; düello ve oda
+  turunda çıkış onayı sorulur. Bunlar yoksa geçmişte geri gidilir (ayar ekranından oyun seçimine), geçmiş de yoksa
+  uygulamadan çıkılır.
+- **Titreşim** (`@capacitor/haptics`, `lib/haptics.ts`): uygulamada iPhone'da da çalışır; doğru cevapta "başarılı",
+  yanlışta "hata" dokunuşu.
+- **Paylaşım** (`@capacitor/share`, `lib/share.ts`): uygulamada sistemin paylaşma menüsü açılır (Android'in
+  WebView'inde tarayıcının paylaşma API'si yok).
+
+Uygulama kimliği
 (`capacitor.config.ts` → `appId`) şimdilik geçicidir; mağazaya ilk yüklemeden sonra değiştirilemez.
 
 ## Yerelde çalıştırma

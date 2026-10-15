@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { deleteMyAccount } from "@/lib/auth";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { type Player } from "@/lib/game";
 
 type DeleteAccountDialogProps = {
@@ -14,6 +15,9 @@ type DeleteAccountDialogProps = {
 /** Hesabı ve oyuncunun bütün verisini kalıcı olarak silmeden önce ne gideceğini anlatıp onay ister. */
 export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccountDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  useBackHandler(() => {
+    if (!isDeleting) onClose();
+  }, BACK_PRIORITY.dialog);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

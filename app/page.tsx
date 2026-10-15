@@ -12,6 +12,7 @@ import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -246,6 +247,18 @@ export default function Home() {
     setAuthError(null);
     cancelPendingChoice();
   }
+
+  // Android geri tuşu: yan çevirmeyi bekleyen tur bırakılır; oyundan ve sonuçtan ana menüye, giriş adımından oyun
+  // seçimine dönülür. Ana menüde ayar ekranından kartlara geçiş tarayıcı geçmişiyle olur (IntroScreen).
+  useBackHandler(
+    () => {
+      if (landscape.isWaiting) landscape.cancel();
+      else if (phase !== "ready") goHome();
+      else cancelPendingChoice();
+    },
+    BACK_PRIORITY.screen,
+    phase !== "ready" || pendingChoice !== null || landscape.isWaiting,
+  );
 
   // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
   const celebration = streakCelebration(answerState, round.streak);

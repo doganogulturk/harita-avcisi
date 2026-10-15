@@ -10,6 +10,7 @@ import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, 
 import { modeOptions, variantFor } from "./DuelSetup";
 import { formatMinutes, gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
 type RoomSetupProps = {
   map: GameMode;
@@ -36,6 +37,8 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isAuthStep, setIsAuthStep] = useState(false);
+  // Android geri tuşu giriş adımından ayarlara döner.
+  useBackHandler(() => setIsAuthStep(false), BACK_PRIORITY.screen, isAuthStep && !player);
   const update = (patch: Partial<RoomOptions>) => {
     setOptions((current) => ({ ...current, ...patch }));
     setError(null);

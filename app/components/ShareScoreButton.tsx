@@ -1,32 +1,22 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
+import { shareLink, useCanShare } from "@/lib/share";
 import { shareUrl } from "@/lib/site";
 
-const noSubscription = () => () => {};
-
 /**
- * Sonuç ekranındaki "Skorumu paylaş": telefonda sistemin paylaşma menüsünü açar (WhatsApp, LinkedIn, X...), menü
- * yoksa (masaüstü tarayıcı, Android uygulaması) metni ve site bağlantısını panoya kopyalar. Bağlantı paylaşıldığında
+ * Sonuç ekranındaki "Skorumu paylaş": telefonda ve mobil uygulamada sistemin paylaşma menüsünü açar (WhatsApp,
+ * LinkedIn, X...), menü yoksa (çoğu masaüstü tarayıcı) metni ve site bağlantısını panoya kopyalar. Bağlantı paylaşıldığında
  * sitenin önizleme kartı (app/opengraph-image.png) görünür. `isCompact`: başka bir tuşun yanında yarım genişlikte
  * durur, yazı kısalır ("Paylaş" / "Kopyala").
  */
 export function ShareScoreButton({ text, isCompact = false }: { text: string; isCompact?: boolean }) {
   const [isCopied, setIsCopied] = useState(false);
-  // Paylaşma menüsü tarayıcıya bağlı; sunucuda çizilen ilk halde yok sayılır, uyuşmazlık olmaz.
-  const canShare = useSyncExternalStore(
-    noSubscription,
-    () => typeof navigator.share === "function",
-    () => false,
-  );
+  const canShare = useCanShare();
 
   const share = async () => {
     const url = shareUrl("/");
-    if (canShare) {
-      // Kullanıcı menüyü kapatırsa hata fırlar; yapılacak bir şey yok.
-      await navigator.share({ title: "Harita Avcısı", text, url }).catch(() => {});
-      return;
-    }
+    if (canShare) return shareLink({ text, url });
     try {
       await navigator.clipboard.writeText(`${text} ${url}`);
       setIsCopied(true);

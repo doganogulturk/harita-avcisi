@@ -7,6 +7,7 @@ import { PlayerBadge } from "../PlayerBadge";
 import { RotateOverlay } from "../RotateOverlay";
 import { SignInPanel } from "../SignInPanel";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
 import { useRoom } from "@/lib/hooks/useRoom";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -55,6 +56,8 @@ export function RoomScreen({ code }: { code: string }) {
   };
 
   const landscape = useLandscapeGate((round: number) => void playRound(round));
+  // Android geri tuşu yan çevrilmeyi bekleyen turu bırakır.
+  useBackHandler(landscape.cancel, BACK_PRIORITY.dialog, landscape.isWaiting);
 
   const finishRound = useCallback(
     (outcome: RoomRoundOutcome) => {

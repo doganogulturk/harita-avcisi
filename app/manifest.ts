@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 export const dynamic = "force-static";
 
 /**
- * Ana ekrana eklenebilir uygulama tanımı. Simgeler logodaki nişangahtır (public/icons). Oyun yatay
- * düzen için tasarlandığı için yüklü uygulama yatay açılır; telefonu çevir uyarısına gerek kalmaz.
+ * Ana ekrana eklenebilir uygulama tanımı. Simgeler logodaki nişangahtır (public/icons). Yüklü uygulama telefonun
+ * tutuluşuna göre açılır; süreli oyunlarda yatay önerilir.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -17,7 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    orientation: "landscape",
+    // Menüler ve antrenman dikeyde de kullanılır; süreli oyunda "yan çevir" ekranı çıkar.
+    orientation: "any",
     background_color: "#f8fafc",
     theme_color: "#f8fafc",
     categories: ["games", "education"],

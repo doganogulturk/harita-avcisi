@@ -3,6 +3,7 @@ import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
 import { ConnectionBanner } from "./components/ConnectionBanner";
 import { KeyboardFocus } from "./components/KeyboardFocus";
+import { NativeBackButton } from "./components/NativeBackButton";
 import { NativeSystemBars } from "./components/NativeSystemBars";
 import { SITE_URL } from "@/lib/site";
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <ConnectionBanner />
         <KeyboardFocus />
+        <NativeBackButton />
         <NativeSystemBars />
       </body>
     </html>

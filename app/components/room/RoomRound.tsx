@@ -7,6 +7,7 @@ import { duelChoice, questionForLocation } from "@/lib/duel";
 import { flagUrl, isFlagChoice, type Player, type Question } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { type RoomState } from "@/lib/room";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -64,6 +65,17 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
     );
   }, [answerRecords, completionDurationMs, onDone, round, roundId, score, status]);
 
+  const exitRound = () => {
+    if (!window.confirm("Turu bırakırsan bu tur 0 puan sayılır ve tekrar oynanamaz. Bırakmak istiyor musun?")) return;
+    hasSaved.current = true;
+    // Sunucu da hemen "yarım" saysın; haber veremezse tur 150 saniye sonra kendiliğinden yarım sayılır.
+    void Promise.resolve(getSupabaseClient()?.rpc("abandon_round", { p_round_id: roundId })).finally(() =>
+      onDone({ round, score: 0, durationMs: 0, saved: false, abandoned: true }),
+    );
+  };
+  // Android geri tuşu turdan çıkış tuşuyla aynı işi yapar (onay sorar).
+  useBackHandler(exitRound, BACK_PRIORITY.screen, play.status === "playing");
+
   const celebration = streakCelebration(play.answerState, play.streak);
   const countdown = nextQuestionCountdown(play.answerState, play.remainingQuestionSeconds, play.questionIndex === play.questions.length - 1);
 
@@ -76,14 +88,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
         answers={play.answers}
         choice={choice}
         exitTitle="Turu bırak · Bu tur 0 puan sayılır ve tekrar oynanamaz"
-        onExit={() => {
-          if (!window.confirm("Turu bırakırsan bu tur 0 puan sayılır ve tekrar oynanamaz. Bırakmak istiyor musun?")) return;
-          hasSaved.current = true;
-          // Sunucu da hemen "yarım" saysın; haber veremezse tur 150 saniye sonra kendiliğinden yarım sayılır.
-          void Promise.resolve(getSupabaseClient()?.rpc("abandon_round", { p_round_id: roundId })).finally(() =>
-            onDone({ round, score: 0, durationMs: 0, saved: false, abandoned: true }),
-          );
-        }}
+        onExit={exitRound}
         onFinishPractice={() => {}}
         onSignOut={onSignOut}
         player={player}

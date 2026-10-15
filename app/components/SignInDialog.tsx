@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SignInPanel } from "./SignInPanel";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
 /**
  * Ana menüdeki "Giriş yap" penceresi: oyuncu bir tur seçmeden, istediği an giriş yapabilsin. Yarış, düello ve oda
@@ -9,6 +10,7 @@ import { SignInPanel } from "./SignInPanel";
  * bitince pencere kapanır, oturum usePlayer'a kendiliğinden yansır; Google girişi sayfadan ayrılıp ana sayfaya döner.
  */
 export function SignInDialog({ onClose }: { onClose: () => void }) {
+  useBackHandler(onClose, BACK_PRIORITY.dialog);
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();

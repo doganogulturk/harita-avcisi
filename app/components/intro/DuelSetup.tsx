@@ -10,6 +10,7 @@ import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences";
 import { gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
+import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
 /** Seçilen haritada geçerli modu döndürür; başka haritada kalmış bir mod o haritanın ilk moduna düşer. */
 export function variantFor(map: GameMode, variant: string): BoardVariant {
@@ -39,6 +40,8 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isAuthStep, setIsAuthStep] = useState(false);
+  // Android geri tuşu giriş adımından ayarlara döner.
+  useBackHandler(() => setIsAuthStep(false), BACK_PRIORITY.screen, isAuthStep && !player);
 
   const save = (nextVariant: BoardVariant, nextRule: DuelRule) => setDuelSettingsKey(`${map}|${nextVariant}|${nextRule}`);
 
