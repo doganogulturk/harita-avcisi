@@ -14,12 +14,16 @@ import { DuelGame } from "./DuelGame";
 import { DuelLobby } from "./DuelLobby";
 import { DuelResult } from "./DuelResult";
 
-function Shell({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) {
+/**
+ * Düellonun çerçevesi. "Yan çevir" uyarısı lobide ve oyunda çizilir: iki oyuncu hazır deyince geri sayım başlar,
+ * çevirmek için o ana kadar beklenmemeli. Bağlantı, giriş ve sonuç ekranları dikeyde de kullanılır.
+ */
+function Shell({ children, header, needsLandscape = false }: { children: React.ReactNode; header?: React.ReactNode; needsLandscape?: boolean }) {
   return (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       {header}
       {children}
-      <RotateOverlay />
+      {needsLandscape && <RotateOverlay />}
     </main>
   );
 }
@@ -64,8 +68,8 @@ export function DuelScreen({ code }: { code: string }) {
     </header>
   );
 
-  const body = (children: React.ReactNode) => (
-    <Shell header={header}>
+  const body = (children: React.ReactNode, needsLandscape = false) => (
+    <Shell header={header} needsLandscape={needsLandscape}>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 lg:overflow-hidden lg:px-8 lg:py-5">{children}</div>
     </Shell>
   );
@@ -115,7 +119,7 @@ export function DuelScreen({ code }: { code: string }) {
 
   if (state.status === "playing") {
     return (
-      <Shell>
+      <Shell needsLandscape>
         {warning}
         <DuelGame
           onAnswer={(position, selected) => void answer(position, selected)}
@@ -145,5 +149,6 @@ export function DuelScreen({ code }: { code: string }) {
         />
       )}
     </>,
+    state.status === "lobby",
   );
 }

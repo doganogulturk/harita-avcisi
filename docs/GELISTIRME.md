@@ -29,7 +29,9 @@ tekrarlanmaz, kartlar beklemeden görünür. Hareket azaltma açıksa hiç göst
 
 ### Yarış
 
-Giriş gerektirir (Google ya da misafir adı). Her tur 10 soru ve toplam 120 saniyedir; her cevaptan sonra doğru cevap 3 saniye gösterilir.
+Giriş gerektirir (Google ya da misafir adı). Giriş yapmamış oyuncu ana menünün sağ üstündeki **Giriş yap** ile
+istediği an giriş yapabilir; yapmadıysa ayar ekranındaki tuş **Giriş yap ve başla** (düello ve odada **Giriş yap ve
+kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821" gibi bir ad önerilir. Her tur 10 soru ve toplam 120 saniyedir; her cevaptan sonra doğru cevap 3 saniye gösterilir.
 
 | Tur | Havuz | Soru |
 | --- | --- | --- |
@@ -49,7 +51,8 @@ Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya ba
 
 ### Antrenman
 
-Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir.
+Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir. Sonuçta aynı
+haritanın yarışına bir davet de durur; giriş yapılmamışsa giriş adımını açar.
 En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; yalnızca yarış turlarından hesaplanır ve antrenmanın
 havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatistiğe katılmaz.
 
@@ -100,7 +103,10 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 ### Harita
 
 Harita tekerlek, sürükleme, iki parmakla sıkıştırma ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Dokunmatikte
-parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar yakındaki yer seçilir; farede bu tolerans yoktur. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır; telefon dikey tutulduğunda cihazı çevirmesi istenir.
+parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar yakındaki yer seçilir; farede bu tolerans yoktur. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner. Oyun yatay düzen için tasarlanmıştır. Menüler, ayarlar, sonuçlar, düello sonucu ve oda panosu dikeyde de
+kullanılır; "Telefonunu yan çevir" uyarısı yalnızca harita ekranında (oyun, düello lobisi ve oyunu, oda turu) çıkar.
+Dikeyde başlatılan yarış, antrenman ya da oda turu hemen başlamaz: uyarı "çevirdiğinde başlar" der, süre telefon yan
+çevrilene kadar işlemez, **Vazgeç** isteği bırakır (`lib/hooks/useLandscapeGate.ts`).
 
 ### Uygulama olarak yükleme
 

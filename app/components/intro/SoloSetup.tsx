@@ -43,13 +43,15 @@ type SoloSetupProps = {
   turkeyPrompt: TurkeyPrompt;
   isScopeLocked: boolean;
   isReady: boolean;
+  /** Yarışta giriş yapılmamışsa tuş bunu önceden söyler; giriş adımı sürpriz olmasın. */
+  needsSignIn: boolean;
   onMapChange: (map: GameMode) => void;
   onBack: () => void;
   onStart: () => void;
 };
 
 /** Adım 2, Yarış ve Antrenman: soru tipi ve (dünyada) kapsam. */
-export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocked, isReady, onMapChange, onBack, onStart }: SoloSetupProps) {
+export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocked, isReady, needsSignIn, onMapChange, onBack, onStart }: SoloSetupProps) {
   const poolScopes: { id: WorldScope; label: string }[] = [
     { id: "normal", label: "Normal" },
     { id: "hard", label: kind === "ranked" ? "Zor" : "Tümü" },
@@ -57,7 +59,7 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
 
   return (
     <SetupShell
-      actionLabel={isReady ? "Başla" : "Harita hazırlanıyor..."}
+      actionLabel={!isReady ? "Harita hazırlanıyor..." : needsSignIn ? "Giriş yap ve başla" : "Başla"}
       game={gameInfo(kind)}
       isActionDisabled={!isReady}
       map={map}

@@ -78,7 +78,7 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
 
   return (
     <SetupShell
-      actionLabel={isBusy ? "Kuruluyor…" : gameInfo("room").action}
+      actionLabel={isBusy ? "Kuruluyor…" : player ? gameInfo("room").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("room")}
       isActionDisabled={isBusy || !supabaseConfigured}

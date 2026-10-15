@@ -1,7 +1,11 @@
 "use client";
 
-/** Mobilde dikey moddayken tüm ekranı kaplayan "telefonunu yan çevir" uyarısı. */
-export function RotateOverlay() {
+/**
+ * Mobilde dikey moddayken tüm ekranı kaplayan "telefonunu yan çevir" uyarısı. Menüler dikeyde de kullanılır; uyarı
+ * yalnızca harita ekranlarında (oyun, düello) ve dikeyde başlatılıp yan çevrilmeyi bekleyen turda çizilir.
+ * `onCancel` verilirse tur henüz başlamamıştır: uyarı turun yan çevirince başlayacağını söyler ve vazgeçme tuşu çıkar.
+ */
+export function RotateOverlay({ onCancel }: { onCancel?: () => void } = {}) {
   const enterLandscape = async () => {
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
@@ -19,10 +23,19 @@ export function RotateOverlay() {
         <path d="M15 21.5 12 19l3-2.5" />
       </svg>
       <p className="text-xl font-bold">Telefonunu yan çevir</p>
-      <p className="max-w-xs text-sm text-slate-300">Harita geniş olduğu için Harita Avcısı yatay modda oynanır.</p>
+      <p className="max-w-xs text-sm text-slate-300">
+        {onCancel
+          ? "Harita geniş olduğu için oyun yatay oynanır. Telefonunu çevirdiğinde başlar; süre o ana kadar işlemez."
+          : "Harita geniş olduğu için Harita Avcısı yatay modda oynanır."}
+      </p>
       <button className="rounded-full bg-cyan-500 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-400" onClick={enterLandscape} type="button">
         Yatay moda geç
       </button>
+      {onCancel && (
+        <button className="text-sm font-semibold text-slate-400 underline-offset-4 transition hover:text-white hover:underline" onClick={onCancel} type="button">
+          Vazgeç
+        </button>
+      )}
     </div>
   );
 }

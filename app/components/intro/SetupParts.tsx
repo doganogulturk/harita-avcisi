@@ -46,8 +46,9 @@ export function SetupShell({
 }: SetupShellProps) {
   return (
     <SelectedClass.Provider value={game.theme.selected}>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 md:flex-row md:gap-4 lg:gap-5">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 lg:gap-4 lg:p-5">
+      {/* Dikey telefonda harita kartı ve ayarlar alt alta durur; ayarlar uzunsa ekran kayar, harita ezilmez. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 max-md:overflow-y-auto md:flex-row md:gap-4 lg:gap-5">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 max-md:flex-none lg:gap-4 lg:p-5">
           <div className="flex shrink-0 items-center gap-2.5 lg:gap-3">
             <BackButton onClick={onBack} />
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl lg:h-12 lg:w-12 lg:rounded-2xl ${game.theme.tile}`}>

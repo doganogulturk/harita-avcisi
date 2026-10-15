@@ -10,6 +10,7 @@ import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -151,7 +152,14 @@ export default function Home() {
     });
   }, [choice, phase, questionIndex, questions]);
 
+  // Dikeyde başlatılan tur, telefon yan çevrilince başlar; süre çevirirken işlemesin.
+  const landscape = useLandscapeGate(beginRound);
+
   function startGame(nextChoice: PlayChoice) {
+    landscape.request(nextChoice);
+  }
+
+  function beginRound(nextChoice: PlayChoice) {
     setChoice(nextChoice);
     round.start(roundFor(nextChoice));
     // Yarış turu sunucuda da açılır; süre sunucuda ölçülsün. Misafir girişinden hemen sonra
@@ -174,6 +182,8 @@ export default function Home() {
     setAuthError(null);
     setPendingChoice(choice);
     writePendingChoice(choice);
+    // Giriş adımı ana menüde açılır; sonuç ekranından (antrenmandan yarışa davet) istendiyse oraya dönülür.
+    round.reset();
   }
 
   function goHome() {
@@ -302,7 +312,8 @@ export default function Home() {
         )}
       </div>
 
-      <RotateOverlay />
+      {/* Menüler ve sonuç dikeyde de kullanılır; uyarı yalnızca harita ekranında ya da yan çevrilmeyi bekleyen turda. */}
+      {(phase === "playing" || landscape.isWaiting) && <RotateOverlay onCancel={landscape.isWaiting ? landscape.cancel : undefined} />}
     </main>
   );
 }

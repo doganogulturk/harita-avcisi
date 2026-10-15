@@ -5,11 +5,14 @@ import { MostMissed } from "./MostMissed";
 import { PlayerBadge } from "./PlayerBadge";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import {
+  boardIdFor,
   BOARDS,
   choiceForBoard,
   choiceLabel,
   flagUrl,
   formatTime,
+  GAME_DURATION_SECONDS,
+  QUESTIONS_PER_ROUND,
   type BoardId,
   type LocationStat,
   type PlayChoice,
@@ -363,6 +366,8 @@ function PracticeResult({
   onSignOut,
 }: PracticeResultProps) {
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
+  // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın Normal / Zor sıralamasına düşer).
+  const rankedBoard = BOARDS.find((board) => board.id === boardIdFor(choice)) ?? BOARDS[0];
 
   return (
     <ResultShell
@@ -388,6 +393,22 @@ function PracticeResult({
             <div className="flex flex-col gap-4 pt-2 lg:mt-auto">
               <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
               <HomeLink onClick={onHome} />
+            </div>
+
+            {/* Antrenmandan yarışa davet. Giriş yapılmamışsa yarış tuşu giriş adımını açar; bu yüzden önceden söylenir. */}
+            <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4">
+              <p className="text-sm font-bold text-slate-900">Skorun sıralamaya girsin mi?</p>
+              <p className="mt-1 text-xs text-slate-600">
+                Yarışta {QUESTIONS_PER_ROUND} soru, {GAME_DURATION_SECONDS} saniye; sonucun {rankedBoard.label} sıralamasına işlenir.
+                {!player && " Google ya da misafir adıyla giriş yeter."}
+              </p>
+              <button
+                className="mt-2 text-sm font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-800 hover:decoration-cyan-600"
+                onClick={() => onPlay(choiceForBoard(rankedBoard))}
+                type="button"
+              >
+                {player ? `${rankedBoard.label} yarışına başla →` : `Giriş yap, ${rankedBoard.label} yarışına başla →`}
+              </button>
             </div>
           </aside>
       }

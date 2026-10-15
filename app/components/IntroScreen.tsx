@@ -7,6 +7,7 @@ import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { LegalMenu } from "./LegalMenu";
 import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
+import { SignInDialog } from "./SignInDialog";
 import { LeaderboardPanel } from "./LeaderboardPanel";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
@@ -99,6 +100,7 @@ export function IntroScreen({
   const [selectedGame, setSelectedGame] = useState<IntroGame | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
 
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
@@ -214,6 +216,7 @@ export function IntroScreen({
       return (
         <SoloSetup
           isReady={readyModes.includes(map)}
+          needsSignIn={kind === "ranked" && !player}
           isScopeLocked={isScopeLocked}
           kind={kind}
           map={map}
@@ -249,6 +252,16 @@ export function IntroScreen({
         </h1>
         <div className="flex shrink-0 items-center gap-2 lg:gap-3">
           <PlayerBadge onDeleteAccount={() => setIsDeleteAccountOpen(true)} onSignOut={onSignOut} player={player} />
+          {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
+          {!player && supabaseConfigured && !pendingChoice && (
+            <button
+              className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:px-4 lg:py-2"
+              onClick={() => setIsSignInOpen(true)}
+              type="button"
+            >
+              Giriş yap
+            </button>
+          )}
           <LegalMenu />
         </div>
       </header>
@@ -263,6 +276,8 @@ export function IntroScreen({
           supabaseConfigured={supabaseConfigured}
         />
       )}
+
+      {isSignInOpen && !player && <SignInDialog onClose={() => setIsSignInOpen(false)} />}
 
       {isDeleteAccountOpen && player && (
         <DeleteAccountDialog

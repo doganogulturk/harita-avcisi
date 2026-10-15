@@ -71,7 +71,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
 
   return (
     <SetupShell
-      actionLabel={isBusy ? "Kuruluyor…" : gameInfo("duel").action}
+      actionLabel={isBusy ? "Kuruluyor…" : player ? gameInfo("duel").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("duel")}
       isActionDisabled={isBusy || !supabaseConfigured}

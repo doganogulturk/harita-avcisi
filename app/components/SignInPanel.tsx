@@ -14,16 +14,20 @@ type SignInPanelProps = {
   onSignedIn: (player: Player) => void;
   /** Verilmezse Google girişinden aynı sayfaya dönülür. */
   redirectTo?: string;
+  cancelLabel?: string;
+  guestSubmitLabel?: string;
 };
 
 /** Düello ve oda gibi girişin kendi akışı olan ekranlar için giriş adımı: Google ya da misafir. */
-export function SignInPanel({ title, description, onCancel, onSignedIn, redirectTo }: SignInPanelProps) {
+export function SignInPanel({ title, description, onCancel, onSignedIn, redirectTo, cancelLabel, guestSubmitLabel }: SignInPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   return (
     <AuthPanel
       authError={error}
+      cancelLabel={cancelLabel}
+      guestSubmitLabel={guestSubmitLabel}
       choiceLabel=""
       description={description}
       isSigningIn={isSigningIn}

@@ -17,10 +17,10 @@ type ModeGridProps = {
   onJoin: (game: "duel" | "room", code: string) => void;
 };
 
-/** Adım 1: dört oyun, 2×2 büyük kart. Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
+/** Adım 1: dört oyun, 2×2 büyük kart (dikey telefonda alt alta). Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
 export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
   return (
-    <div className="grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-2 gap-3 lg:gap-5">
+    <div className="grid min-h-0 w-full flex-1 grid-cols-1 grid-rows-4 gap-3 sm:grid-cols-2 sm:grid-rows-2 lg:gap-5">
       {GAMES.map((game, index) => (
         <ModeCard
           delayMs={introDelayMs + introStepMs * index}
@@ -90,7 +90,7 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         <CornerTab colorClass={theme.badge} isDecorative label={game.cardAction} onClick={onSelect} />
       </div>
 
-      <div className="pointer-events-none relative flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:mt-7 lg:gap-5 short:flex-row short:items-center short:gap-2.5">
+      <div className="pointer-events-none relative flex min-w-0 flex-row items-start gap-3 sm:gap-4 lg:mt-7 lg:gap-5 short:items-center short:gap-2.5">
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl short:h-9 short:w-9 short:rounded-xl lg:h-20 lg:w-20 lg:rounded-3xl ${theme.tile}`}
         >

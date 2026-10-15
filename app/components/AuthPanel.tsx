@@ -15,7 +15,16 @@ type AuthPanelProps = {
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
   onCancel: () => void;
+  /** Vazgeç bağlantısının yazısı; giriş penceresinde "Kapat". */
+  cancelLabel?: string;
+  /** Misafir adı formunun tuşu; giriş bir tur başlatmıyorsa (giriş penceresi) "Giriş yap". */
+  guestSubmitLabel?: string;
 };
+
+/** Misafir girişinde ad alanına önerilen ad; oyuncu isterse üzerine yazar. */
+function suggestGuestName() {
+  return `Avcı ${Math.floor(1000 + Math.random() * 9000)}`;
+}
 
 /**
  * Giriş, ayrı bir ekran değil; oyuncu "Oyna"ya bastıktan sonra aynı kartın içinde
@@ -31,8 +40,10 @@ export function AuthPanel({
   onGoogleSignIn,
   onGuestSignIn,
   onCancel,
+  cancelLabel = "← Geri",
+  guestSubmitLabel = "Başla",
 }: AuthPanelProps) {
-  const [guestName, setGuestName] = useState("");
+  const [guestName, setGuestName] = useState(suggestGuestName);
   const [isGuestFormVisible, setIsGuestFormVisible] = useState(false);
 
   const submitGuestName = (event: FormEvent<HTMLFormElement>) => {
@@ -47,7 +58,7 @@ export function AuthPanel({
         onClick={onCancel}
         type="button"
       >
-        ← Geri
+        {cancelLabel}
       </button>
 
       <p className="mt-3 text-lg font-bold text-slate-900">
@@ -96,6 +107,8 @@ export function AuthPanel({
             id="guest-name"
             maxLength={40}
             onChange={(event) => setGuestName(event.target.value)}
+            // Önerilen ad seçili gelir: yazmaya başlayan kendi adını yazar, dokunmayan önerilenle devam eder.
+            onFocus={(event) => event.currentTarget.select()}
             placeholder="Sıralamada görünecek adın"
             value={guestName}
           />
@@ -104,7 +117,7 @@ export function AuthPanel({
             disabled={isSigningIn}
             type="submit"
           >
-            Başla
+            {guestSubmitLabel}
           </button>
         </form>
       )}
