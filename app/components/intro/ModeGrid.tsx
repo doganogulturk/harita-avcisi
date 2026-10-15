@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState } from "react";
 import { type IntroGame } from "@/lib/intro-preferences";
+import { CORNER_TAB_SIZE, CornerTab } from "../CornerTab";
 import { GameIcon, GAMES, type GameInfo } from "./games";
 
 type ModeGridProps = {
@@ -15,9 +16,6 @@ type ModeGridProps = {
   /** Düello ve oda kartındaki "Kodla katıl"; 6 karakterlik kod geçerliyse o sayfaya gider. */
   onJoin: (game: "duel" | "room", code: string) => void;
 };
-
-/** Köşe sekmesinin ve onun yer tutucusunun ortak ölçüleri; ikisi aynı boyda olsun diye tek yerde. */
-const CORNER_TAB_SIZE = "gap-1.5 py-2 pr-4 pl-4 text-sm short:py-1.5 short:pr-3 short:pl-3.5 lg:py-3 lg:pr-6 lg:pl-6 lg:text-base";
 
 /** Adım 1: dört oyun, 2×2 büyük kart. Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
 export function ModeGrid({ lastGame, introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
@@ -86,40 +84,21 @@ function ModeCard({ game, isLast, delayMs, onSelect, onShowLeaderboard, onJoin }
         game={game.id}
       />
 
-      {/* Kartın eylem tuşu sağ üst köşeden içeri kıvrılan bir sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve
-          ekran okuyucu için kart tuşu yeterli. İki yanındaki içbükey kıvrımlar sekmeyi kartın kenarına bağlar. */}
+      {/* Kartın eylem tuşu sağ üst köşedeki sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve ekran okuyucu için kart
+          tuşu yeterli. */}
       <div className="absolute top-0 right-0 z-10">
-        <button
-          aria-hidden="true"
-          className={`group/action pill-shine relative flex cursor-pointer items-center rounded-bl-2xl font-bold transition duration-200 group-hover:gap-2.5 hover:brightness-110 active:brightness-95 lg:rounded-bl-3xl ${CORNER_TAB_SIZE} ${theme.badge}`}
-          onClick={onSelect}
-          tabIndex={-1}
-          type="button"
-        >
-          {game.cardAction}
-          <svg
-            className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            viewBox="0 0 24 24"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <span aria-hidden="true" className={`corner-fillet top-0 right-full ${theme.badge}`} />
-        <span aria-hidden="true" className={`corner-fillet top-full right-0 ${theme.badge}`} />
+        <CornerTab colorClass={theme.badge} isDecorative label={game.cardAction} onClick={onSelect} />
       </div>
 
-      <div className="pointer-events-none relative flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:gap-5 short:flex-row short:items-center short:gap-2.5">
+      <div className="pointer-events-none relative flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:mt-7 lg:gap-5 short:flex-row short:items-center short:gap-2.5">
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl short:h-9 short:w-9 short:rounded-xl lg:h-20 lg:w-20 lg:rounded-3xl ${theme.tile}`}
         >
           <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-10 lg:w-10" game={game.id} />
         </span>
         <div className="min-w-0 flex-1">
-          {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda
-              kartın iç boşluğu sekmeden yüksek olduğu için gerekmez; orada başlığı aşağı itmesin. */}
+          {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda kart
+              yüksek olduğu için başlık bloğu sekmenin altından başlar (lg:mt-7); yer tutucu orada başlığı itmesin. */}
           <span aria-hidden="true" className={`invisible float-right -mt-(--card-pad) -mr-(--card-pad) mb-1 ml-3 flex items-center font-bold lg:hidden ${CORNER_TAB_SIZE}`}>
             {game.cardAction}
             <span className="h-4 w-4 lg:h-5 lg:w-5" />

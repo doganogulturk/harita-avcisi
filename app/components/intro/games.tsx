@@ -22,7 +22,6 @@ export type GameTheme = {
   badge: string;
   link: string;
   watermark: string;
-  button: string;
   /** Kartın üzerinden süzülen ışığın rengi (globals.css, .card-sweep). */
   glow: string;
 };
@@ -37,9 +36,6 @@ export type GameInfo = {
   cardAction: string;
   theme: GameTheme;
 };
-
-const BUTTON_BASE =
-  "flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-lg font-bold shadow-lg transition-all duration-200 hover:gap-3.5 active:scale-[0.98] focus-visible:ring-4 focus-visible:outline-none disabled:cursor-wait disabled:opacity-50 short:py-2.5 short:text-base lg:py-4";
 
 export const formatMinutes = (minutes: number) => (minutes === 60 ? "1 saat" : `${minutes} dk`);
 
@@ -60,7 +56,6 @@ export const GAMES: GameInfo[] = [
       badge: "bg-cyan-600 text-white",
       link: "text-cyan-700 decoration-cyan-300 hover:text-cyan-800 hover:decoration-cyan-600",
       watermark: "text-cyan-600",
-      button: `${BUTTON_BASE} bg-cyan-600 text-white shadow-cyan-600/20 hover:bg-cyan-500 focus-visible:ring-cyan-200`,
       glow: "rgb(6 182 212 / 0.14)",
     },
   },
@@ -80,7 +75,6 @@ export const GAMES: GameInfo[] = [
       badge: "bg-amber-400 text-amber-950",
       link: "text-amber-700 decoration-amber-300 hover:text-amber-800 hover:decoration-amber-600",
       watermark: "text-amber-500",
-      button: `${BUTTON_BASE} bg-amber-400 text-amber-950 shadow-amber-400/30 hover:bg-amber-300 focus-visible:ring-amber-200`,
       glow: "rgb(245 158 11 / 0.16)",
     },
   },
@@ -100,7 +94,6 @@ export const GAMES: GameInfo[] = [
       badge: "bg-orange-500 text-white",
       link: "text-orange-600 decoration-orange-300 hover:text-orange-700 hover:decoration-orange-500",
       watermark: "text-orange-500",
-      button: `${BUTTON_BASE} bg-orange-500 text-white shadow-orange-500/25 hover:bg-orange-400 focus-visible:ring-orange-200`,
       glow: "rgb(249 115 22 / 0.14)",
     },
   },
@@ -124,7 +117,6 @@ export const GAMES: GameInfo[] = [
       badge: "bg-violet-600 text-white",
       link: "text-violet-700 decoration-violet-300 hover:text-violet-800 hover:decoration-violet-600",
       watermark: "text-violet-600",
-      button: `${BUTTON_BASE} bg-violet-600 text-white shadow-violet-600/20 hover:bg-violet-500 focus-visible:ring-violet-200`,
       glow: "rgb(139 92 246 / 0.14)",
     },
   },

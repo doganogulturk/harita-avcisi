@@ -13,15 +13,18 @@ içeri kıvrılan bir sekmedir. En son oynanan oyunun kartı sağ altta "Son oyn
 künyeler gizlenir, düzen 2×2 kalır. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
 kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir.
 
-İkinci adım dört oyunda aynı düzendedir: solda oynanacak harita, sağda en üstte Türkiye / Dünya seçimi, altında
-oyunun kendi ayarları ve en altta büyük eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**). **← Oyun modu**
-ilk adıma döner. Tüm seçimler tarayıcıda hatırlanır.
+İkinci adım dört oyunda aynı düzendedir: solda üstte yuvarlak **←** tuşu ve oyunun adı, altında Türkiye / Dünya seçimi
+ve oynanacak haritanın küçük önizlemesi; sağda daha geniş panelde oyunun kendi ayarları. Eylem tuşu (**Başla**,
+**Düelloyu kur**, **Odayı kur**) giriş kartlarındaki gibi panelin sağ üst köşesinden içeri kıvrılan sekmedir
+(`CornerTab`). Alçak (yatay telefon) ekranlarda ayarların etiketi solda, seçici sağda durur. Başlıktaki logo da
+her adımdan ilk adıma döner. İkinci adım tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez); telefonda geri
+hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda hatırlanır.
 
-İkinci adımda oynanacak harita gerçek boyutuyla gösterilir. Kıta seçildiğinde o kıta harita üzerinde vurgulanır;
-havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam yan paneldeki tek satırlık açıklamayla anlatılır.
+Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam
+yan paneldeki tek satırlık açıklamayla anlatılır.
 
 Sayfa ilk açıldığında oyunun adı ekranın ortasında belirir, ardından bu katman çekilerek seçim ekranı açılır.
-Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **← Oyun modu** ile ilk adıma dönüşte
+Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **←** ile ilk adıma dönüşte
 tekrarlanmaz, kartlar beklemeden görünür. Hareket azaltma açıksa hiç gösterilmez.
 
 ### Yarış
@@ -80,7 +83,7 @@ sayımla başlar.
 ### Oda
 
 Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranında **Oda** kartı seçilince ikinci adımda
-oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve en fazla katılımcı (5 / 10 / 20 / 50) seçilir.
+oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve kişi sınırı (5 / 10 / 20 / 50) seçilir.
 Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Oda kartındaki **Kodla katıl** ile de girer.
 
 - **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an

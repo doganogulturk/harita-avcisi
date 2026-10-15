@@ -90,7 +90,7 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
     >
       <Field htmlFor="room-name" label="Oda adı">
         <input
-          className="w-full rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+          className="w-full rounded-xl border border-slate-300 px-4 py-2 outline-none short:px-3 short:py-1.5 short:text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
           id="room-name"
           maxLength={ROOM_NAME_MAX}
           onChange={(event) => update({ name: event.target.value })}
@@ -126,9 +126,9 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
         />
       </Field>
 
-      <Field label="En fazla katılımcı">
+      <Field label="Kişi sınırı">
         <Segmented
-          label="En fazla katılımcı"
+          label="Kişi sınırı"
           onChange={(maxPlayers) => update({ maxPlayers })}
           options={ROOM_PLAYER_PRESETS.map((preset) => ({ id: preset, label: String(preset) }))}
           value={options.maxPlayers as (typeof ROOM_PLAYER_PRESETS)[number]}

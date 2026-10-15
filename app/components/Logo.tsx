@@ -19,7 +19,7 @@ const LOGO_SIZES = {
  */
 export function Logo({ size = "header", isHeading = true }: { size?: keyof typeof LOGO_SIZES; isHeading?: boolean }) {
   const style = LOGO_SIZES[size];
-  const Tag = isHeading ? "h1" : "p";
+  const Tag = isHeading ? "h1" : "span";
   return (
     <Tag className={`flex items-center ${style.row}`}>
       <span

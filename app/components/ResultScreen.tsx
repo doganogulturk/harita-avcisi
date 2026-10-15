@@ -56,11 +56,25 @@ const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 upp
  * tuşları, sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar; sağ sütun kendi içinde kayar.
  * Dar ekranda her şey tek sütunda aynı sırayla alt alta gelir ve sayfa kayar; sıralama yine önce görünür.
  */
-function ResultShell({ player, onSignOut, aside, children }: { player: Player | null; onSignOut: () => void; aside: React.ReactNode; children: React.ReactNode }) {
+function ResultShell({
+  player,
+  onSignOut,
+  onHome,
+  aside,
+  children,
+}: {
+  player: Player | null;
+  onSignOut: () => void;
+  onHome: () => void;
+  aside: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 lg:gap-5 lg:overflow-hidden lg:px-8 lg:py-5">
       <header className="flex shrink-0 items-center justify-between gap-3">
-        <Logo isHeading={false} />
+        <button aria-label="Ana menü" className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
+          <Logo isHeading={false} />
+        </button>
         <PlayerBadge onSignOut={onSignOut} player={player} />
       </header>
       <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
@@ -264,6 +278,7 @@ export function ResultScreen({
 
   return (
     <ResultShell
+      onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
@@ -351,6 +366,7 @@ function PracticeResult({
 
   return (
     <ResultShell
+      onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
             <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />

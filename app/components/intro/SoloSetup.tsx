@@ -82,8 +82,12 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
             )}
           </Field>
 
-          <Field label="Kapsam" note={isScopeLocked ? SCOPE_LOCK_NOTE : scopeNote(scope)}>
-            <div className="flex flex-wrap gap-2" role="radiogroup">
+          <Field noteOn={isScopeLocked ? "all" : "tall"} label="Kapsam" note={isScopeLocked ? SCOPE_LOCK_NOTE : scopeNote(scope)}>
+            {/* Antrenmanda havuzların altında kıtalar da var. Alçak ekranda altısı tek ızgarada üçerli iki satır olur. */}
+            <div
+              className={`grid gap-2 short:gap-1.5 ${kind === "practice" ? "grid-cols-2 short:grid-cols-3" : "w-fit grid-cols-2"}`}
+              role="radiogroup"
+            >
               {poolScopes.map((option) => (
                 <ScopeChip
                   count={scopeCountryCount(option.id)}
@@ -94,21 +98,22 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
                   onClick={() => setWorldScope(option.id)}
                 />
               ))}
+              {kind === "practice" && (
+                <>
+                  <span aria-hidden="true" className="col-span-full my-0.5 border-t border-slate-100 short:hidden" />
+                  {CONTINENTS.map((continent) => (
+                    <ScopeChip
+                      count={scopeCountryCount(continent.id)}
+                      disabled={false}
+                      isSelected={scope === continent.id}
+                      key={continent.id}
+                      label={continent.label}
+                      onClick={() => setWorldScope(continent.id)}
+                    />
+                  ))}
+                </>
+              )}
             </div>
-            {kind === "practice" && (
-              <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-slate-100 pt-2.5" role="radiogroup">
-                {CONTINENTS.map((continent) => (
-                  <ScopeChip
-                    count={scopeCountryCount(continent.id)}
-                    disabled={false}
-                    isSelected={scope === continent.id}
-                    key={continent.id}
-                    label={continent.label}
-                    onClick={() => setWorldScope(continent.id)}
-                  />
-                ))}
-              </div>
-            )}
           </Field>
         </>
       ) : (

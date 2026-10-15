@@ -51,6 +51,9 @@ type IntroScreenProps = {
  */
 let hasPlayedIntro = false;
 
+/** Adım 2'nin tarayıcı geçmişindeki kaydında seçilen oyunun tutulduğu alan. */
+const INTRO_STEP_KEY = "introStep";
+
 /** Açılış katmanının çekilip bittiği an (globals.css'teki intro-curtain gecikmesi + süresi). */
 const INTRO_CURTAIN_MS = 1820;
 /** Seçim ekranı, katman çekilirken netleşmeye başlar. */
@@ -129,12 +132,33 @@ export function IntroScreen({
   const choiceFor = (mode: GameMode, playKind: PlayKind): PlayChoice =>
     mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, playKind === "ranked" && isContinentScope(storedScope) ? "hard" : storedScope, prompt);
 
-  const goBack = () => setSelectedGame(null);
+  // Adım 2 tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez): telefonda geri hareketi ve Android'in geri
+  // tuşu siteden çıkmak yerine oyun seçimine döner. Kayıttan dönülünce (geri / ileri) adım kayıttaki oyuna uyar.
+  useEffect(() => {
+    // Oyundan menüye dönüldüğünde geçmişte adım 2 kaydı kalmış olabilir; menü adım 1'le açıldığı için temizlenir.
+    if (window.history.state?.[INTRO_STEP_KEY]) window.history.replaceState({ [INTRO_STEP_KEY]: null }, "");
+    const syncWithHistory = (event: PopStateEvent) => setSelectedGame((event.state?.[INTRO_STEP_KEY] as IntroGame | undefined) ?? null);
+    window.addEventListener("popstate", syncWithHistory);
+    return () => window.removeEventListener("popstate", syncWithHistory);
+  }, []);
+
+  const goBack = () => {
+    if (window.history.state?.[INTRO_STEP_KEY]) window.history.back();
+    else setSelectedGame(null);
+  };
+
+  /** Başlıktaki logo: hangi adımda olunursa olunsun oyun seçimine (adım 1) döner. */
+  const goHome = () => {
+    goBack();
+    setIsLeaderboardOpen(false);
+    if (pendingChoice) onCancelPendingChoice();
+  };
 
   // Oyuncu kartların netleşmesini beklemeden bir oyun seçtiyse animasyon da biter.
   const selectGame = (game: IntroGame) => {
     setIsIntroDone(true);
     setSelectedGame(game);
+    window.history.pushState({ [INTRO_STEP_KEY]: game }, "");
   };
 
   const start = () => {
@@ -216,9 +240,13 @@ export function IntroScreen({
   };
 
   return (
-    <section className="flex h-full w-full flex-col gap-3 px-4 py-3 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
+    <section className="flex h-full w-full flex-col gap-3 px-4 py-3 short:gap-2 short:py-2 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
       <header className="flex shrink-0 items-center justify-between gap-3">
-        <Logo />
+        <h1>
+          <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title="Ana menü" type="button">
+            <Logo isHeading={false} />
+          </button>
+        </h1>
         <div className="flex shrink-0 items-center gap-2 lg:gap-3">
           <PlayerBadge onDeleteAccount={() => setIsDeleteAccountOpen(true)} onSignOut={onSignOut} player={player} />
           <LegalMenu />
