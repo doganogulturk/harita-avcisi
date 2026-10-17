@@ -28,4 +28,6 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 [Kullanım Koşulları](https://haritaavcisi.com/kullanim-kosullari) ·
 [Hesap Silme](https://haritaavcisi.com/hesap-silme)
 
+Site çerezsiz, anonim ziyaret istatistiği tutar (Vercel Web Analytics); iOS ve Android uygulamalarında analitik yok.
+
 Geliştirme ve kurulum notları: [docs/GELISTIRME.md](docs/GELISTIRME.md)

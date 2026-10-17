@@ -388,6 +388,10 @@ yarış turudur; bu yüzden `finish_round`'un bütün denetimlerinden geçer ve 
 2. Vercel Project Settings > Environment Variables altında iki `NEXT_PUBLIC_SUPABASE_*` değişkenini ekleyin.
 3. Yayınlanan alan adını Supabase Authentication URL Configuration'a ekleyin.
 
+Ziyaret istatistikleri Vercel Web Analytics ile tutulur (`app/components/WebAnalytics.tsx`): çerezsiz, yalnızca
+sitede; mobil uygulamada yüklenmez. Sorgu dizgisi (`?kod=…`) ve adresin `#` parçası (web'de Google girişinden dönen
+oturum belirteci) gönderilmeden atılır. Veri toplanması için Vercel Project Settings > Analytics'te açılması gerekir.
+
 Bir derleme hazır olduğu halde yayına alınmadıysa (ör. önceki bir Instant Rollback sonrası), Deployments listesinde **⋯ → Promote to Production** ile yayına alınabilir.
 
 ## Kontroller

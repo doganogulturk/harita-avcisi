@@ -5,6 +5,7 @@ import { ConnectionBanner } from "./components/ConnectionBanner";
 import { KeyboardFocus } from "./components/KeyboardFocus";
 import { NativeBackButton } from "./components/NativeBackButton";
 import { NativeSystemBars } from "./components/NativeSystemBars";
+import { WebAnalytics } from "./components/WebAnalytics";
 import { SITE_URL } from "@/lib/site";
 
 // Yalnızca logo başlığında kullanılır; next/font derleme sırasında indirip siteyle birlikte sunar.
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <KeyboardFocus />
         <NativeBackButton />
         <NativeSystemBars />
+        <WebAnalytics />
       </body>
     </html>
   );

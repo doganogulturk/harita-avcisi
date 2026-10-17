@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Gizlilik Politikası" updated="13 Ekim 2026">
+    <LegalPage title="Gizlilik Politikası" updated="18 Ekim 2026">
       <p>
         Bu politika, Harita Avcısı web sitesinde ve iOS ile Android uygulamalarında (birlikte &ldquo;Harita Avcısı&rdquo;)
         hangi kişisel verilerin işlendiğini, neden işlendiğini ve bu veriler üzerindeki haklarını anlatır. Kişisel
@@ -54,10 +54,19 @@ export default function PrivacyPage() {
         cihaz bilgisi ve istek zamanı gibi sunucu kayıtlarını kısa süreliğine tutar.
       </p>
 
+      <h3>Ziyaret istatistikleri</h3>
+      <p>
+        Web sitesinde hangi sayfaların kaç kez açıldığını görmek için Vercel Web Analytics kullanılır. Çerez kullanmaz
+        ve seni tanımaz: yalnızca anonim sayfa görüntülemelerini, kabaca hangi ülkeden ve hangi cihaz türünden
+        (telefon, bilgisayar) gelindiğini sayar. Seni siteler arasında takip etmez, bir profil çıkarmaz. Düello ve oda
+        kodları adresten silinerek gönderilir. Bu istatistik yalnızca web sitesinde vardır; iOS ve Android
+        uygulamalarında hiçbir analitik hizmeti çalışmaz.
+      </p>
+
       <h3>Cihazında saklananlar</h3>
       <p>
         Oturum bilgin ve oyun tercihlerin cihazının yerel depolamasında tutulur. Harita Avcısı reklam ya da izleme
-        çerezi kullanmaz, analitik veya reklam hizmeti barındırmaz.
+        çerezi kullanmaz, reklam hizmeti barındırmaz. Tek analitik, yukarıdaki çerezsiz ziyaret istatistikleridir.
       </p>
 
       <h2>Herkese açık olanlar</h2>
@@ -79,6 +88,7 @@ export default function PrivacyPage() {
         <li>Düello ve odaları çalıştırmak, rakiplerine adını ve fotoğrafını göstermek.</li>
         <li>Puanı sunucuda hesaplayarak hileyi önlemek ve hizmetin güvenliğini sağlamak.</li>
         <li>&ldquo;En çok yanlış yapılan yerler&rdquo; gibi toplu oyun istatistiklerini üretmek.</li>
+        <li>Web sitesinin hangi sayfalarının ne kadar kullanıldığını anonim olarak görüp siteyi iyileştirmek.</li>
       </ul>
       <p>Verilerini reklam, profil çıkarma ya da pazarlama için kullanmayız ve kimseye satmayız.</p>
 
@@ -98,7 +108,7 @@ export default function PrivacyPage() {
           </tr>
           <tr>
             <td>Vercel</td>
-            <td>Web sitesinin barındırılması.</td>
+            <td>Web sitesinin barındırılması ve çerezsiz ziyaret istatistikleri (Vercel Web Analytics).</td>
           </tr>
           <tr>
             <td>Google</td>

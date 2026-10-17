@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function KvkkPage() {
   return (
-    <LegalPage title="KVKK Aydınlatma Metni" updated="13 Ekim 2026">
+    <LegalPage title="KVKK Aydınlatma Metni" updated="18 Ekim 2026">
       <p>
         Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu&apos;nun (&ldquo;KVKK&rdquo;) 10. maddesi uyarınca,
         Harita Avcısı web sitesi ve mobil uygulamalarını kullananların kişisel verilerinin nasıl işlendiği hakkında
@@ -47,6 +47,13 @@ export default function KvkkPage() {
             <td>İşlem güvenliği</td>
             <td>IP adresi, tarayıcı veya cihaz bilgisi, oturum bilgileri ve sunucu kayıtları</td>
           </tr>
+          <tr>
+            <td>Ziyaret istatistikleri</td>
+            <td>
+              Yalnızca web sitesinde: görüntülenen sayfa (düello ve oda kodu çıkarılarak), kabaca ülke, cihaz türü,
+              tarayıcı ve işletim sistemi
+            </td>
+          </tr>
         </tbody>
       </table>
 
@@ -72,6 +79,10 @@ export default function KvkkPage() {
             <td>(f) Veri sorumlusunun meşru menfaati</td>
           </tr>
           <tr>
+            <td>Web sitesi sayfalarının ne kadar kullanıldığının anonim olarak ölçülmesi ve sitenin iyileştirilmesi</td>
+            <td>(f) Veri sorumlusunun meşru menfaati</td>
+          </tr>
+          <tr>
             <td>Yetkili kurum ve kuruluşların talepleri ile hukuki yükümlülüklerin yerine getirilmesi</td>
             <td>(ç) Veri sorumlusunun hukuki yükümlülüğünü yerine getirebilmesi</td>
           </tr>
@@ -81,6 +92,11 @@ export default function KvkkPage() {
         Sıralamada ve düello ya da odalarda gösterilen ad ve profil fotoğrafı, oyunun kendisinin bir parçası olarak
         yukarıdaki (c) bendine dayanılarak diğer oyunculara açılır. E-posta adresi hiçbir zaman diğer kullanıcılara
         gösterilmez.
+      </p>
+      <p>
+        Ziyaret istatistikleri Vercel Web Analytics ile toplanır. Bu hizmet çerez kullanmaz, ziyaretçiyi tanımlamaz ve
+        siteler arasında takip etmez; yalnızca anonim sayfa görüntüleme sayıları üretir. iOS ve Android uygulamalarında
+        analitik hizmeti çalışmaz.
       </p>
 
       <h2>4. Toplama yöntemi</h2>
@@ -92,9 +108,9 @@ export default function KvkkPage() {
       <h2>5. Aktarım</h2>
       <p>
         Kişisel veriler yalnızca hizmetin sunulması amacıyla, veri işleyen sıfatıyla hizmet veren şu sağlayıcılara
-        aktarılır: Supabase (veritabanı ve kimlik doğrulama), Vercel (web barındırma) ve Google (Google ile giriş).
-        Bu sağlayıcıların sunucuları Türkiye dışında bulunduğundan veriler yurt dışına aktarılmaktadır. Aktarım KVKK
-        m. 9 çerçevesinde yapılır.
+        aktarılır: Supabase (veritabanı ve kimlik doğrulama), Vercel (web barındırma ve ziyaret istatistikleri) ve
+        Google (Google ile giriş). Bu sağlayıcıların sunucuları Türkiye dışında bulunduğundan veriler yurt dışına
+        aktarılmaktadır. Aktarım KVKK m. 9 çerçevesinde yapılır.
       </p>
       <p>
         Bunların dışında kişisel veriler, yalnızca kanunen yetkili kamu kurum ve kuruluşlarına, talep etmeleri hâlinde
