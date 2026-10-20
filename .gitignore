@@ -48,3 +48,6 @@ next-env.d.ts
 
 # env example (opt-in)
 !.env.example
+
+# Android sürüm paketleri (npm run android:release)
+/release/
