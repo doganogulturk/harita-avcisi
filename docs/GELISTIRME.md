@@ -394,6 +394,21 @@ oturum belirteci) gönderilmeden atılır. Veri toplanması için Vercel Project
 
 Bir derleme hazır olduğu halde yayına alınmadıysa (ör. önceki bir Instant Rollback sonrası), Deployments listesinde **⋯ → Promote to Production** ile yayına alınabilir.
 
+## Google Play sürümü
+
+```bash
+npm run android:release
+```
+
+`scripts/android-release.mjs` versionCode'u bir artırır, versionName'i `package.json`'daki sürümden alır, siteyi
+derleyip Android projesine kopyalar ve imzalı paketi `release/harita-avcisi-<sürüm>-<kod>.aab` olarak bırakır
+(depoya girmez). Derleme başarılı olunca `android/app/build.gradle`'daki sürüm değişikliği commit edilir.
+
+Paket, Play App Signing'e yüklenen **yükleme anahtarıyla** imzalanır. Anahtar depoda değil:
+`~/.android-anahtarlar/harita-avcisi/` altında `upload-keystore.jks` ve şifresini taşıyan `keystore.properties`
+(yol `HARITA_AVCISI_KEYSTORE` ile değiştirilebilir). İkisi birlikte yedeklenmeli; kaybolursa Play Console'dan yükleme
+anahtarı sıfırlama istenir. Uygulamanın asıl imza anahtarını Google saklar.
+
 ## Kontroller
 
 ```bash
