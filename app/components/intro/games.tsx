@@ -54,7 +54,7 @@ export const GAMES: GameInfo[] = [
     description: `${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye. Eşit puanda hızlı olan önde; sonucun sıralamaya işlenir.`,
     facts: [`${QUESTIONS_PER_ROUND} soru`, `${GAME_DURATION_SECONDS} sn`, "Sıralamaya işlenir"],
     action: "Başla",
-    cardAction: "Yarışa başla",
+    cardAction: "Başla",
     theme: {
       surface: "bg-gradient-to-br from-cyan-50 via-white to-white",
       selected: "border-cyan-600 bg-cyan-600 text-white",
@@ -76,7 +76,7 @@ export const GAMES: GameInfo[] = [
     description: "Giriş yok, süre yok. İstediğin kadar oyna, kıtaları tek tek çalış; hiçbir yere kaydedilmez.",
     facts: ["Sınırsız soru", "Süre yok", "Kaydedilmez"],
     action: "Başla",
-    cardAction: "Antrenmana başla",
+    cardAction: "Başla",
     theme: {
       surface: "bg-gradient-to-br from-amber-50 via-white to-white",
       selected: "border-amber-400 bg-amber-400 text-amber-950",
@@ -98,7 +98,7 @@ export const GAMES: GameInfo[] = [
     description: "Bir arkadaşınla aynı sorulara aynı anda cevap verin. Kodu gönder, kim daha hızlı görün.",
     facts: ["2 kişi", `${DUEL_QUESTIONS} soru · ${DUEL_QUESTION_MS / 1000} sn`, "Sıralamaya işlenmez"],
     action: "Düelloyu kur",
-    cardAction: "Düello başlat",
+    cardAction: "Oluştur",
     theme: {
       surface: "bg-gradient-to-br from-orange-50 via-white to-white",
       selected: "border-orange-500 bg-orange-500 text-white",
@@ -124,7 +124,7 @@ export const GAMES: GameInfo[] = [
       `${formatMinutes(ROOM_DURATIONS[0])} – ${formatMinutes(ROOM_DURATIONS.at(-1) ?? 60)}`,
     ],
     action: "Odayı kur",
-    cardAction: "Oda oluştur",
+    cardAction: "Oluştur",
     theme: {
       surface: "bg-gradient-to-br from-violet-50 via-white to-white",
       selected: "border-violet-600 bg-violet-600 text-white",

@@ -1,9 +1,12 @@
 const LOGO_SIZES = {
   header: {
-    row: "gap-2.5 lg:gap-3.5",
-    badge: "h-10 w-10 rounded-2xl short:h-9 short:w-9 short:rounded-xl lg:h-12 lg:w-12",
-    icon: "h-6 w-6 lg:h-7 lg:w-7",
-    text: "text-3xl short:text-2xl lg:text-4xl",
+    // Dar telefonda (400 pikselden dar) başlıkta giriş ve bilgi tuşlarına yer kalsın diye küçülür; en dar telefonlarda
+    // (360 pikselden dar) rozet gizlenir, yalnızca ad kalır.
+    row: "gap-2.5 max-[25rem]:gap-2 lg:gap-3.5",
+    badge:
+      "h-10 w-10 rounded-2xl short:h-9 short:w-9 short:rounded-xl max-[25rem]:h-9 max-[25rem]:w-9 max-[25rem]:rounded-xl max-[22.5rem]:hidden lg:h-12 lg:w-12",
+    icon: "h-6 w-6 max-[25rem]:h-5 max-[25rem]:w-5 lg:h-7 lg:w-7",
+    text: "text-3xl short:text-2xl max-[25rem]:text-2xl lg:text-4xl",
   },
   curtain: {
     row: "gap-4 lg:gap-6",

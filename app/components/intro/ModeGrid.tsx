@@ -2,7 +2,7 @@
 
 import { type FormEvent, useState } from "react";
 import { type IntroGame } from "@/lib/intro-preferences";
-import { CORNER_TAB_SIZE, CornerTab, CornerTile } from "../CornerTab";
+import { CORNER_TAB_SIZE, CornerTab } from "../CornerTab";
 import { GameIcon, GAMES, type GameInfo } from "./games";
 
 type ModeGridProps = {
@@ -16,10 +16,14 @@ type ModeGridProps = {
   onJoin: (game: "duel" | "room", code: string) => void;
 };
 
-/** Adım 1: dört oyun, 2×2 büyük kart (dikey telefonda alt alta). Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı çalışır. */
+/**
+ * Adım 1: dört oyun, 2×2 büyük kart (dikey telefonda alt alta). Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı
+ * çalışır. Kartlar ekranı doldurur ama içeriklerinden kısa olamaz; ekran yetmezse (küçük telefon) liste kayar, yazılar
+ * üst üste binmez. Kaydırma alanının kenar boşluğu, kartın üzerine gelince kalkması ve gölgesi kırpılmasın diye.
+ */
 export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
   return (
-    <div className="grid min-h-0 w-full flex-1 grid-cols-1 grid-rows-4 gap-3 sm:grid-cols-2 sm:grid-rows-2 lg:gap-5">
+    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[repeat(4,minmax(min-content,1fr))] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[repeat(2,minmax(min-content,1fr))] lg:gap-5">
       {GAMES.map((game, index) => (
         <ModeCard
           delayMs={introDelayMs + introStepMs * index}
@@ -63,7 +67,7 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
 
   return (
     <div
-      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-(--card-pad) transition-all duration-200 [--card-pad:1rem] [--tile:3rem] hover:-translate-y-1 hover:shadow-xl short:[--card-pad:0.75rem] short:[--tile:2.5rem] sm:[--card-pad:1.25rem] sm:[--tile:3.25rem] lg:[--card-pad:2rem] lg:[--tile:5rem] border-slate-200 ${theme.surface} ${theme.card}`}
+      className={`group card-sweep intro-focus relative flex min-h-0 min-w-0 flex-col rounded-3xl border-2 p-(--card-pad) transition-all duration-200 [--card-pad:1rem] hover:-translate-y-1 hover:shadow-xl short:[--card-pad:0.75rem] sm:[--card-pad:1.25rem] lg:[--card-pad:2rem] border-slate-200 ${theme.surface} ${theme.card}`}
       style={
         {
           "--intro-delay": `${delayMs}ms`,
@@ -79,18 +83,12 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
         type="button"
       />
 
-      {/* Köşede büyük, silik simge: kartı uzaktan tanınır kılar. */}
+      {/* Oyunun simgesi kartın sağ alt köşesinde büyük ve silik durur; kartı uzaktan tanınır kılar. Başlık ve açıklama
+          ona yer açmak zorunda kalmadan kartın sol üstünden başlar. */}
       <GameIcon
-        className={`pointer-events-none absolute -right-6 -bottom-8 h-40 w-40 opacity-[0.07] transition-all duration-300 group-hover:scale-105 group-hover:opacity-[0.12] short:h-28 short:w-28 lg:h-56 lg:w-56 ${theme.watermark}`}
+        className={`pointer-events-none absolute -right-5 -bottom-7 h-36 w-36 opacity-[0.1] transition-all duration-300 group-hover:scale-105 group-hover:opacity-[0.16] short:h-28 short:w-28 sm:h-40 sm:w-40 lg:h-56 lg:w-56 ${theme.watermark}`}
         game={game.id}
       />
-
-      {/* Oyunun simgesi sol üst köşeye yapışık bir karodur; sekmelerle aynı biçimde ama tuş değil. */}
-      <div className="absolute top-0 left-0 z-10">
-        <CornerTile colorClass={theme.tile} fillClass={theme.tileFill}>
-          <GameIcon className="h-6 w-6 short:h-5 short:w-5 sm:h-7 sm:w-7 lg:h-10 lg:w-10" game={game.id} />
-        </CornerTile>
-      </div>
 
       {/* Kartın eylem tuşu sağ üst köşedeki sekmedir; kartın tuşuyla aynı işi yapar. Klavye ve ekran okuyucu için kart
           tuşu yeterli. */}
@@ -106,15 +104,10 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
         </div>
       )}
 
-      <div className="pointer-events-none relative flex min-w-0 lg:mt-7">
+      <div className="pointer-events-none relative flex min-w-0">
         <div className="min-w-0 flex-1">
-          {/* Köşe karosunun yer tutucusu: başlık ve açıklama karonun altına girmeden sağından akar. */}
-          <span
-            aria-hidden="true"
-            className="float-left -mt-(--card-pad) -ml-(--card-pad) mr-3 mb-1 h-(--tile) w-(--tile) lg:-mt-[calc(var(--card-pad)+1.75rem)] lg:mr-5"
-          />
-          {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda kart
-              yüksek olduğu için başlık bloğu sekmenin altından başlar (lg:mt-7); yer tutucu orada başlığı itmesin. */}
+          {/* Köşe sekmesinin yer tutucusu: başlık ve açıklama sekmenin altına girmeden yanından akar. Geniş ekranda açıklama
+              dar tutulduğu (lg:max-w-lg) için sekmeye ulaşmaz; yer tutucu orada gerekmez. */}
           <span aria-hidden="true" className={`invisible float-right -mt-(--card-pad) -mr-(--card-pad) mb-1 ml-3 flex items-center font-bold lg:hidden ${CORNER_TAB_SIZE}`}>
             {game.cardAction}
             <span className="h-4 w-4 lg:h-5 lg:w-5" />

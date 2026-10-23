@@ -11,7 +11,7 @@ import {
   type DuelSettings,
   type DuelState,
 } from "@/lib/duel";
-import { DuelAvatar, DuelSettingsPicker, GlowHeading, SHIMMER_BUTTON, TONE_TEXT, type DuelTone } from "./DuelParts";
+import { DuelAvatar, DuelSettingsPicker, SHIMMER_BUTTON, TONE_TEXT, type DuelTone } from "./DuelParts";
 
 type DuelResultProps = {
   state: DuelState;
@@ -74,7 +74,6 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
 
   return (
     <div className="flex flex-col gap-3">
-      <GlowHeading>Rövanş</GlowHeading>
       {rematch?.declined && rematch.by === me?.id && (
         <p className="rounded-xl bg-slate-100 px-3 py-2 text-center text-sm text-slate-600">{opponentName} rövanşı reddetti.</p>
       )}
@@ -89,24 +88,26 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
           </button>
         </>
       ) : (
-        <>
-          <button
-            className={SHIMMER_BUTTON}
-            disabled={isRequestingRematch}
-            onClick={() => onRematch({ mode: state.game_mode, variant: state.variant, rule: state.rule })}
-            type="button"
-          >
-            ↻ Rövanş
-          </button>
-          <button
-            className="sweep sweep-cyan rounded-2xl py-3 font-display text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:text-cyan-700"
-            onClick={() => setIsChoosing(true)}
-            type="button"
-          >
-            Başka modla rövanş
-          </button>
-          <p className="text-center text-xs text-slate-500">{opponentName} kabul ederse ikiniz de yeni düellonun lobisine geçersiniz.</p>
-        </>
+        // Dar kutuda (dikey telefon) ikinci tuş "Başka modla" diye kısalır; genişlik kutuya göre ölçülür (@container).
+        <div className="@container">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              className={`${SHIMMER_BUTTON} !px-3 !text-lg`}
+              disabled={isRequestingRematch}
+              onClick={() => onRematch({ mode: state.game_mode, variant: state.variant, rule: state.rule })}
+              type="button"
+            >
+              ↻ Rövanş
+            </button>
+            <button
+              className="sweep sweep-cyan rounded-2xl px-3 py-3 font-display text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:text-cyan-700"
+              onClick={() => setIsChoosing(true)}
+              type="button"
+            >
+              Başka modla<span className="hidden @sm:inline"> rövanş</span>
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -154,8 +155,7 @@ export function DuelResult(props: DuelResultProps) {
       </aside>
 
       <section className="rounded-3xl border-2 border-slate-200 bg-white p-5 lg:min-h-0 lg:overflow-y-auto lg:p-7">
-        <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Soru soru</p>
-        <table className="mt-4 w-full text-sm">
+        <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-slate-500">
               <th className="w-8 pb-2 font-semibold">#</th>

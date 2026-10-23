@@ -254,18 +254,18 @@ export function IntroScreen({
 
   return (
     <section className="flex h-full w-full flex-col gap-3 px-4 py-3 short:gap-2 short:py-2 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
-      <header className="flex shrink-0 items-center justify-between gap-3">
-        <h1>
+      <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
+        <h1 className="min-w-0">
           <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title="Ana menü" type="button">
             <Logo isHeading={false} />
           </button>
         </h1>
-        <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+        <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
           <PlayerBadge onSignOut={onSignOut} player={player} />
           {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
           {!player && supabaseConfigured && !pendingChoice && (
             <button
-              className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:px-4 lg:py-2"
+              className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold whitespace-nowrap text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none max-[25rem]:px-3 lg:px-4 lg:py-2"
               onClick={() => setIsSignInOpen(true)}
               type="button"
             >

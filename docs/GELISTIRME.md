@@ -7,11 +7,13 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 Giriş ekranı iki adımlıdır. İlk adımda dört oyun 2×2 büyük kart olarak durur: **Yarış**, **Antrenman**, **Düello**
 ve **Oda**. Her kartın kendi rengi, simgesi, bir cümlelik açıklaması ve künyesi (soru sayısı, süre, sıralamaya
-işlenip işlenmediği) vardır. Oyunun simgesi sol üst köşeye yapışık bir karodur. Kartın eylem tuşu
-(**Yarışa başla**, **Antrenmana başla**...) sağ üst köşeden içeri kıvrılan bir sekmedir. Yarış kartında **Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** çaprazdaki sol alt köşeden içeri kıvrılan, daha küçük
+işlenip işlenmediği) vardır. Oyunun simgesi kartın sağ alt köşesinde büyük ve silik durur; adı ve açıklaması sol üst
+köşeden başlar. Kartın eylem tuşu (Yarış ve Antrenman'da **Başla**, Düello ve Oda'da **Oluştur**) sağ üst köşeden içeri
+kıvrılan bir sekmedir. Yarış kartında **Sıralamayı gör**, Düello ve Oda kartlarında **Kodla katıl** çaprazdaki sol alt köşeden içeri kıvrılan, daha küçük
 ve soluk tonda bir sekmedir; kartın asıl işi sağ üstteki dolgulu sekmedir. Kod alanı açılınca sekme çekilir, alan
-kartın alt satırında açılır. Alçak (yatay telefon) ekranlarda
-künyeler gizlenir, düzen 2×2 kalır. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
+kartın alt satırında açılır. Dikey telefonda kartlar alt alta durur ve ekranı doldurur ama içeriklerinden kısa olamaz;
+ekran yetmezse liste kayar. Alçak (yatay telefon) ekranlarda künyeler gizlenir, düzen 2×2 kalır. 400 pikselden dar
+ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
 kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir (orada tanıtımı yeniden açan **Nasıl oynanır?** de var).
 
 İkinci adım dört oyunda aynı düzendedir: solda üstte yuvarlak **←** tuşu ve oyunun adı, altında Türkiye / Dünya seçimi
@@ -94,6 +96,9 @@ sayımla başlar.
   tıkladığı turuncu) ve 3 saniye sonra sonraki soruya geçilir.
 - Sonuçta kazanan, soru soru döküm ve seri skoru görünür. **Rövanş** aynı ayarlarla, **Başka modla rövanş** yeni
   ayarlarla yeni bir düello kurar; rakibe istek gider, kabul ederse ikisi de yeni lobiye geçer.
+- Yatay ekranda üst bar tek satırdır: solda oyuncu, ortada soru ve sayaç, sağda rakip. Dikey telefonda iki satırdır:
+  üstte çıkış ve iki oyuncu kutusu, altta tam genişlikte soru şeridi (soru, sayaç, soru bitince sonraki soruya geri
+  sayım).
 - Rakip 30 saniyeden uzun süre bağlantısız kalırsa düello hükmen kazanılır.
 - Düellolar genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine işlenmez.
 

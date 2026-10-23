@@ -49,22 +49,71 @@ function answerStatus(state: DuelState, answer: DuelAnswer | undefined, isEnded:
   return answer.correct ? `✓ ${label} · ${formatSeconds(answer.response_ms ?? 0)}` : `✗ ${label}`;
 }
 
-function ScoreChip({ player, tone, status, gained }: { player: DuelPlayer; tone: DuelTone; status: string; gained: number }) {
+/** Dar ekranda (dikey telefon) kutu daha sıkışıktır: kenar boşluğu ve puan küçülür, ad ve durum kısalır. */
+function ScoreChip({ player, tone, status, gained, isCompact = false }: { player: DuelPlayer; tone: DuelTone; status: string; gained: number; isCompact?: boolean }) {
   const isOpponent = tone === "opponent";
   return (
-    <div className={`flex min-w-0 items-center gap-2 rounded-2xl border-2 px-3 py-1.5 lg:gap-3 lg:px-4 lg:py-2 ${CHIP_TONE[tone]} ${isOpponent ? "flex-row-reverse" : ""}`}>
+    <div
+      className={`flex min-w-0 items-center rounded-2xl border-2 ${isCompact ? "gap-1.5 px-2 py-1" : "gap-2 px-3 py-1.5 lg:gap-3 lg:px-4 lg:py-2"} ${CHIP_TONE[tone]} ${isOpponent ? "flex-row-reverse" : ""}`}
+    >
       <DuelAvatar avatar={player.avatar} name={player.name} tone={tone} />
-      <div className={`min-w-0 ${isOpponent ? "text-right" : ""}`}>
+      <div className={`min-w-0 flex-1 ${isOpponent ? "text-right" : ""}`}>
         <p className="truncate text-sm font-bold text-slate-900">{player.name}</p>
         <p className="truncate text-xs text-slate-500">{status}</p>
       </div>
-      <span className={`relative font-display text-3xl font-bold tabular-nums lg:text-4xl ${TONE_TEXT[tone]}`}>
+      <span className={`relative shrink-0 font-display font-bold tabular-nums ${isCompact ? "text-2xl" : "text-3xl lg:text-4xl"} ${TONE_TEXT[tone]}`}>
         {player.score}
         {gained > 0 && (
           <span className={`absolute -top-2 ${isOpponent ? "-left-5" : "-right-5"} rounded-full bg-emerald-500 px-1.5 text-xs text-white`}>+{gained}</span>
         )}
       </span>
     </div>
+  );
+}
+
+/**
+ * Sorunun kalan süresi: ortada saniye, çevresinde süreyle birlikte kısalan halka. Son 5 saniyede kırmızıya döner. Saat
+ * 100 ms'de bir güncellendiği için halka aradaki farkı kısa bir geçişle kapatır, takılmadan akar.
+ */
+function CountdownRing({ remainingMs }: { remainingMs: number }) {
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  const isUrgent = remainingMs <= 5000;
+  return (
+    <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center lg:h-10 lg:w-10 ${isUrgent ? "text-rose-600" : "text-cyan-700"}`}>
+      <svg aria-hidden="true" className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 36 36">
+        <circle className="stroke-slate-200" cx="18" cy="18" fill="none" r={radius} strokeWidth="3" />
+        <circle
+          className={`transition-[stroke-dashoffset] duration-100 ease-linear ${isUrgent ? "stroke-rose-500" : "stroke-cyan-500"}`}
+          cx="18"
+          cy="18"
+          fill="none"
+          r={radius}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - remainingMs / DUEL_QUESTION_MS)}
+          strokeLinecap="round"
+          strokeWidth="3"
+        />
+      </svg>
+      <span className="relative font-display text-sm font-bold tabular-nums">{Math.ceil(remainingMs / 1000)}</span>
+    </span>
+  );
+}
+
+/** Düellodan çıkış; rakip 30 saniye beklenir, dönülmezse hükmen kaybedilir. */
+function ExitButton({ onExit }: { onExit: () => void }) {
+  return (
+    <button
+      aria-label="Düellodan çık"
+      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
+      onClick={onExit}
+      title="Düellodan çık · 30 saniye içinde dönmezsen hükmen kaybedersin"
+      type="button"
+    >
+      <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+        <path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
   );
 }
 
@@ -122,6 +171,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
   const remainingMs = Math.max(0, startedAt + DUEL_QUESTION_MS - now);
   const nextInSeconds = endedAt ? Math.max(0, Math.ceil((endedAt + DUEL_REVEAL_MS - now) / 1000)) : 0;
   const reveal = isEnded ? revealMessage(state, mine, theirs, opponent.name) : null;
+  const countdown = isEnded ? `${position + 1 >= DUEL_QUESTIONS ? "Sonuçlar" : "Sonraki soru"} · ${nextInSeconds} sn` : null;
 
   const select = (locationId: string) => {
     if (!canAnswer) return;
@@ -130,80 +180,91 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
     onAnswer(position, selected);
   };
 
+  // Soru, ilerleme ve sorunun kalan süresi; dikeyde ayrı şeritte, yatayda üst barın ortasında.
+  const questionArea = (
+    <>
+      <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-400 uppercase lg:text-xs">
+        Soru {Math.min(position + 1, DUEL_QUESTIONS)} / {DUEL_QUESTIONS}
+      </p>
+      <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+        {isCountdown || !question || !location ? (
+          <h1 className="font-display text-2xl font-bold text-slate-400 lg:text-3xl">Hazır ol…</h1>
+        ) : isFlagChoice(choice) && "code" in question ? (
+          <>
+            <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
+            <Image
+              alt="Sorulan ülkenin bayrağı"
+              className="h-9 w-auto rounded-sm border border-slate-200 shadow-sm lg:h-11"
+              height={44}
+              key={question.code}
+              src={flagUrl(question.code)}
+              unoptimized
+              width={59}
+            />
+            {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
+          </>
+        ) : isPlateChoice(choice) && "plate" in question ? (
+          <>
+            <h1 className="sr-only">Bu plaka hangi ilin?</h1>
+            <PlateBadge key={question.plate} plate={question.plate} />
+            {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.city}</span>}
+          </>
+        ) : (
+          <h1 className="truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">{"city" in question ? question.city : question.name}</h1>
+        )}
+        {!isCountdown && !isEnded && question && <CountdownRing remainingMs={remainingMs} />}
+      </div>
+    </>
+  );
+
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-      <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-200 px-3 py-2 lg:gap-6 lg:px-5 lg:py-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <button
-            aria-label="Düellodan çık"
-            className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
-            onClick={onExit}
-            title="Düellodan çık · 30 saniye içinde dönmezsen hükmen kaybedersin"
-            type="button"
-          >
-            <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-              <path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <ScoreChip gained={isEnded ? (mine?.points ?? 0) : 0} player={me} status={answerStatus(state, mine, isEnded, true, isCountdown)} tone="me" />
-        </div>
-
-        <div className="flex min-w-0 flex-col items-center">
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-400 uppercase lg:text-xs">
-            Soru {Math.min(position + 1, DUEL_QUESTIONS)} / {DUEL_QUESTIONS}
-          </p>
-          <div className="flex min-w-0 items-center gap-2 lg:gap-3">
-            {isCountdown || !question || !location ? (
-              <h1 className="font-display text-2xl font-bold text-slate-400 lg:text-3xl">Hazır ol…</h1>
-            ) : isFlagChoice(choice) && "code" in question ? (
-              <>
-                <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
-                <Image
-                  alt="Sorulan ülkenin bayrağı"
-                  className="h-9 w-auto rounded-sm border border-slate-200 shadow-sm lg:h-11"
-                  height={44}
-                  key={question.code}
-                  src={flagUrl(question.code)}
-                  unoptimized
-                  width={59}
-                />
-                {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
-              </>
-            ) : isPlateChoice(choice) && "plate" in question ? (
-              <>
-                <h1 className="sr-only">Bu plaka hangi ilin?</h1>
-                <PlateBadge key={question.plate} plate={question.plate} />
-                {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.city}</span>}
-              </>
-            ) : (
-              <h1 className="truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">{"city" in question ? question.city : question.name}</h1>
-            )}
-            {!isCountdown && !isEnded && question && (
-              <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 font-display text-sm font-bold tabular-nums lg:h-10 lg:w-10 ${
-                  remainingMs <= 5000 ? "border-rose-400 text-rose-600" : "border-cyan-300 text-cyan-700"
-                }`}
-              >
-                {Math.ceil(remainingMs / 1000)}
-              </span>
-            )}
+      <header className="shrink-0 border-b border-slate-200">
+        {/* Dikey telefon: üstte çıkış ve iki oyuncu, altta tam genişlikte soru şeridi. Tek satırda oyuncu kutuları soruyla
+            üst üste biniyordu. */}
+        <div className="px-3 pt-2 pb-2 sm:hidden">
+          <div className="flex items-center gap-2">
+            <ExitButton onExit={onExit} />
+            <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+              <ScoreChip gained={isEnded ? (mine?.points ?? 0) : 0} isCompact player={me} status={answerStatus(state, mine, isEnded, true, isCountdown)} tone="me" />
+              <ScoreChip
+                gained={isEnded ? (theirs?.points ?? 0) : 0}
+                isCompact
+                player={opponent}
+                status={answerStatus(state, theirs, isEnded, false, isCountdown)}
+                tone="opponent"
+              />
+            </div>
+          </div>
+          <div className="mt-2 flex min-h-14 flex-col items-center justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+            {questionArea}
+            {countdown && <p className="mt-0.5 text-xs font-bold text-cyan-800 tabular-nums">{countdown}</p>}
           </div>
         </div>
 
-        <div className="flex min-w-0 justify-end">
-          <ScoreChip
-            gained={isEnded ? (theirs?.points ?? 0) : 0}
-            player={opponent}
-            status={answerStatus(state, theirs, isEnded, false, isCountdown)}
-            tone="opponent"
-          />
+        {/* Yatay ekran ve masaüstü: tek satır, soru ortada. */}
+        <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 sm:grid lg:gap-6 lg:px-5 lg:py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <ExitButton onExit={onExit} />
+            <ScoreChip gained={isEnded ? (mine?.points ?? 0) : 0} player={me} status={answerStatus(state, mine, isEnded, true, isCountdown)} tone="me" />
+          </div>
+
+          <div className="flex min-w-0 flex-col items-center">{questionArea}</div>
+
+          <div className="flex min-w-0 justify-end">
+            <ScoreChip
+              gained={isEnded ? (theirs?.points ?? 0) : 0}
+              player={opponent}
+              status={answerStatus(state, theirs, isEnded, false, isCountdown)}
+              tone="opponent"
+            />
+          </div>
         </div>
       </header>
 
       <div className="relative flex min-h-0 flex-1">
         <GameMap
           answerState={isEnded ? (mine?.correct ? "correct" : "incorrect") : null}
-          countdown={isEnded ? `${position + 1 >= DUEL_QUESTIONS ? "Sonuçlar" : "Sonraki soru"} · ${nextInSeconds} sn` : null}
           isInteractive
           mapError={mapError}
           mapMarkup={mapMarkup}
@@ -224,16 +285,25 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
           </div>
         )}
 
+        {/* Haritanın üst ortası: kim kaptı / kim bildi, altında sonraki soruya geri sayım. Dikey telefonda geri sayım soru
+            şeridinde durur. */}
         {reveal && (
-          <div
-            className={`pointer-events-none absolute top-4 left-1/2 max-w-[90%] -translate-x-1/2 rounded-2xl px-5 py-2.5 text-center font-display text-lg font-bold text-white shadow-xl lg:top-6 lg:px-6 lg:py-3 lg:text-2xl ${BANNER_TONE[reveal.tone ?? "none"]}`}
-          >
-            {reveal.text}
+          <div aria-live="polite" className="pointer-events-none absolute inset-x-0 top-4 z-10 flex flex-col items-center gap-2 lg:top-6">
+            <p
+              className={`max-w-[90%] rounded-2xl px-5 py-2.5 text-center font-display text-lg font-bold text-white shadow-xl lg:px-6 lg:py-3 lg:text-2xl ${BANNER_TONE[reveal.tone ?? "none"]}`}
+            >
+              {reveal.text}
+            </p>
+            {countdown && (
+              <p className="rounded-full border border-cyan-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums shadow-sm backdrop-blur max-sm:hidden lg:px-4 lg:py-1.5 lg:text-sm">
+                {countdown}
+              </p>
+            )}
           </div>
         )}
 
         {isEnded && (
-          <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-2xl bg-white/90 p-3 text-xs shadow-lg backdrop-blur lg:bottom-6 lg:left-6 lg:p-4 lg:text-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-2xl bg-white/90 p-3 text-xs shadow-lg backdrop-blur portrait:max-lg:bottom-14 lg:bottom-6 lg:left-6 lg:p-4 lg:text-sm">
             <span className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-400" /> Doğru cevap
             </span>
