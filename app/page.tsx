@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { GameMap, nextQuestionCountdown, streakCelebration } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
+import { PlayTips } from "./components/PlayTips";
 import { ResultScreen } from "./components/ResultScreen";
 import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
-import { type IntroGame } from "@/lib/intro-preferences";
+import { type IntroGame, readPlayTipsSeen, setPlayTipsSeen } from "@/lib/intro-preferences";
+import { canLockLandscape, isPortraitPhoneNow } from "@/lib/orientation";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
@@ -154,6 +156,21 @@ export default function Home() {
     });
   }, [choice, phase, questionIndex, questions]);
 
+  // Dikey telefonda ilk oyundan önce ipuçları (yan çevir, iki parmakla yakınlaştır) bir kez gösterilir; tur ve süresi
+  // ipuçları kapanınca başlar.
+  const [tipsChoice, setTipsChoice] = useState<PlayChoice | null>(null);
+
+  function startRound(nextChoice: PlayChoice) {
+    if (isPortraitPhoneNow() && !readPlayTipsSeen()) setTipsChoice(nextChoice);
+    else beginRound(nextChoice);
+  }
+
+  function finishTips() {
+    setPlayTipsSeen();
+    setTipsChoice(null);
+    if (tipsChoice) beginRound(tipsChoice);
+  }
+
   function beginRound(nextChoice: PlayChoice) {
     setChoice(nextChoice);
     round.start(roundFor(nextChoice));
@@ -171,7 +188,7 @@ export default function Home() {
    */
   function play(choice: PlayChoice) {
     if (player || choice.kind === "practice") {
-      beginRound(choice);
+      startRound(choice);
       return;
     }
     setAuthError(null);
@@ -220,7 +237,7 @@ export default function Home() {
     if ("error" in result) return setAuthError(result.error);
     setPlayer(result.player);
     writePendingChoice(null);
-    if (pendingChoice) beginRound(pendingChoice);
+    if (pendingChoice) startRound(pendingChoice);
   }
 
   async function signOut() {
@@ -338,6 +355,7 @@ export default function Home() {
           </section>
         )}
       </div>
+      {tipsChoice && <PlayTips canLockLandscape={canLockLandscape()} onCancel={() => setTipsChoice(null)} onDone={finishTips} />}
     </main>
   );
 }

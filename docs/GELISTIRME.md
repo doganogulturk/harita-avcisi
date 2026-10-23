@@ -26,8 +26,9 @@ hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda ha
 Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; Tümü seçiliyken vurgu yapılmaz, kapsam
 yan paneldeki tek satırlık açıklamayla anlatılır.
 
-İlk ziyarette açılış animasyonundan sonra üç ekranlık bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
-Türkiye ve dünya haritalarında isim, plaka ve bayrak soruları; sorulan yer yeşil yanar), dört oyun, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
+İlk ziyarette açılış animasyonundan sonra bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
+Türkiye ve dünya haritalarında isim, plaka ve bayrak soruları; sorulan yer yeşil yanar), dokunmatik cihazda **Telefonda**
+(yan çevir ve iki parmakla yakınlaştır animasyonları), dört oyun, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
 tuşlarla gezilir; **Geç** her ekranda durur. Son ekranın asıl tuşu **Başlayalım** ana ekrandaki oyun seçimine döner; giriş
 yapılmamışsa Google ve misafir girişi seçenek olarak sunulur. Görüldüğü tarayıcıda hatırlanır, giriş yapmış oyuncuya
 gösterilmez; başlıktaki ⓘ menüsünde **Nasıl oynanır?** ile yeniden açılır.
@@ -129,6 +130,14 @@ yerine oturur, yanlış tıklanan yer sarsılır, puan yeşil yanıp büyür. Ü
 **Yön.** Tüm ekranlar ve oyunlar (antrenman, yarış, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
 zorunlu değildir. Harita dikeyde yaklaşık yarı boyuta indiği için haritanın sol altında kapatılabilir bir "Yan
 çevirirsen harita büyür" ipucu durur. Mobil uygulamada ipucunun yerinde **Yatay moda geç** tuşu vardır (aşağıda).
+
+Dikey telefonda ilk oyundan önce bir kez iki adımlı bir ipucu açılır (`PlayTips.tsx`): oyun ekranının üstünde bulanık
+bir katmanda uygulamanın kartı, önce yan çevrilen telefonun içinde büyüyen harita, sonra iki parmakla Malta'ya
+yakınlaşan harita animasyonu. Oyuncu ilk adımda telefonu yan çevirirse adım tamamlanmış sayılır ve kart iki parmak
+adımına geçer; mobil uygulamada ilk adımda **Yatay moda geç** tuşu da vardır. Süreli oyunun süresi kart kapanınca
+başlar. Düelloda geri sayım sunucuda işlediği için kart lobide çıkar (yön kilidi orada konmaz); odada turun başlatma
+isteğinden önce çıkar. Görüldüğü cihazda hatırlanır; bir daha yalnızca tanıtımdaki **Telefonda** ekranında görülür.
+Hareket azaltma açıksa animasyonların son karesi durağan gösterilir.
 
 ### Sağlamlık
 

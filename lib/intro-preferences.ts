@@ -93,40 +93,46 @@ export const [useDuelSettingsKey, setDuelSettingsKey] = createPreference<DuelSet
 );
 
 /**
- * Tanıtım ekranlarının görülüp görülmediği. Diğer seçimlerden farkı: sunucuda ve depolama kapalıyken "görüldü"
- * sayılır. Böylece sunucu tanıtımı çizmez (geri dönen oyuncuda bir an belirip kaybolmaz) ve depolaması kapalı
- * tarayıcıda her açılışta tekrar gösterilmez.
+ * Bir kez gösterilen ekranların (tanıtım, dikeyde ilk oyunun ipuçları) görülüp görülmediği. Diğer seçimlerden farkı:
+ * sunucuda ve depolama kapalıyken "görüldü" sayılır. Böylece sunucu bunları çizmez (geri dönen oyuncuda bir an belirip
+ * kaybolmaz) ve depolaması kapalı tarayıcıda her açılışta tekrar gösterilmez.
  */
-const GUIDE_SEEN_KEY = "harita-avcisi:guide-seen";
-const guideListeners = new Set<() => void>();
-let isGuideSeenInMemory = false;
+function createSeenFlag(key: string) {
+  const listeners = new Set<() => void>();
+  let isSeenInMemory = false;
 
-function readGuideSeen(): boolean {
-  if (isGuideSeenInMemory) return true;
-  try {
-    return localStorage.getItem(GUIDE_SEEN_KEY) === "1";
-  } catch {
-    return true;
-  }
-}
-
-function subscribeGuideSeen(listener: () => void) {
-  guideListeners.add(listener);
-  return () => {
-    guideListeners.delete(listener);
+  const read = (): boolean => {
+    if (isSeenInMemory) return true;
+    try {
+      return localStorage.getItem(key) === "1";
+    } catch {
+      return true;
+    }
   };
+
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  const useSeen = () => useSyncExternalStore(subscribe, read, () => true);
+
+  const setSeen = () => {
+    isSeenInMemory = true;
+    try {
+      localStorage.setItem(key, "1");
+    } catch {
+      // Depolama kapalı; bu sayfa yaşamı boyunca yine de bir daha gösterilmez.
+    }
+    listeners.forEach((listener) => listener());
+  };
+
+  return [useSeen, setSeen, read] as const;
 }
 
-export function useGuideSeen() {
-  return useSyncExternalStore(subscribeGuideSeen, readGuideSeen, () => true);
-}
+export const [useGuideSeen, setGuideSeen] = createSeenFlag("harita-avcisi:guide-seen");
 
-export function setGuideSeen() {
-  isGuideSeenInMemory = true;
-  try {
-    localStorage.setItem(GUIDE_SEEN_KEY, "1");
-  } catch {
-    // Depolama kapalı; bu sayfa yaşamı boyunca yine de bir daha gösterilmez.
-  }
-  guideListeners.forEach((listener) => listener());
-}
+/** Dikey telefonda ilk oyundan önce bir kez gösterilen ipuçları: yan çevir, iki parmakla yakınlaştır (PlayTips). */
+export const [usePlayTipsSeen, setPlayTipsSeen, readPlayTipsSeen] = createSeenFlag("harita-avcisi:play-tips-seen");

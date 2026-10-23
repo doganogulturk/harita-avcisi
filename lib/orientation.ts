@@ -1,5 +1,24 @@
 import { Capacitor } from "@capacitor/core";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
+import { useSyncExternalStore } from "react";
+
+/**
+ * Telefonun ya da küçük tabletin dikey tutulduğu durum; haritadaki "Yan çevir" ipucunun CSS koşuluyla
+ * (portrait:max-lg) aynıdır.
+ */
+const PORTRAIT_QUERY = "(orientation: portrait) and (max-width: 63.999rem)";
+
+export const isPortraitPhoneNow = () => window.matchMedia(PORTRAIT_QUERY).matches;
+
+function subscribePortrait(onChange: () => void) {
+  const query = window.matchMedia(PORTRAIT_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+export function useIsPortraitPhone() {
+  return useSyncExternalStore(subscribePortrait, isPortraitPhoneNow, () => false);
+}
 
 /**
  * Mobil uygulamada oyun sırasında ekranı yataya kilitlemek için. Telefonun yön kilidi açık olsa bile ekran döner;

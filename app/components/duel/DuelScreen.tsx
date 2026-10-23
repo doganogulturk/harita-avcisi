@@ -4,10 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
+import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
 import { duelPath, type DuelSettings } from "@/lib/duel";
 import { useDuel } from "@/lib/hooks/useDuel";
+import { setPlayTipsSeen, usePlayTipsSeen } from "@/lib/intro-preferences";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useIsPortraitPhone } from "@/lib/orientation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { DuelGame } from "./DuelGame";
 import { DuelLobby } from "./DuelLobby";
@@ -46,6 +49,10 @@ export function DuelScreen({ code }: { code: string }) {
   const { state, fatalError, connectionError, serverNow, setReady, answer, requestRematch, declineRematch } = useDuel(code, player);
   const [isRequestingRematch, setIsRequestingRematch] = useState(false);
   const supabaseConfigured = getSupabaseClient() !== null;
+  // Dikey telefonda ilk oyundan önceki ipuçları düelloda lobide gösterilir: geri sayım sunucuda işler, oyun sırasında
+  // gösterilirse süreden yer. Yön kilidi lobide konmaz; oyun başlamazsa menülerde kalırdı.
+  const isTipsSeen = usePlayTipsSeen();
+  const isPortrait = useIsPortraitPhone();
 
   const goHome = () => router.push("/");
   const exitDuel = () => {
@@ -136,7 +143,10 @@ export function DuelScreen({ code }: { code: string }) {
     <>
       {warning}
       {state.status === "lobby" ? (
-        <DuelLobby onReady={(ready) => void setReady(ready)} state={state} />
+        <>
+          <DuelLobby onReady={(ready) => void setReady(ready)} state={state} />
+          {isPortrait && !isTipsSeen && <PlayTips canLockLandscape={false} onDone={setPlayTipsSeen} />}
+        </>
       ) : (
         <DuelResult
           isRequestingRematch={isRequestingRematch}

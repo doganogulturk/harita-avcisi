@@ -650,3 +650,146 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/*
+ * Dikeyde ilk oyundan önceki ipuçları (PlayTips) ve tanıtımdaki "Telefonda" ekranı: yan çevrilen telefonun içinde
+ * büyüyen harita ve iki parmakla Malta'ya yakınlaşan harita. Harita silüeti dünya haritası dosyasından maskeyle çizilir;
+ * rengi öğenin zemin rengidir.
+ */
+.map-silhouette {
+  -webkit-mask: url(/maps/world.svg) center / contain no-repeat;
+  mask: url(/maps/world.svg) center / contain no-repeat;
+}
+
+@keyframes tip-rotate {
+  0%,
+  20% {
+    transform: rotate(0);
+  }
+  45%,
+  80% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+
+/* Telefonun içindeki harita telefonla ters yönde döner (dik kalır) ve yatay ekrana sığacak kadar büyür. */
+@keyframes tip-grow {
+  0%,
+  20% {
+    transform: rotate(0) scale(1);
+  }
+  45%,
+  80% {
+    transform: rotate(90deg) scale(1.7);
+  }
+  100% {
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes tip-zoom {
+  0%,
+  15% {
+    transform: scale(1);
+  }
+  50%,
+  80% {
+    transform: scale(2.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tip-finger-a {
+  0%,
+  15% {
+    transform: translate(-6px, -4px);
+  }
+  50%,
+  80% {
+    transform: translate(-30px, -18px);
+  }
+  100% {
+    transform: translate(-6px, -4px);
+  }
+}
+
+@keyframes tip-finger-b {
+  0%,
+  15% {
+    transform: translate(6px, 4px);
+  }
+  50%,
+  80% {
+    transform: translate(30px, 18px);
+  }
+  100% {
+    transform: translate(6px, 4px);
+  }
+}
+
+@keyframes tip-spot {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  55%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.tip-phone {
+  animation: tip-rotate 3.6s ease-in-out infinite;
+}
+.tip-phone-map {
+  animation: tip-grow 3.6s ease-in-out infinite;
+}
+/* Yakınlaşma Malta'nın haritadaki yerine doğru (world.svg koordinatlarından). */
+.tip-zoom {
+  transform-origin: 52.3% 42.9%;
+  animation: tip-zoom 3.6s ease-in-out infinite;
+}
+.tip-finger-a {
+  animation: tip-finger-a 3.6s ease-in-out infinite;
+}
+.tip-finger-b {
+  animation: tip-finger-b 3.6s ease-in-out infinite;
+}
+.tip-spot {
+  animation: tip-spot 3.6s ease-in-out infinite;
+}
+
+/* Hareket azaltma açıksa animasyonun son karesi durağan gösterilir: yan çevrilmiş telefon, yakınlaşmış harita. */
+@media (prefers-reduced-motion: reduce) {
+  .tip-phone,
+  .tip-phone-map,
+  .tip-zoom,
+  .tip-finger-a,
+  .tip-finger-b,
+  .tip-spot {
+    animation: none;
+  }
+  .tip-phone {
+    transform: rotate(-90deg);
+  }
+  .tip-phone-map {
+    transform: rotate(90deg) scale(1.7);
+  }
+  .tip-zoom {
+    transform: scale(2.6);
+  }
+  .tip-finger-a {
+    transform: translate(-30px, -18px);
+  }
+  .tip-finger-b {
+    transform: translate(30px, 18px);
+  }
+}

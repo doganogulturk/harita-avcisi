@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { PlateBadge } from "../GameTopBar";
+import { PinchDemo, RotateDemo } from "../PlayTips";
 import { Logo } from "../Logo";
 import { flagUrl, GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
@@ -25,20 +26,33 @@ type GuideProps = {
 const SWIPE_THRESHOLD_PX = 50;
 
 /**
- * İlk açılışta gösterilen üç ekranlık tanıtım: nasıl oynanır, dört oyun, arkadaşlarla oynamak. Kaydırarak, oklarla ya
+ * İlk açılışta gösterilen tanıtım: nasıl oynanır, (dokunmatik cihazda) telefonda yan çevir ve yakınlaştır, dört oyun,
+ * arkadaşlarla oynamak. Kaydırarak, oklarla ya
  * da alttaki tuşlarla gezilir; "Geç" her ekranda durur. Son ekranın asıl tuşu ana ekrandaki oyun seçimine götürür,
  * giriş yalnızca bir seçenek olarak sunulur. Bilgi menüsündeki "Nasıl oynanır?" ile yeniden açılır.
  */
 export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: GuideProps) {
   const [index, setIndex] = useState(0);
   const swipeStartX = useRef<number | null>(null);
+  // Telefon ve tablette ikinci ekran yan çevirmeyi ve iki parmakla yakınlaştırmayı gösterir; farede gereksiz.
+  const [isTouch] = useState(() => window.matchMedia("(pointer: coarse)").matches);
   const slides = [
     {
       eyebrow: "Nasıl oynanır",
       title: "Sorulan yeri haritada bul",
-      body: "Ekrana bir il, ülke, plaka ya da bayrak gelir; haritada yerine dokunursun. Doğruysa yeşil yanar, yanlışsa doğru yer gösterilir. Küçük yerler için iki parmakla yakınlaştır.",
+      body: "Ekrana bir il, ülke, plaka ya da bayrak gelir; haritada yerine dokunursun. Doğruysa yeşil yanar, yanlışsa doğru yer gösterilir.",
       visual: <MapDemo />,
     },
+    ...(isTouch
+      ? [
+          {
+            eyebrow: "Telefonda",
+            title: "Yan çevir, yakınlaştır",
+            body: "Yatayda harita iki kat büyük olur. Malta, Singapur gibi küçük yerler için iki parmağını haritanın üstünde aç.",
+            visual: <TouchDemo />,
+          },
+        ]
+      : []),
     {
       eyebrow: "Dört oyun",
       title: "Nasıl istersen öyle oyna",
@@ -266,6 +280,22 @@ function MapDemo() {
 }
 
 /** Dört oyun, giriş ekranındaki renkleri ve simgeleriyle. */
+/** Yan çevrilen telefon ve iki parmakla yakınlaştırma, dikeyde ilk oyundan önceki ipuçlarıyla (PlayTips) aynı. */
+function TouchDemo() {
+  return (
+    <div className="grid h-full w-full grid-cols-2 gap-2 lg:gap-4">
+      <div className="flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2">
+        <RotateDemo />
+      </div>
+      <div className="flex items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-2">
+        <div className="origin-center scale-75 sm:scale-100">
+          <PinchDemo />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GamesDemo() {
   return (
     <div className="grid h-full w-full grid-cols-2 gap-2 lg:gap-4">

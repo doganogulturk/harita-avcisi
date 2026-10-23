@@ -4,8 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
+import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
+import { readPlayTipsSeen, setPlayTipsSeen } from "@/lib/intro-preferences";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { canLockLandscape, isPortraitPhoneNow, releaseLandscapeLock } from "@/lib/orientation";
 import { useRoom } from "@/lib/hooks/useRoom";
 import { getSupabaseClient } from "@/lib/supabase";
 import { RoomBoard } from "./RoomBoard";
@@ -43,11 +46,19 @@ export function RoomScreen({ code }: { code: string }) {
     goHome();
   };
 
+  // Dikey telefonda ilk oyundan önce ipuçları bir kez gösterilir; tur sunucuda ipuçları kapanınca başlatılır.
+  const [tipsRound, setTipsRound] = useState<number | null>(null);
+  const requestRound = (round: number) => {
+    if (isPortraitPhoneNow() && !readPlayTipsSeen()) setTipsRound(round);
+    else void playRound(round);
+  };
+
   const playRound = async (round: number) => {
     setIsStartingRound(true);
     const started = await startRound(round);
     setIsStartingRound(false);
-    if (!started) return;
+    // İpuçlarındaki "Yatay moda geç" ile konan kilit, tur açılamadıysa menülerde kalmasın.
+    if (!started) return releaseLandscapeLock();
     setIsPaused(true);
     setActiveRound({ round, ...started });
   };
@@ -71,6 +82,17 @@ export function RoomScreen({ code }: { code: string }) {
         <PlayerBadge onSignOut={signOut} player={player} />
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 lg:overflow-hidden lg:px-8 lg:py-5">{children}</div>
+      {tipsRound !== null && (
+        <PlayTips
+          canLockLandscape={canLockLandscape()}
+          onCancel={() => setTipsRound(null)}
+          onDone={() => {
+            setPlayTipsSeen();
+            setTipsRound(null);
+            void playRound(tipsRound);
+          }}
+        />
+      )}
     </main>
   );
 
@@ -132,7 +154,7 @@ export function RoomScreen({ code }: { code: string }) {
       isStartingRound={isStartingRound}
       lastOutcome={lastOutcome}
       onHome={goHome}
-      onPlayRound={(round) => void playRound(round)}
+      onPlayRound={requestRound}
       playerId={player.id}
       serverNow={serverNow}
       state={state}
