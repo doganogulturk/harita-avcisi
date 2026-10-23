@@ -14,20 +14,25 @@ type ModeGridProps = {
   onShowLeaderboard: () => void;
   /** Düello ve oda kartındaki "Kodla katıl"; 6 karakterlik kod geçerliyse o sayfaya gider. */
   onJoin: (game: "duel" | "room", code: string) => void;
+  /** Yarış kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
+  rankedLeaders?: CardLeader[];
 };
+
+export type CardLeader = { place: string; name: string; score: string; time: string };
 
 /**
  * Adım 1: dört oyun, 2×2 büyük kart (dikey telefonda alt alta). Kartın tamamı seçim yüzeyidir; kart içi bağlantılar ayrı
  * çalışır. Kartlar ekranı doldurur ama içeriklerinden kısa olamaz; ekran yetmezse (küçük telefon) liste kayar, yazılar
  * üst üste binmez. Kaydırma alanının kenar boşluğu, kartın üzerine gelince kalkması ve gölgesi kırpılmasın diye.
  */
-export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin }: ModeGridProps) {
+export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
   return (
-    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[repeat(4,minmax(min-content,1fr))] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[repeat(2,minmax(min-content,1fr))] lg:gap-5">
+    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[repeat(4,minmax(min-content,1fr))] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[repeat(2,minmax(min-content,1fr))] lg:max-h-[46rem] lg:gap-5">
       {GAMES.map((game, index) => (
         <ModeCard
           delayMs={introDelayMs + introStepMs * index}
           game={game}
+          leaders={game.id === "ranked" ? rankedLeaders : []}
           key={game.id}
           onJoin={game.id === "duel" || game.id === "room" ? (code) => onJoin(game.id as "duel" | "room", code) : undefined}
           onSelect={() => onSelect(game.id)}
@@ -40,13 +45,14 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
 
 type ModeCardProps = {
   game: GameInfo;
+  leaders: CardLeader[];
   delayMs: number;
   onSelect: () => void;
   onShowLeaderboard?: () => void;
   onJoin?: (code: string) => void;
 };
 
-function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCardProps) {
+function ModeCard({ game, leaders, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCardProps) {
   const { theme } = game;
   const [isJoining, setIsJoining] = useState(false);
   const [code, setCode] = useState("");
@@ -112,8 +118,27 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
             {game.cardAction}
             <span className="h-4 w-4 lg:h-5 lg:w-5" />
           </span>
-          <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl sm:text-3xl lg:text-5xl">{game.title}</p>
-          <p className="mt-1.5 line-clamp-3 text-xs text-slate-500 short:line-clamp-2 sm:text-sm lg:mt-3 lg:max-w-lg lg:text-lg">{game.description}</p>
+          <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl sm:text-3xl lg:text-5xl 2xl:text-6xl">{game.title}</p>
+          <p className="mt-1.5 line-clamp-3 text-xs text-slate-500 short:line-clamp-2 sm:text-sm lg:mt-3 lg:max-w-lg lg:text-lg 2xl:max-w-xl 2xl:text-xl">{game.description}</p>
+          {/* Canlı bilgi (Yarış'ta Türkiye'nin ve Dünya'nın birincisi): kart yalnızca bir menü değil, oyunun içinden bir an
+              gösterir. Dar ekranda yalnızca ad kısalır; skor ve süre hep görünür. */}
+          {leaders.length > 0 && (
+            <ul className="mt-2 flex max-w-full flex-col items-start gap-1 short:hidden lg:mt-4 lg:gap-1.5">
+              {leaders.map((leader) => (
+                <li
+                  className="flex max-w-full items-center gap-1 rounded-full bg-white/80 px-2.5 py-0.5 text-xs text-slate-700 shadow-sm lg:px-3 lg:py-1 lg:text-sm"
+                  key={leader.place}
+                >
+                  <span aria-hidden="true">🏆</span>
+                  <span className="shrink-0 font-semibold text-slate-500">{leader.place} 1.</span>
+                  <span className="min-w-0 truncate font-bold">{leader.name}</span>
+                  <span className="shrink-0 font-semibold tabular-nums">
+                    · {leader.score} · {leader.time}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -121,7 +146,7 @@ function ModeCard({ game, delayMs, onSelect, onShowLeaderboard, onJoin }: ModeCa
 
       <div className="pointer-events-none relative mt-3 hidden flex-wrap gap-1.5 short:hidden sm:flex lg:gap-2">
         {game.facts.map((fact) => (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 lg:px-3 lg:text-sm" key={fact}>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 lg:px-3 lg:text-sm 2xl:text-base" key={fact}>
             {fact}
           </span>
         ))}

@@ -13,7 +13,11 @@ kıvrılan bir sekmedir. Yarış kartında **Sıralamayı gör**, Düello ve Oda
 ve soluk tonda bir sekmedir; kartın asıl işi sağ üstteki dolgulu sekmedir. Kod alanı açılınca sekme çekilir, alan
 kartın alt satırında açılır. Dikey telefonda kartlar alt alta durur ve ekranı doldurur ama içeriklerinden kısa olamaz;
 ekran yetmezse liste kayar. Alçak (yatay telefon) ekranlarda künyeler gizlenir, düzen 2×2 kalır. 400 pikselden dar
-ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
+ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Yarış kartında Türkiye'nin
+ve Dünya'nın birincisi yazar ("Türkiye'de 1. Murat · 10/10 · 00:42"; giriş ekranı açılırken bir kez çekilir, dar ekranda
+yalnızca ad kısalır). Zeminde silik
+enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur, kartlar
+en fazla 46rem yüksekliğe uzar ve yazıları büyür; kartlar ekranı doldurup boş görünmez. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
 kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir (orada tanıtımı yeniden açan **Nasıl oynanır?** de var).
 
 İkinci adım dört oyunda aynı düzendedir: solda üstte yuvarlak **←** tuşu ve oyunun adı, altında Türkiye / Dünya seçimi
@@ -51,6 +55,10 @@ kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821"
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
 
 Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
+
+Sonuç ekranında skorun altında soru başına küçük bir kare durur (yeşil doğru, kırmızı yanlış); **Soruları gör** ile her
+soru bir satır olur: sorulan yer (bayrak turunda bayrak, plaka turunda plaka) ve yanlışsa tıklanan yer. Antrenmanda da
+vardır; liste uzarsa kendi içinde kayar.
 
 Tur bitince sonuç ekranında asıl tuş **Tekrar oyna** aynı turu yeniden başlatır; **Başka tur seç** Yarış'ın ayar
 ekranını açar (antrenmanda **Tekrar antrenman** ve **Başka antrenman seç**). Yatay telefonda sonuç ekranı iki
@@ -128,7 +136,8 @@ parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar
 yerine oturur, yanlış tıklanan yer sarsılır, puan yeşil yanıp büyür. Üç ve daha uzun doğru serisinde haritanın üstünde
 "🔥 3 seri" rozeti belirir. Android'de (tarayıcı ve uygulama) doğru cevapta kısa, yanlışta çift titreşim olur
 (`lib/haptics.ts`); iPhone Safari titreşimi desteklemez. Hareket azaltma açıksa animasyonlar oynamaz. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner.
-Yanlış cevapta doğru yer ekranda çok küçükse (24 pikselden küçük; ör. dikey telefonda Malta, Dominika) harita oraya
+Yanlış cevapta tıklanan yerin adı da kırmızı bir etikette yazar (plaka turunda plakasıyla), sonraki soruya geri sayımın
+yanında: dikey telefonda soru şeridinde, yatayda haritanın üstünde. Yanlış cevapta doğru yer ekranda çok küçükse (24 pikselden küçük; ör. dikey telefonda Malta, Dominika) harita oraya
 yumuşak bir geçişle yakınlaşır, sonraki soruda geri döner; doğru bilende harita yerinde kalır. Haritanın görünen alanı
 ekranın en-boy oranındadır: açılışta harita tam sığar, yakınlaşınca dikey telefonda da ekranın tamamı dolar
 (`useMapZoom.ts`).

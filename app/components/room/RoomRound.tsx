@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { GameMap, nextQuestionCountdown, streakCelebration } from "../GameMap";
+import { GameMap, nextQuestionCountdown, streakCelebration, wrongPickNotice } from "../GameMap";
 import { GameTopBar } from "../GameTopBar";
 import { duelChoice, questionForLocation } from "@/lib/duel";
 import { flagUrl, isFlagChoice, type Player, type Question } from "@/lib/game";
@@ -77,6 +77,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
   useBackHandler(exitRound, BACK_PRIORITY.screen, play.status === "playing");
 
   const celebration = streakCelebration(play.answerState, play.streak);
+  const wrongPick = wrongPickNotice(choice, play.answerState, play.selectedLocation);
   const countdown = nextQuestionCountdown(play.answerState, play.remainingQuestionSeconds, play.questionIndex === play.questions.length - 1);
 
   return (
@@ -84,6 +85,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
       <GameTopBar
         celebration={celebration}
         countdown={countdown}
+        wrongPick={wrongPick}
         answerState={play.answerState}
         answers={play.answers}
         choice={choice}
@@ -102,6 +104,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
         answerState={play.answerState}
         celebration={celebration}
         countdown={countdown}
+        wrongPick={wrongPick}
         areNoticesInHeaderWhenNarrow
         isInteractive
         mapError={mapError}

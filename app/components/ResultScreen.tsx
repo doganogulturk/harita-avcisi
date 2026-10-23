@@ -2,6 +2,7 @@ import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
 import { PlayerBadge } from "./PlayerBadge";
+import { RoundReview } from "./RoundReview";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { ShareScoreButton } from "./ShareScoreButton";
 import {
@@ -12,6 +13,7 @@ import {
   formatTime,
   GAME_DURATION_SECONDS,
   QUESTIONS_PER_ROUND,
+  type AnswerRecord,
   type BoardId,
   type LocationStat,
   type PlayChoice,
@@ -41,6 +43,8 @@ type ResultScreenProps = {
   mostMissedChoice: PlayChoice;
   /** Oyuncunun bu turda yanlış cevapladığı yerler. */
   missedLocationIds: string[];
+  /** Turun cevapları sırayla; soru soru döküm (RoundReview) bunlardan çizilir. */
+  answerRecords: AnswerRecord[];
   onBoardChange: (boardId: BoardId) => void;
   onPlay: (choice: PlayChoice) => void;
   /** Oynanan oyunun (Yarış ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
@@ -188,6 +192,7 @@ export function ResultScreen({
   mostMissed,
   mostMissedChoice,
   missedLocationIds,
+  answerRecords,
   onBoardChange,
   onPlay,
   onChooseAnother,
@@ -197,6 +202,7 @@ export function ResultScreen({
   if (choice.kind === "practice") {
     return (
       <PracticeResult
+        answerRecords={answerRecords}
         answeredCount={answeredCount}
         bestStreak={bestStreak}
         choice={choice}
@@ -248,6 +254,8 @@ export function ResultScreen({
               </dl>
             </div>
 
+            <RoundReview answers={answerRecords} choice={choice} />
+
             <SaveNotice onRetry={onRetrySave} result={saveResult} />
 
             {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
@@ -289,6 +297,7 @@ export function ResultScreen({
 
 type PracticeResultProps = {
   player: Player | null;
+  answerRecords: AnswerRecord[];
   choice: PlayChoice;
   score: number;
   answeredCount: number;
@@ -308,6 +317,7 @@ type PracticeResultProps = {
  */
 function PracticeResult({
   player,
+  answerRecords,
   choice,
   score,
   answeredCount,
@@ -345,6 +355,8 @@ function PracticeResult({
                 <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
               </dl>
             </div>
+
+            <RoundReview answers={answerRecords} choice={choice} />
 
             <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
               <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />

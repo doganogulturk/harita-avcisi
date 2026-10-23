@@ -110,6 +110,29 @@ export function useLeaderboards(isOpen: boolean) {
 }
 
 /**
+ * Giriş ekranındaki Yarış kartı için her sıralamanın lideri. Bir kez çekilir, canlı güncellenmez: kart yalnızca bir
+ * fikir verir, sıralama penceresi (useLeaderboards) kendi canlı aboneliğini kurar. Bağlantı yoksa boş kalır.
+ */
+export function useLeaders(isEnabled: boolean) {
+  const [leaders, setLeaders] = useState<Partial<Record<BoardId, LeaderboardEntry>>>({});
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!isEnabled || !supabase) return;
+    let isActive = true;
+    void fetchLeaderboards(supabase).then((loaded) => {
+      if (!isActive || !loaded) return;
+      setLeaders(Object.fromEntries(BOARDS.flatMap((board) => (loaded[board.id][0] ? [[board.id, loaded[board.id][0]]] : []))));
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [isEnabled]);
+
+  return leaders;
+}
+
+/**
  * Kaydın sonucu: "saved" kaydedildi, "failed" sunucuya ulaşılamadı ya da reddetti (yeniden denenebilir),
  * "no-round" tur başlarken sunucuda açılamadı (çoğunlukla bağlantı yoktu); süreyi sunucu turun açıldığı andan
  * ölçtüğü için bu tur sonradan kaydedilemez.

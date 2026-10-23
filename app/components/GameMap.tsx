@@ -6,11 +6,16 @@ import { canLockLandscape, keepLandscapeLock, lockLandscape, releaseLandscapeLoc
 import { useMapZoom } from "@/lib/hooks/useMapZoom";
 import {
   correctLocationId,
+  formatPlate,
+  isPlateChoice,
   isSameLocation,
   locationIdOf,
+  locationName,
   LOCATION_SELECTOR,
+  normalizeLocationId,
   type AnswerState,
   type GameMode,
+  type PlayChoice,
   type Question,
 } from "@/lib/game";
 import { type MapBox } from "@/lib/world-countries";
@@ -35,6 +40,8 @@ type GameMapProps = {
   celebration?: string | null;
   /** Cevaptan sonra haritanın üst ortasında duran geri sayım, ör. "Sonraki soru · 2 sn". */
   countdown?: string | null;
+  /** Yanlış cevapta oyuncunun tıkladığı yerin adı, ör. "Kayseri" (wrongPickNotice). */
+  wrongPick?: string | null;
   /** Bildirimler dikey telefonda üst barda gösteriliyorsa (GameTopBar) haritanın üstünde dar ekranda gizlenir. */
   areNoticesInHeaderWhenNarrow?: boolean;
   onSelect: (locationId: string) => void;
@@ -65,6 +72,17 @@ const STREAK_CELEBRATION_FROM = 3;
 /** Cevaptan sonraki geri sayım; son soruda sonuç ekranına geçişi söyler. Cevap yokken gösterilmez. */
 export function nextQuestionCountdown(answerState: AnswerState, seconds: number, isLastQuestion: boolean): string | null {
   return answerState ? `${isLastQuestion ? "Sonuçlar" : "Sonraki soru"} · ${seconds} sn` : null;
+}
+
+/**
+ * Yanlış cevapta oyuncunun tıkladığı yerin adı; kırmızı yanan yerin ne olduğunu öğrensin. Plaka turunda plakasıyla
+ * ("38 Kayseri"). Yalnızca ad yazar; kırmızı rengi haritada kırmızı yanan yerle eşleşir.
+ */
+export function wrongPickNotice(choice: PlayChoice, answerState: AnswerState, selectedLocation: string | null): string | null {
+  if (answerState !== "incorrect" || !selectedLocation) return null;
+  const locationId = normalizeLocationId(choice.mode, selectedLocation);
+  const name = locationName(choice.mode, locationId);
+  return isPlateChoice(choice) ? `${formatPlate(Number(locationId))} ${name}` : name;
 }
 
 /** Doğru cevaptan sonra gösterilecek seri kutlaması; seri kısaysa ya da cevap yanlışsa yok. */
@@ -134,6 +152,7 @@ export function GameMap({
   opponentLocation = null,
   celebration = null,
   countdown = null,
+  wrongPick = null,
   areNoticesInHeaderWhenNarrow = false,
   onSelect,
 }: GameMapProps) {
@@ -236,9 +255,9 @@ export function GameMap({
         }}
       />
 
-      {/* Haritanın üst ortası: seri kutlaması ve altında sonraki soruya geri sayım. Üst bar dar ekranda kalabalık olduğu
-          için geri sayım burada durur. Dokunmalar haritaya geçer. */}
-      {(celebration || countdown) && (
+      {/* Haritanın üst ortası: seri kutlaması, altında yan yana yanlışta tıklanan yerin adı ve sonraki soruya geri sayım.
+          Dikey telefonda bunlar üst barın soru şeridindedir. Dokunmalar haritaya geçer. */}
+      {(celebration || countdown || wrongPick) && (
         <div
           aria-live="polite"
           className={`pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-center gap-2 lg:top-5 ${areNoticesInHeaderWhenNarrow ? "max-sm:hidden" : ""}`}
@@ -251,11 +270,18 @@ export function GameMap({
               {celebration}
             </p>
           )}
-          {countdown && (
-            <p className="rounded-full border border-cyan-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
-              {countdown}
-            </p>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-2 empty:hidden">
+            {wrongPick && (
+              <p className="rounded-full border border-rose-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-rose-600 shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
+                {wrongPick}
+              </p>
+            )}
+            {countdown && (
+              <p className="rounded-full border border-cyan-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
+                {countdown}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

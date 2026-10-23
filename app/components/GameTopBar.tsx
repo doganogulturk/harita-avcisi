@@ -40,6 +40,8 @@ type GameTopBarProps = {
    */
   celebration?: string | null;
   countdown?: string | null;
+  /** Yanlış cevapta tıklanan yerin adı (GameMap'teki wrongPickNotice); dikey telefonda soru şeridinde, geri sayımın yanında. */
+  wrongPick?: string | null;
 };
 
 const PLATE_SIZES = {
@@ -168,6 +170,7 @@ export function GameTopBar({
   onSignOut,
   celebration = null,
   countdown = null,
+  wrongPick = null,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
   const timeClass = timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"]);
@@ -239,7 +242,8 @@ export function GameTopBar({
           <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
             <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
           </div>
-          <div aria-live="polite" className="mt-1 flex items-center justify-center gap-1.5 empty:mt-0">
+          <div aria-live="polite" className="mt-1 flex flex-wrap items-center justify-center gap-1.5 empty:mt-0">
+            {wrongPick && <span className="max-w-full truncate rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-rose-600">{wrongPick}</span>}
             {celebration && (
               <span className="streak-pop rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-amber-950" key={celebration}>
                 {celebration}

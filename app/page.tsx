@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GameMap, nextQuestionCountdown, streakCelebration } from "./components/GameMap";
+import { GameMap, nextQuestionCountdown, streakCelebration, wrongPickNotice } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { PlayTips } from "./components/PlayTips";
@@ -269,6 +269,7 @@ export default function Home() {
 
   // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
   const celebration = streakCelebration(answerState, round.streak);
+  const wrongPick = wrongPickNotice(choice, answerState, round.selectedLocation);
   const countdown = nextQuestionCountdown(answerState, round.remainingQuestionSeconds, !isPractice && questionIndex === questions.length - 1);
 
   return (
@@ -292,6 +293,7 @@ export default function Home() {
           />
         ) : phase === "finished" ? (
           <ResultScreen
+            answerRecords={answerRecords}
             answeredCount={answers.length}
             bestStreak={bestStreak}
             choice={choice}
@@ -324,6 +326,7 @@ export default function Home() {
             <GameTopBar
               celebration={celebration}
               countdown={countdown}
+              wrongPick={wrongPick}
               answers={answers}
               answerState={answerState}
               choice={choice}
@@ -342,6 +345,7 @@ export default function Home() {
               answerState={answerState}
               celebration={celebration}
               countdown={countdown}
+              wrongPick={wrongPick}
               areNoticesInHeaderWhenNarrow
               homeView={continent ? continentInfo(continent).view : null}
               isInteractive

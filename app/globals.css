@@ -793,3 +793,14 @@ body {
     transform: translate(30px, 18px);
   }
 }
+
+/* Giriş ekranının zemini: silik enlem-boylam ızgarası, ortada belirgin, kenarlara doğru kaybolur (IntroScreen). */
+.intro-backdrop {
+  background-image:
+    linear-gradient(to right, rgb(103 232 249 / 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(103 232 249 / 0.18) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+}

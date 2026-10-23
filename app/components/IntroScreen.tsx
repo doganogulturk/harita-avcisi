@@ -9,13 +9,14 @@ import { PlayButton } from "./PlayButton";
 import { PlayerBadge } from "./PlayerBadge";
 import { SignInDialog } from "./SignInDialog";
 import { LeaderboardPanel } from "./LeaderboardPanel";
+import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
-import { ModeGrid } from "./intro/ModeGrid";
+import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
 import { duelPath } from "@/lib/duel";
-import { boardIdFor, choiceLabel, GAME_DURATION_SECONDS, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
+import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
   setGuideSeen,
   setIntroMap,
@@ -28,6 +29,12 @@ import {
 } from "@/lib/intro-preferences";
 import { roomPath } from "@/lib/room";
 import { type WorldScope } from "@/lib/world-countries";
+
+/** Yarış kartında birincisi gösterilen sıralamalar. */
+const HIGHLIGHT_BOARDS: { id: BoardId; place: string }[] = [
+  { id: "turkey", place: "Türkiye'de" },
+  { id: "world-hard", place: "Dünya'da" },
+];
 
 type IntroScreenProps = {
   player: Player | null;
@@ -176,6 +183,16 @@ export function IntroScreen({
     onPlay(choiceFor(map, kind));
   };
 
+  // Yarış kartında Türkiye'nin ve Dünya'nın (isimle) birincisi; yüklenmeyen satır gösterilmez.
+  const leaders = useLeaders(supabaseConfigured && selectedGame === null);
+  const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
+  const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, place }) => {
+    const leader = leaders[id];
+    return leader
+      ? [{ place, name: leader.display_name, score: `${leader.score}/${QUESTIONS_PER_ROUND}`, time: formatTime(Math.round(leader.duration_ms / 1000)) }]
+      : [];
+  });
+
   const content = () => {
     if (pendingChoice && !player) {
       return (
@@ -239,6 +256,7 @@ export function IntroScreen({
 
     return (
       <ModeGrid
+        rankedLeaders={rankedLeaders}
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
         onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
@@ -249,35 +267,43 @@ export function IntroScreen({
   };
 
   return (
-    <section className="flex h-full w-full flex-col gap-3 px-4 py-3 short:gap-2 short:py-2 lg:gap-5 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
-      <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
-        <h1 className="min-w-0">
-          <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title="Ana menü" type="button">
-            <Logo isHeading={false} />
-          </button>
-        </h1>
-        <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
-          <PlayerBadge onSignOut={onSignOut} player={player} />
-          {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
-          {!player && supabaseConfigured && !pendingChoice && (
-            <button
-              className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold whitespace-nowrap text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none max-[25rem]:px-3 lg:px-4 lg:py-2"
-              onClick={() => setIsSignInOpen(true)}
-              type="button"
-            >
-              Giriş yap
+    <section className="relative isolate flex h-full w-full flex-col px-4 py-3 short:py-2 lg:px-8 lg:py-5" data-intro={isIntroPlaying ? "" : undefined}>
+      {/* Zemin: silik enlem-boylam çizgileri ve dünya haritası; menü bir harita oyununun içinde durur. Büyük ekranda
+          kartların çevresinde kalan boşluğu doldurur, kartların altında yalnızca kenarlardan görünür. */}
+      <div aria-hidden="true" className="intro-backdrop pointer-events-none absolute inset-0 -z-10">
+        <span className="map-silhouette absolute inset-x-[4%] inset-y-[10%] bg-cyan-700 opacity-[0.05]" />
+      </div>
+      {/* Çok geniş ekranda kartlar şişmesin: içerik ortada en fazla 80rem genişlikte durur. */}
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3 short:gap-2 lg:gap-5">
+        <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
+          <h1 className="min-w-0">
+            <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title="Ana menü" type="button">
+              <Logo isHeading={false} />
             </button>
-          )}
-          <LegalMenu onShowGuide={() => setIsGuideRequested(true)} />
-        </div>
-      </header>
+          </h1>
+          <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
+            <PlayerBadge onSignOut={onSignOut} player={player} />
+            {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
+            {!player && supabaseConfigured && !pendingChoice && (
+              <button
+                className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold whitespace-nowrap text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none max-[25rem]:px-3 lg:px-4 lg:py-2"
+                onClick={() => setIsSignInOpen(true)}
+                type="button"
+              >
+                Giriş yap
+              </button>
+            )}
+            <LegalMenu onShowGuide={() => setIsGuideRequested(true)} />
+          </div>
+        </header>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
+        <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
+      </div>
 
       {isLeaderboardOpen && (
         <LeaderboardPanel
           currentPlayerId={player?.id}
-          initialBoardId={boardIdFor(choiceFor(map, "ranked"))}
+          initialBoardId={rankedBoardId}
           onClose={() => setIsLeaderboardOpen(false)}
           supabaseConfigured={supabaseConfigured}
         />
