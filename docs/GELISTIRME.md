@@ -126,6 +126,14 @@ parmak bir yere denk gelmezse (ör. Malta'nın yanında denize) 16 piksele kadar
 yerine oturur, yanlış tıklanan yer sarsılır, puan yeşil yanıp büyür. Üç ve daha uzun doğru serisinde haritanın üstünde
 "🔥 3 seri" rozeti belirir. Android'de (tarayıcı ve uygulama) doğru cevapta kısa, yanlışta çift titreşim olur
 (`lib/haptics.ts`); iPhone Safari titreşimi desteklemez. Hareket azaltma açıksa animasyonlar oynamaz. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner.
+Yanlış cevapta doğru yer ekranda çok küçükse (24 pikselden küçük; ör. dikey telefonda Malta, Dominika) harita oraya
+yumuşak bir geçişle yakınlaşır, sonraki soruda geri döner; doğru bilende harita yerinde kalır. Haritanın görünen alanı
+ekranın en-boy oranındadır: açılışta harita tam sığar, yakınlaşınca dikey telefonda da ekranın tamamı dolar
+(`useMapZoom.ts`).
+
+Dikey telefonda oyunun üst barı iki satırdır: üstte çıkış / bitir, doğru sayısı, kalan süre ve yeni tur; altında tam
+genişlikte soru şeridi (ad, büyük bayrak ya da plaka; cevaptan sonra seri ve sonraki soruya geri sayım). Düellodaki
+şeritle aynı düzendir.
 
 **Yön.** Tüm ekranlar ve oyunlar (antrenman, yarış, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
 zorunlu değildir. Harita dikeyde yaklaşık yarı boyuta indiği için haritanın sol altında kapatılabilir bir "Yan

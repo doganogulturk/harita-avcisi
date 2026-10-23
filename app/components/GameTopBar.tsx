@@ -103,7 +103,7 @@ function timeTone(remainingGameSeconds: number, tones: [danger: string, warning:
 
 /** Sorulan şey: ülke / il adı, bayrak ya da plaka; bayrak ve plakada cevaptan sonra yanında adı. */
 function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { choice: PlayChoice; question: Question | undefined; answerState: AnswerState; isNarrow?: boolean }) {
-  const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-sm" : "text-base lg:text-2xl"}`;
+  const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-base" : "text-base lg:text-2xl"}`;
   if (question && isFlagChoice(choice) && "code" in question) {
     return (
       <>
@@ -111,7 +111,7 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
         {/* Yeni soruda eski bayrak bir an bile görünmesin diye her ülke için ayrı öğe. */}
         <Image
           alt="Sorulan ülkenin bayrağı"
-          className="h-9 w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm lg:h-11"
+          className={`w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm ${isNarrow ? "h-12" : "h-9 lg:h-11"}`}
           height={44}
           key={question.code}
           src={flagUrl(question.code)}
@@ -135,7 +135,7 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
   }
   return (
     <h1
-      className={`text-center leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-lg" : "line-clamp-1 text-xl lg:text-3xl"}`}
+      className={`text-center leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
     >
       {question && questionName(question)}
     </h1>
@@ -174,9 +174,10 @@ export function GameTopBar({
 
   return (
     <header className="shrink-0 border-b border-slate-200 bg-white">
-      {/* Dikey telefon. Yanlar eşit genişlikte (1fr) olduğu için soru ekranın tam ortasında durur; soru en fazla ekranın
-          kalanı kadar genişler ve gerekirse iki satıra iner. */}
-      <div className="px-3 pt-2 pb-1.5 sm:hidden">
+      {/* Dikey telefon. Üstte solda turdan çık / antrenmanı bitir, ortada doğru sayısı ve kalan süre, sağda yeni tur. Altta
+          tam genişlikte soru şeridi: soru (ad, bayrak ya da plaka) ve cevaptan sonraki bildirimler (seri, sonraki soru).
+          Düellodaki şeritle aynı düzen; soru yanlardaki tuşlarla yer paylaşmadığı için uzun adlar ve bayrak rahat sığar. */}
+      <div className="px-3 pt-2 pb-2 sm:hidden">
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
           <div className="flex justify-start">
             {isPractice ? (
@@ -196,8 +197,25 @@ export function GameTopBar({
             )}
           </div>
 
-          <div className="flex max-w-[calc(100vw-11rem)] min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
+          <div className="flex items-center gap-3">
+            <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title="Doğru">
+              <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>
+                <ScoreValue score={score} />
+                <span className="text-slate-400">/{isPractice ? answers.length : questionCount}</span>
+              </span>
+            </p>
+            {!isPractice && (
+              <p className={`flex items-center gap-1 text-sm font-bold tabular-nums ${timeClass}`}>
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l2.5 2M9 2h6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {formatTime(remainingGameSeconds)}
+              </p>
+            )}
           </div>
 
           <div className="flex min-w-0 justify-end">
@@ -217,39 +235,18 @@ export function GameTopBar({
           </div>
         </div>
 
-        <div className="mt-1.5 grid min-h-7 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-          <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title="Doğru">
-            <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>
-              <ScoreValue score={score} />
-              <span className="text-slate-400">/{isPractice ? answers.length : questionCount}</span>
-            </span>
-          </p>
-
-          <div aria-live="polite" className="flex items-center justify-center gap-1.5">
+        <div className="mt-2 flex min-h-14 flex-col items-center justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+          <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
+          </div>
+          <div aria-live="polite" className="mt-1 flex items-center justify-center gap-1.5 empty:mt-0">
             {celebration && (
               <span className="streak-pop rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-amber-950" key={celebration}>
                 {celebration}
               </span>
             )}
-            {countdown && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums">{countdown}</span>}
+            {countdown && <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums">{countdown}</span>}
           </div>
-
-          <p className={`flex items-center justify-end gap-1 text-sm font-bold tabular-nums ${isPractice ? "text-slate-400" : timeClass}`}>
-            {isPractice ? (
-              "Süre yok"
-            ) : (
-              <>
-                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
-                  <circle cx="12" cy="13" r="8" />
-                  <path d="M12 9v4l2.5 2M9 2h6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {formatTime(remainingGameSeconds)}
-              </>
-            )}
-          </p>
         </div>
       </div>
 

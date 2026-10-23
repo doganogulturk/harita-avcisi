@@ -180,7 +180,9 @@ export function GameMap({
         // Büyüme animasyonu komşu yerlerin altında kalmasın: SVG'de sonra çizilen üstte durur. Zaten sondaysa
         // dokunulmaz; taşımak animasyonu baştan başlatır.
         if (location.parentNode && location.parentNode.lastElementChild !== location) location.parentNode.appendChild(location);
-        ensureVisible(location);
+        // Yanlış cevapta doğru yer ekranda çok küçükse (Malta, Lüksemburg) harita oraya yakınlaşır; oyuncu yeri
+        // görerek öğrensin. Doğru bilen zaten yeri bulduğu için harita yerinde kalır.
+        ensureVisible(location, { zoomIfSmall: answerState === "incorrect" });
       }
     });
   }, [answerState, ensureVisible, mapMarkup, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
