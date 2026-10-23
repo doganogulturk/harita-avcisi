@@ -94,6 +94,7 @@ sayımla başlar.
 - **🎯 Herkes puan alır:** doğru bilen 1 puan alır; ikisi de bildiyse hızlı olana +1.
 - Soru bitince iki tıklama haritada birlikte gösterilir (doğru cevap yeşil, oyuncunun yanlışı kırmızı, rakibin
   tıkladığı turuncu) ve 3 saniye sonra sonraki soruya geçilir.
+- Lobide iki oyuncu kartı ve "VS" yan yana durur; dikey telefonda kartlar küçülür, uzun ad kısalır.
 - Sonuçta kazanan, soru soru döküm ve seri skoru görünür. **Rövanş** aynı ayarlarla, **Başka modla rövanş** yeni
   ayarlarla yeni bir düello kurar; rakibe istek gider, kabul ederse ikisi de yeni lobiye geçer.
 - Yatay ekranda üst bar tek satırdır: solda oyuncu, ortada soru ve sayaç, sağda rakip. Dikey telefonda iki satırdır:
@@ -115,7 +116,8 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
   ve tur başlayana kadar gizlidir. Turlar sırayla, oda süresi içinde istenen anda ve birer kez oynanır. Başlatılıp
   bırakılan tur "yarım" sayılır: 0 puan, 120 saniye.
 - **Oda sıralaması:** tur tur puanlar, toplam puan ve toplam süre canlı güncellenir; toplam puana, eşitlikte toplam
-  süreye göre dizilir. Süre bitince oda kapanır ve ilk üç kürsüde gösterilir.
+  süreye göre dizilir. Dikey telefonda tablo sıra, oyuncu ve puandan oluşur (süre puanın altında); tur tur puanlar
+  geniş ekranda görünür. Süre bitince oda kapanır ve ilk üç kürsüde gösterilir.
 - Oda turları genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine de işlenir.
 - Bir oyuncunun aynı anda en fazla 3 açık odası olabilir.
 

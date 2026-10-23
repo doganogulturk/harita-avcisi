@@ -74,12 +74,12 @@ const PODIUM = [
 
 function Podium({ players, playerId }: { players: RoomPlayer[]; playerId: string }) {
   return (
-    <div className="mb-6 flex items-end justify-center gap-3">
+    <div className="mb-6 flex items-end justify-center gap-2 sm:gap-3">
       {PODIUM.map(({ place, height, medal }) => {
         const player = players[place - 1];
-        if (!player) return <div className="w-24" key={place} />;
+        if (!player) return <div className="w-20 sm:w-24" key={place} />;
         return (
-          <div className="flex w-24 flex-col items-center gap-1.5 text-center lg:w-28" key={place}>
+          <div className="flex w-20 flex-col items-center gap-1.5 text-center sm:w-24 lg:w-28" key={place}>
             <span className="text-2xl">{medal}</span>
             <DuelAvatar avatar={player.avatar} name={player.name} size="md" tone={player.id === playerId ? "me" : "opponent"} />
             <span className="w-full truncate text-sm font-bold text-slate-900">{player.name}</span>
@@ -92,7 +92,11 @@ function Podium({ players, playerId }: { players: RoomPlayer[]; playerId: string
   );
 }
 
-/** Başlamış ya da bitmiş oda: solda oyuncunun durumu ve sıradaki turu, sağda canlı oda sıralaması. */
+/**
+ * Başlamış ya da bitmiş oda: solda oyuncunun durumu ve sıradaki turu, sağda canlı oda sıralaması. Dikey telefonda alt
+ * alta durur; sıralama tablosu orada sıra, oyuncu ve puandan oluşur (süre puanın altında), tur tur puanlar geniş ekranda
+ * görünür. Sütun içerikle genişlemez (minmax(0,1fr)); aksi halde geniş tablo sol kartı da ekrandan taşırıyordu.
+ */
 export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError, isStartingRound, onPlayRound, onHome }: RoomBoardProps) {
   const remainingSeconds = useCountdown(state.ends_at, serverNow);
   const me = state.players.find((player) => player.id === playerId);
@@ -100,13 +104,13 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
   const isFinished = state.status === "finished";
 
   return (
-    <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[24rem_minmax(0,1fr)] lg:gap-5">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[24rem_minmax(0,1fr)] lg:gap-5">
       <aside className="flex flex-col gap-5 rounded-3xl border-2 border-slate-200 bg-white p-5 lg:min-h-0 lg:overflow-y-auto lg:p-7">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">
             👥 {duelModeLabel(state.game_mode, state.variant)} · {state.round_count} tur
           </p>
-          <h1 className="mt-2 font-display text-4xl leading-none font-bold text-slate-900">{state.name}</h1>
+          <h1 className="mt-2 font-display text-3xl leading-none font-bold break-words text-slate-900 sm:text-4xl">{state.name}</h1>
         </div>
 
         {isFinished ? (
@@ -168,19 +172,21 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
               <th className="w-8 pb-2 font-semibold">#</th>
               <th className="pb-2 font-semibold">Oyuncu</th>
               {Array.from({ length: state.round_count }, (_, index) => (
-                <th className="w-12 pb-2 text-center font-semibold" key={index}>
+                <th className="hidden w-12 pb-2 text-center font-semibold sm:table-cell" key={index}>
                   T{index + 1}
                 </th>
               ))}
               <th className="w-16 pb-2 text-right font-semibold">Puan</th>
-              <th className="w-16 pb-2 text-right font-semibold">Süre</th>
+              <th className="hidden w-16 pb-2 text-right font-semibold sm:table-cell">Süre</th>
             </tr>
           </thead>
           <tbody>
             {state.players.map((player, index) => (
               <tr className={`border-t border-slate-100 ${player.id === playerId ? "bg-cyan-50/60" : ""}`} key={player.id}>
                 <td className="py-2.5 pl-1 font-bold text-slate-400 tabular-nums">{index + 1}</td>
-                <td className="py-2.5">
+                {/* Dar ekranda hücre kalan yeri alır ve uzun ad kısalır (max-w-0); tablo ekrandan taşmaz. Geniş ekranda tur
+                    sütunları da sığar, hücre normal genişler. */}
+                <td className="py-2.5 max-sm:w-full max-sm:max-w-0">
                   <span className="flex min-w-0 items-center gap-2">
                     <DuelAvatar avatar={player.avatar} name={player.name} tone={player.id === playerId ? "me" : "opponent"} />
                     <span className="truncate font-bold text-slate-900">
@@ -188,24 +194,34 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
                       {player.name}
                     </span>
                     {player.id === playerId && (
-                      <span className="shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase">Sen</span>
+                      <span className="hidden shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase min-[25rem]:inline">
+                        Sen
+                      </span>
                     )}
                   </span>
                 </td>
                 {Array.from({ length: state.round_count }, (_, round) => (
-                  <td className="py-2.5 text-center" key={round}>
+                  <td className="hidden py-2.5 text-center sm:table-cell" key={round}>
                     <RoundCell result={player.rounds.find((item) => item.round === round + 1)} />
                   </td>
                 ))}
-                <td className="py-2.5 text-right font-display text-lg font-bold text-slate-900 tabular-nums">{player.total_score}</td>
-                <td className="py-2.5 pr-1 text-right text-xs font-semibold text-slate-500 tabular-nums">
+                <td className="py-2.5 pl-2 text-right tabular-nums">
+                  <span className="block font-display text-lg leading-tight font-bold text-slate-900">{player.total_score}</span>
+                  <span className="block text-[11px] text-slate-500 sm:hidden">
+                    {player.rounds.length > 0 ? formatTime(Math.round(player.total_duration_ms / 1000)) : "—"}
+                  </span>
+                </td>
+                <td className="hidden py-2.5 pr-1 text-right text-xs font-semibold text-slate-500 tabular-nums sm:table-cell">
                   {player.rounds.length > 0 ? formatTime(Math.round(player.total_duration_ms / 1000)) : "—"}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="mt-4 text-xs text-slate-500">T: tur puanı (10 üzerinden) · yarım: başlatılıp bitirilmedi, 0 sayılır · eşit puanda toplam süre kısa olan önde</p>
+        <p className="mt-4 text-xs text-slate-500">
+          <span className="hidden sm:inline">T: tur puanı (10 üzerinden) · yarım: başlatılıp bitirilmedi, 0 sayılır · </span>
+          Eşit puanda toplam süre kısa olan önde.
+        </p>
       </section>
     </div>
   );

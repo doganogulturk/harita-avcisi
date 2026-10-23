@@ -21,6 +21,8 @@ const AVATAR_SIZE = {
   sm: "h-9 w-9 text-sm ring-2",
   md: "h-14 w-14 text-2xl ring-4 lg:h-16 lg:w-16",
   lg: "h-20 w-20 text-3xl ring-4 lg:h-24 lg:w-24 lg:text-4xl",
+  /** Düello lobisi: dikey telefonda iki kart yan yana sığsın diye küçük, genişledikçe büyür. */
+  lobby: "h-14 w-14 text-2xl ring-4 sm:h-20 sm:w-20 sm:text-3xl lg:h-24 lg:w-24 lg:text-4xl",
 };
 
 export function DuelAvatar({ name, avatar, tone, size = "sm" }: { name: string; avatar: string | null; tone: DuelTone; size?: keyof typeof AVATAR_SIZE }) {
