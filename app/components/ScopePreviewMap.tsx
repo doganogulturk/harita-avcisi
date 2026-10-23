@@ -7,8 +7,7 @@ import { continentLocationIds, isContinentScope, type WorldScope } from "@/lib/w
 
 /**
  * Giriş ekranının ikinci adımında oynanacak haritayı gösterir. Kıta seçildiğinde o kıta vurgulanır;
- * harita yakınlaşmaz, kıtanın dünyadaki yeri olduğu gibi işaretlenir. Havuz seçimlerinde (Normal /
- * Tümü) vurgu yapılmaz: dağınık bir ülke kümesi haritada okunaklı bir şekil oluşturmuyor, o yüzden
+ * harita yakınlaşmaz, kıtanın dünyadaki yeri olduğu gibi işaretlenir. Tüm ülkeler seçiliyken vurgu yapılmaz;
  * kapsam yan paneldeki açıklamayla anlatılır.
  */
 export function ScopePreviewMap({ mode, scope }: { mode: GameMode; scope: WorldScope }) {

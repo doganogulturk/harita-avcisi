@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { BOARDS, formatTime, GAME_DURATION_MS, type BoardId, type LeaderboardEntry } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
 
@@ -13,6 +14,8 @@ type LeaderboardProps = {
   isLoading?: boolean;
   /** Liste daha uzun gösterilir (sonuç ekranı, sıralamanın ekranın ana içeriği olduğu yer). */
   tall?: boolean;
+  /** Liste kabın kalan yüksekliğini doldurur ve orada kayar; sekmeler yerinde kalır (sıralama penceresi). */
+  fillHeight?: boolean;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -54,10 +57,11 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
   return (
     <li className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm sm:gap-3 ${isCurrentPlayer ? "bg-cyan-50" : "bg-slate-50"}`}>
       {/*
-        İsim ve çubuk, isim sütununun taban genişliğinden artan alanı 1'e 9 paylaşır: çubuk her satırda
-        aynı genişlikte ve aynı hizadan başlar, isme de o artan alanın onda biri kadar ek yer kalır.
+        Geniş ekranda isim ve çubuk, isim sütununun taban genişliğinden artan alanı 1'e 9 paylaşır: çubuk her satırda
+        aynı genişlikte ve aynı hizadan başlar, isme de o artan alanın onda biri kadar ek yer kalır. Dikey telefonda
+        çubuk yoktur; isim kalan yerin tamamını alır, süre puanın altında yazar.
       */}
-      <span className="flex min-w-0 shrink grow basis-40 items-center gap-2 sm:basis-52 sm:gap-3">
+      <span className="flex min-w-0 shrink grow basis-0 items-center gap-2 sm:basis-52 sm:gap-3">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${isTop ? MEDAL_STYLES[rank] : "text-slate-400"}`}
         >
@@ -80,14 +84,21 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
         )}
         <span className={`truncate ${isTop ? "font-bold text-slate-900" : "font-medium text-slate-700"}`}>{entry.display_name}</span>
         {isCurrentPlayer && (
-          <span className="shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Sen</span>
+          // Dar ekranda satırın mavi zemini yeter; etiket ismin yerini yemesin.
+          <span className="hidden shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase min-[25rem]:inline">Sen</span>
         )}
       </span>
-      {/* Çubuğun içindeki süre yazısı kadar yer her zaman ayrılır; dar ekranda isim kısalır, çubuk puanın üstüne taşmaz. */}
-      <span className="min-w-[3.25rem] shrink grow-[9] basis-0" title="Süre (0-120 sn)">
+      {/* Çubuğun içindeki süre yazısı kadar yer her zaman ayrılır; isim kısalır, çubuk puanın üstüne taşmaz. */}
+      <span className="hidden min-w-[3.25rem] shrink grow-[9] basis-0 sm:block" title="Süre (0-120 sn)">
         <DurationBar durationMs={entry.duration_ms} isCurrentPlayer={isCurrentPlayer} />
       </span>
-      <span className="w-16 shrink-0 text-right font-bold tabular-nums text-slate-900">{entry.score} puan</span>
+      {/* Puan tek başına yazar ("10"); her tur 10 soru olduğu için birim yazısı gerekmez. */}
+      <span className="flex w-10 shrink-0 flex-col items-end" title="Puan">
+        <span className="font-display text-lg leading-tight font-bold tabular-nums text-slate-900">{entry.score}</span>
+        {entry.duration_ms < UNKNOWN_DURATION_MS && (
+          <span className="text-[11px] leading-tight text-slate-500 tabular-nums sm:hidden">{formatTime(Math.round(entry.duration_ms / 1000))}</span>
+        )}
+      </span>
     </li>
   );
 }
@@ -100,24 +111,31 @@ export function Leaderboard({
   showTitle = true,
   isLoading,
   tall = false,
+  fillHeight = false,
   onBoardChange,
 }: LeaderboardProps) {
   const entries = leaderboards[boardId];
+  // Dar telefonda sekme satırı yana kayabilir; seçili sekme (ör. son oynanan Bayrak) yarım kalmasın.
+  const selectedTabRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    selectedTabRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [boardId]);
   const isEmptyEverywhere = BOARDS.every((board) => leaderboards[board.id].length === 0);
   const isStillLoading = isLoading ?? isEmptyEverywhere;
 
   return (
-    <div>
+    <div className={fillHeight ? "flex min-h-0 flex-1 flex-col" : ""}>
       {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
       {/* Beş sekme tek satırda: başlık ayrı satırda durur, sekmeler kartın tam genişliğini yazılarının boyuna göre paylaşır;
-          dikey telefonda yazı ve iç boşluk küçülür. */}
-      <div className={`flex gap-0.5 rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
+          dikey telefonda yazı ve iç boşluk küçülür. En dar telefonlarda sığmazsa satır yana kayar. */}
+      <div className={`no-scrollbar flex shrink-0 gap-0.5 overflow-x-auto rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
         {BOARDS.map((board) => (
           <button
             aria-selected={boardId === board.id}
-            className={`flex-auto rounded-full px-1.5 py-1.5 text-[11px] font-bold whitespace-nowrap transition sm:px-3 sm:text-sm ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
+            className={`flex-auto rounded-full px-1.5 py-1.5 text-[11px] max-[22.5rem]:px-1 font-bold whitespace-nowrap transition sm:px-3 sm:text-sm ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
             key={board.id}
             onClick={() => onBoardChange(board.id)}
+            ref={boardId === board.id ? selectedTabRef : undefined}
             role="tab"
             type="button"
           >
@@ -126,7 +144,7 @@ export function Leaderboard({
         ))}
       </div>
 
-      <div className={`overflow-y-auto pr-1 ${tall ? "mt-4 max-h-[28rem]" : "mt-3 max-h-[20rem]"}`}>
+      <div className={`overflow-y-auto pr-1 ${fillHeight ? "mt-3 min-h-0 flex-1" : tall ? "mt-4 max-h-[28rem]" : "mt-3 max-h-[20rem]"}`}>
         {leaderboardError ? (
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (

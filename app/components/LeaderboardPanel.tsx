@@ -17,6 +17,7 @@ type LeaderboardPanelProps = {
 /**
  * Giriş ekranından açılan sıralama. Tur oynamadan da bakılabilsin diye ayrı bir katman:
  * oyun sırasında açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
+ * Telefonda ekranın altından açılan ve tam genişliği kullanan bir sayfadır; geniş ekranda ortada bir penceredir.
  */
 export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConfigured, onClose }: LeaderboardPanelProps) {
   useBackHandler(onClose, BACK_PRIORITY.dialog);
@@ -32,21 +33,23 @@ export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConf
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <button aria-label="Sıralamayı kapat" className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
 
       <div
         aria-labelledby="leaderboard-title"
         aria-modal="true"
-        className="relative flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-900/20 sm:p-7"
+        className="sheet-up relative flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl shadow-slate-900/20 sm:max-h-full sm:max-w-2xl sm:rounded-3xl sm:p-7 sm:[animation:none]"
         role="dialog"
       >
-        <div className="flex items-start justify-between gap-4">
+        {/* Alttan açılan sayfanın tutamacı: sayfanın kapatılabilir bir katman olduğunu gösterir. */}
+        <span aria-hidden="true" className="mx-auto mb-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-200 sm:hidden" />
+        <div className="flex shrink-0 items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-3xl leading-none font-bold text-slate-900" id="leaderboard-title">
+            <h2 className="font-display text-2xl leading-none font-bold text-slate-900 sm:text-3xl" id="leaderboard-title">
               Sıralama
             </h2>
-            <p className="mt-2 text-sm text-slate-500">Her turun kendi sıralaması var. Eşit puanda hızlı olan önde.</p>
+            <p className="mt-1.5 text-sm text-slate-500 sm:mt-2">Her turun kendi sıralaması var. Eşit puanda hızlı olan önde.</p>
           </div>
           <button
             aria-label="Kapat"
@@ -61,10 +64,11 @@ export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConf
           </button>
         </div>
 
-        <div className="mt-5 min-h-0 flex-1 overflow-y-auto">
+        <div className="mt-4 flex min-h-0 flex-1 flex-col sm:mt-5">
           {supabaseConfigured ? (
             <Leaderboard
               boardId={boardId}
+              fillHeight
               currentPlayerId={currentPlayerId}
               leaderboardError={leaderboardError}
               isLoading={isLoading}

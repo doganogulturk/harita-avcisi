@@ -50,7 +50,8 @@ export type IntroGame = "ranked" | "practice" | "duel" | "room";
 const MAPS: GameMode[] = ["turkey", "world"];
 const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag"];
 const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
-const SCOPES: WorldScope[] = ["normal", "hard", "africa", "america", "asia", "europe"];
+// Eski sürümlerin kaydettiği "normal" ve "hard" geçersiz sayılır ve "all"a düşer; kıta seçimleri korunur.
+const SCOPES: WorldScope[] = ["all", "africa", "america", "asia", "europe"];
 
 /** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
 export const [useIntroMap, setIntroMap] = createPreference<GameMode>(
@@ -62,7 +63,7 @@ export const [useIntroMap, setIntroMap] = createPreference<GameMode>(
 export const [useWorldScope, setWorldScope] = createPreference<WorldScope>(
   "harita-avcisi:intro-scope",
   (value): value is WorldScope => (SCOPES as string[]).includes(value),
-  "normal",
+  "all",
 );
 
 export const [useQuestionPrompt, setQuestionPrompt] = createPreference<WorldPrompt>(

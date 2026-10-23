@@ -1,10 +1,18 @@
 export type CountryTier = "common" | "rare";
+/**
+ * Veritabanındaki dünya turu türü. Oyunda yalnızca "hard" (179 ülkenin tamamı, arayüzde "Dünya") oynanır; "normal"
+ * (58 tanınmış ülke) kaldırıldı ama eski düello, oda ve sonuç kayıtlarında, güncellenmemiş uygulamalardan gelen
+ * isteklerde hâlâ geçer.
+ */
 export type WorldDifficulty = "normal" | "hard";
 
 export type Country = {
   code: string;
   name: string;
-  /** "common": tanınmış ülkeler (Normal havuzu). "rare": yalnızca Zor modda sorulur. */
+  /**
+   * "common": tanınmış ülkeler, "rare": diğerleri. Oyunda artık iki grup birlikte sorulur; ayrım yalnızca eski "normal"
+   * düellolarının sunucudaki soru havuzu için tutulur (scripts/generate-duel-pools.mjs).
+   */
   tier: CountryTier;
 };
 
@@ -191,11 +199,6 @@ export const countries: Country[] = [
   { code: "zw", name: "Zimbabve", tier: "rare" },
 ];
 
-export const commonCountries = countries.filter((country) => country.tier === "common");
-
-export function countryCount(difficulty: WorldDifficulty): number {
-  return difficulty === "hard" ? countries.length : commonCountries.length;
-}
 
 export type Continent = "europe" | "asia" | "africa" | "america";
 
@@ -250,20 +253,18 @@ export function continentInfo(continent: Continent) {
   return CONTINENTS.find((option) => option.id === continent)!;
 }
 
-/** Giriş ekranında Dünya turunun kapsamı: bir havuz ya da tek bir kıta. */
-export type WorldScope = WorldDifficulty | Continent;
+/** Giriş ekranında Dünya turunun kapsamı: tüm ülkeler ya da (yalnızca antrenmanda) tek bir kıta. */
+export type WorldScope = "all" | Continent;
 
 export function isContinentScope(scope: WorldScope): scope is Continent {
-  return scope !== "normal" && scope !== "hard";
+  return scope !== "all";
 }
 
 const allCountryCodes: ReadonlySet<string> = new Set(countries.map((country) => country.code));
-const commonCountryCodes: ReadonlySet<string> = new Set(commonCountries.map((country) => country.code));
 
 /** Kapsama giren ülkeler; giriş ekranındaki önizleme haritasında bunlar vurgulanır. */
 export function scopeLocationIds(scope: WorldScope): ReadonlySet<string> {
-  if (isContinentScope(scope)) return continentCodes[scope];
-  return scope === "hard" ? allCountryCodes : commonCountryCodes;
+  return isContinentScope(scope) ? continentCodes[scope] : allCountryCodes;
 }
 
 export function scopeCountryCount(scope: WorldScope): number {

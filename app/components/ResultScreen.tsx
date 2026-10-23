@@ -321,7 +321,7 @@ function PracticeResult({
   onSignOut,
 }: PracticeResultProps) {
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
-  // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın Normal / Zor sıralamasına düşer).
+  // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın 179 ülkelik sıralamasına düşer).
   const rankedBoard = BOARDS.find((board) => board.id === boardIdFor(choice)) ?? BOARDS[0];
 
   return (

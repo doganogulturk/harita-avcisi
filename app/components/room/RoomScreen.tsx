@@ -4,11 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Logo } from "../Logo";
 import { PlayerBadge } from "../PlayerBadge";
-import { RotateOverlay } from "../RotateOverlay";
 import { SignInPanel } from "../SignInPanel";
 import { usePlayer } from "@/lib/hooks/usePlayer";
-import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
-import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
 import { useRoom } from "@/lib/hooks/useRoom";
 import { getSupabaseClient } from "@/lib/supabase";
 import { RoomBoard } from "./RoomBoard";
@@ -55,10 +52,6 @@ export function RoomScreen({ code }: { code: string }) {
     setActiveRound({ round, ...started });
   };
 
-  const landscape = useLandscapeGate((round: number) => void playRound(round));
-  // Android geri tuşu yan çevrilmeyi bekleyen turu bırakır.
-  useBackHandler(landscape.cancel, BACK_PRIORITY.dialog, landscape.isWaiting);
-
   const finishRound = useCallback(
     (outcome: RoomRoundOutcome) => {
       setLastOutcome(outcome);
@@ -78,8 +71,6 @@ export function RoomScreen({ code }: { code: string }) {
         <PlayerBadge onSignOut={signOut} player={player} />
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 lg:overflow-hidden lg:px-8 lg:py-5">{children}</div>
-      {/* Oda panosu dikeyde de kullanılır; dikeyde istenen tur telefon yan çevrilince başlar. */}
-      {landscape.isWaiting && <RotateOverlay onCancel={landscape.cancel} />}
     </main>
   );
 
@@ -127,7 +118,6 @@ export function RoomScreen({ code }: { code: string }) {
           roundId={activeRound.roundId}
           state={state}
         />
-        <RotateOverlay />
       </main>
     );
   }
@@ -142,7 +132,7 @@ export function RoomScreen({ code }: { code: string }) {
       isStartingRound={isStartingRound}
       lastOutcome={lastOutcome}
       onHome={goHome}
-      onPlayRound={landscape.request}
+      onPlayRound={(round) => void playRound(round)}
       playerId={player.id}
       serverNow={serverNow}
       state={state}

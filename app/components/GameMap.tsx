@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { vibrate } from "@/lib/haptics";
+import { canLockLandscape, keepLandscapeLock, lockLandscape, releaseLandscapeLock } from "@/lib/orientation";
 import { useMapZoom } from "@/lib/hooks/useMapZoom";
 import {
   correctLocationId,
@@ -76,18 +77,31 @@ let isRotateHintDismissed = false;
 
 /**
  * Dikeyde oynanırken haritanın sol altındaki küçük ipucu: yatayda harita iki kat büyür. Yalnızca dikey telefonda
- * görünür (portrait:max-lg); oyuncu kapatabilir. Dokunmalar haritaya geçmesin diye kendi alanı tıklanabilir.
+ * görünür (portrait:max-lg); oyuncu kapatabilir. Mobil uygulamada ipucu bir tuştur: dokununca ekran yataya kilitlenir,
+ * telefonun yön kilidi açık olsa bile. Dokunmalar haritaya geçmesin diye kendi alanı tıklanabilir.
  */
 function RotateHint() {
   const [isDismissed, setIsDismissed] = useState(isRotateHintDismissed);
   if (isDismissed) return null;
+  const icon = (
+    <svg aria-hidden="true" className="h-4 w-4 text-cyan-600" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <rect height="14" rx="2" width="20" x="2" y="5" />
+      <path d="M9 2.5 12 5 9 7.5" />
+    </svg>
+  );
   return (
     <div className="absolute bottom-3 left-3 z-10 hidden items-center gap-1 rounded-full border border-slate-200 bg-white/90 py-1 pr-1 pl-3 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur portrait:max-lg:flex">
-      <svg aria-hidden="true" className="h-4 w-4 text-cyan-600" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-        <rect height="14" rx="2" width="20" x="2" y="5" />
-        <path d="M9 2.5 12 5 9 7.5" />
-      </svg>
-      Yan çevirirsen harita büyür
+      {canLockLandscape() ? (
+        <button className="flex items-center gap-1 text-cyan-700" onClick={() => void lockLandscape()} type="button">
+          {icon}
+          Yatay moda geç
+        </button>
+      ) : (
+        <>
+          {icon}
+          Yan çevirirsen harita büyür
+        </>
+      )}
       <button
         aria-label="İpucunu kapat"
         className="hit-area flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
@@ -123,6 +137,12 @@ export function GameMap({
   areNoticesInHeaderWhenNarrow = false,
   onSelect,
 }: GameMapProps) {
+  // Mobil uygulamada ipucuyla konan yatay kilit oyun boyunca sürer; harita kaldırılınca (oyun bitince) kalkar.
+  useEffect(() => {
+    keepLandscapeLock();
+    return releaseLandscapeLock;
+  }, []);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPointerType = useRef("mouse");
   const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, wasDragged, panHandlers } = useMapZoom(

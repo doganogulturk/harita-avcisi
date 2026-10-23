@@ -230,12 +230,27 @@ body {
   animation: score-bump 420ms ease-out;
 }
 
+/* Telefonda alttan açılan sayfa (sıralama) yerine kayarak gelir. */
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.sheet-up {
+  animation: sheet-up 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Seri rozeti hareketsiz durur; cevap gösterimi bitince kendiliğinden kalkar. */
   .map .map-correct,
   .map .map-incorrect,
   .score-bump,
-  .streak-pop {
+  .streak-pop,
+  .sheet-up {
     animation: none;
   }
 }
@@ -626,4 +641,12 @@ body {
   background: var(--color-slate-100);
   font-weight: 600;
   color: var(--color-slate-900);
+}
+
+/* Kaydırılabilen ama kaydırma çubuğu görünmeyen satır (ör. dar telefonda sıralama sekmeleri). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

@@ -34,7 +34,7 @@ type SetupShellProps = {
 export function SetupShell({
   game,
   map,
-  previewScope = "normal",
+  previewScope = "all",
   onMapChange,
   onBack,
   note,
@@ -56,13 +56,17 @@ export function SetupShell({
             </span>
             <div className="min-w-0">
               <p className="font-display text-2xl leading-none font-bold text-slate-900 lg:text-4xl">{game.title}</p>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500 lg:mt-1 lg:text-sm">
-                {game.facts.map((fact, index) => (
-                  <span className="flex items-center gap-2" key={fact}>
-                    {index > 0 && <span className="h-1 w-1 rounded-full bg-slate-300" />}
-                    {fact}
-                  </span>
-                ))}
+              {/* Her künyenin önünde bir nokta durur; satırın başına düşen nokta kabın solundaki taşma alanında kalıp
+                  gizlenir. Satır kırılınca "• Sıralamaya işlenir" gibi noktayla başlayan satır olmaz. */}
+              <p className="mt-0.5 overflow-hidden text-xs text-slate-500 lg:mt-1 lg:text-sm">
+                <span className="-ml-3 flex flex-wrap items-center gap-x-2">
+                  {game.facts.map((fact) => (
+                    <span className="flex items-center gap-2 whitespace-nowrap" key={fact}>
+                      <span aria-hidden="true" className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                      {fact}
+                    </span>
+                  ))}
+                </span>
               </p>
             </div>
           </div>
@@ -230,23 +234,22 @@ export function ScopeChip({
   label,
   count,
   isSelected,
-  disabled,
+  className = "",
   onClick,
 }: {
   label: string;
   count: number;
   isSelected: boolean;
-  disabled: boolean;
+  className?: string;
   onClick: () => void;
 }) {
   const selectedClass = useContext(SelectedClass);
   return (
     <button
       aria-checked={isSelected}
-      className={`flex items-baseline justify-between gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold transition short:px-2 short:py-1 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none disabled:opacity-40 ${
+      className={`flex items-baseline justify-between gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold transition short:px-2 short:py-1 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${className} ${
         isSelected ? `${selectedClass} shadow-sm` : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
       }`}
-      disabled={disabled}
       onClick={onClick}
       role="radio"
       type="button"

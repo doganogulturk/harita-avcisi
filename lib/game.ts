@@ -49,7 +49,7 @@ export function choiceLabel(choice: PlayChoice): string {
   if (kind === "ranked" && isFlagChoice(choice)) return "Bayrak";
   if (kind === "ranked" && isPlateChoice(choice)) return "Plaka";
   const map =
-    mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya · Zor" : "Dünya · Normal";
+    mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya" : "Dünya · Tanınmış ülkeler";
   const label = isFlagChoice(choice) ? `${map} · Bayrak` : isPlateChoice(choice) ? `${map} · Plaka` : map;
   return kind === "practice" ? `Antrenman · ${label}` : label;
 }
@@ -82,10 +82,10 @@ export const MAP_LABELS: Record<GameMode, string> = {
 export const GAME_MODES: GameMode[] = ["turkey", "world"];
 
 /**
- * Her oynanış türünün kendi sıralaması var; Zor turlar Normal'lerle, bayrak ve plaka turları
- * isimli turlarla yarışmaz.
+ * Her oynanış türünün kendi sıralaması var; bayrak ve plaka turları isimli turlarla yarışmaz. Dünyanın isimli
+ * sıralaması veritabanında "hard" türüdür (179 ülke); kaldırılan "normal" türün eski skorları gösterilmez.
  */
-export type BoardId = "turkey" | "turkey-plates" | "world" | "world-hard" | "world-flags";
+export type BoardId = "turkey" | "turkey-plates" | "world-hard" | "world-flags";
 
 /** Veritabanındaki `variant` sütunu. Bayrak turları 179 ülkenin tamamından, plaka turları 81 ilden sorulur. */
 export type BoardVariant = WorldDifficulty | "flags" | "plates";
@@ -93,8 +93,7 @@ export type BoardVariant = WorldDifficulty | "flags" | "plates";
 export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: BoardVariant }[] = [
   { id: "turkey", label: "Türkiye", mode: "turkey", variant: "normal" },
   { id: "turkey-plates", label: "Plaka", mode: "turkey", variant: "plates" },
-  { id: "world", label: "Dünya", mode: "world", variant: "normal" },
-  { id: "world-hard", label: "Dünya · Zor", mode: "world", variant: "hard" },
+  { id: "world-hard", label: "Dünya", mode: "world", variant: "hard" },
   { id: "world-flags", label: "Bayrak", mode: "world", variant: "flags" },
 ];
 
@@ -108,17 +107,13 @@ export function choiceForBoard(board: { mode: GameMode; variant: BoardVariant })
 }
 
 /**
- * Giriş ekranındaki kapsam ve soru tipi seçimlerini bir tura çevirir.
- * Yarışta bayrak turu tek bir sıralamaya bağlıdır: 179 ülkenin tamamı, kıtasız.
+ * Giriş ekranındaki kapsam ve soru tipi seçimlerini bir tura çevirir. Yarış her zaman 179 ülkenin tamamından sorulur.
  * Kıta yalnızca antrenmanda seçilebilir; kendi sıralaması olmadığı için yarışta yok sayılır.
  */
 export function worldChoice(kind: PlayKind, scope: WorldScope, prompt: WorldPrompt): PlayChoice {
-  if (kind === "ranked") {
-    if (prompt === "flag") return FLAG_CHOICE;
-    return { kind, mode: "world", difficulty: scope === "normal" ? "normal" : "hard" };
-  }
+  if (kind === "ranked") return prompt === "flag" ? FLAG_CHOICE : { kind, mode: "world", difficulty: "hard" };
   if (isContinentScope(scope)) return { kind, mode: "world", difficulty: "hard", continent: scope, prompt };
-  return { kind, mode: "world", difficulty: scope, prompt };
+  return { kind, mode: "world", difficulty: "hard", prompt };
 }
 
 /** Türkiye turları yalnızca 81 ilden sorulur; zorluk seçimi yoktur, soru tipi sıralamayı belirler. */
@@ -135,7 +130,7 @@ export function boardVariantFor(choice: PlayChoice): BoardVariant {
 export function boardIdFor(choice: PlayChoice): BoardId {
   if (choice.mode === "turkey") return isPlateChoice(choice) ? "turkey-plates" : "turkey";
   if (isFlagChoice(choice)) return "world-flags";
-  return choice.difficulty === "hard" ? "world-hard" : "world";
+  return "world-hard";
 }
 
 export const LOCATION_SELECTOR: Record<GameMode, string> = {

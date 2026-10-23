@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
 type AuthPanelProps = {
-  /** Oyuncunun giriş yapmadan önce seçtiği tur, ör. "Dünya · Zor". */
+  /** Oyuncunun giriş yapmadan önce seçtiği tur, ör. "Bayrak". */
   choiceLabel: string;
   /** Verilirse varsayılan "... turu seni bekliyor" başlığı ve açıklaması yerine gösterilir (ör. düello). */
   title?: React.ReactNode;
@@ -15,8 +15,8 @@ type AuthPanelProps = {
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
   onCancel: () => void;
-  /** Vazgeç bağlantısının yazısı; giriş penceresinde "Kapat". */
-  cancelLabel?: string;
+  /** Vazgeç nasıl gösterilir: sol üstte "← Geri" bağlantısı ya da (giriş penceresinde) sağ üstte ✕ kapatma tuşu. */
+  cancelAs?: "back" | "close";
   /** Misafir adı formunun tuşu; giriş bir tur başlatmıyorsa (giriş penceresi) "Giriş yap". */
   guestSubmitLabel?: string;
 };
@@ -40,7 +40,7 @@ export function AuthPanel({
   onGoogleSignIn,
   onGuestSignIn,
   onCancel,
-  cancelLabel = "← Geri",
+  cancelAs = "back",
   guestSubmitLabel = "Başla",
 }: AuthPanelProps) {
   const [guestName, setGuestName] = useState(suggestGuestName);
@@ -52,16 +52,29 @@ export function AuthPanel({
   };
 
   return (
-    <div className="rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 short:p-5">
-      <button
-        className="text-xs font-semibold text-slate-500 underline-offset-2 transition hover:text-cyan-700 hover:underline"
-        onClick={onCancel}
-        type="button"
-      >
-        {cancelLabel}
-      </button>
+    <div className="relative rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 short:p-5">
+      {cancelAs === "close" ? (
+        <button
+          aria-label="Kapat"
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
+          onClick={onCancel}
+          type="button"
+        >
+          <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          className="mb-3 text-xs font-semibold text-slate-500 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+          onClick={onCancel}
+          type="button"
+        >
+          ← Geri
+        </button>
+      )}
 
-      <p className="mt-3 text-lg font-bold text-slate-900">
+      <p className={`text-lg font-bold text-slate-900 ${cancelAs === "close" ? "pr-10" : ""}`}>
         {title ?? (
           <>
             <span className="text-cyan-700">{choiceLabel}</span> turu seni bekliyor

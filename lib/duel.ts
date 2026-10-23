@@ -34,8 +34,7 @@ export const DUEL_MODES: { mode: GameMode; title: string; options: { variant: Bo
     mode: "world",
     title: "Dünya",
     options: [
-      { variant: "normal", label: "Normal" },
-      { variant: "hard", label: "Zor" },
+      { variant: "hard", label: "Ülke" },
       { variant: "flags", label: "Bayrak" },
     ],
   },
@@ -43,10 +42,25 @@ export const DUEL_MODES: { mode: GameMode; title: string; options: { variant: Bo
 
 export type DuelSettings = { mode: GameMode; variant: BoardVariant; rule: DuelRule };
 
+/**
+ * Kaldırılan dünya "normal" modunda (58 tanınmış ülke) kurulmuş eski düello ve odaların etiketi. Sunucu bu modu
+ * güncellenmemiş uygulamalar için hâlâ kabul eder; seçeneklerde yoktur.
+ */
+const LEGACY_MODE_LABELS: Partial<Record<`${GameMode}|${BoardVariant}`, string>> = { "world|normal": "Tanınmış ülkeler" };
+
 export function duelModeLabel(mode: GameMode, variant: BoardVariant): string {
   const group = DUEL_MODES.find((candidate) => candidate.mode === mode);
   const option = group?.options.find((candidate) => candidate.variant === variant);
-  return `${group?.title ?? mode} · ${option?.label ?? variant}`;
+  return `${group?.title ?? mode} · ${option?.label ?? LEGACY_MODE_LABELS[`${mode}|${variant}`] ?? variant}`;
+}
+
+/**
+ * Seçilen haritada geçerli modu döndürür; başka haritada kalmış ya da kaldırılmış bir mod (eski dünya "normal") o
+ * haritanın ilk moduna düşer. Eski bir düellonun rövanşı da böylece güncel modla kurulur.
+ */
+export function variantFor(map: GameMode, variant: string): BoardVariant {
+  const options = DUEL_MODES.find((group) => group.mode === map)?.options ?? [];
+  return options.find((option) => option.variant === variant)?.variant ?? options[0]?.variant ?? "normal";
 }
 
 /** Soru gösterimi (isim, plaka, bayrak) tek oyunculu oyunla aynı kurallara bağlı olsun diye düellonun turu. */

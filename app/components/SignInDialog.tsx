@@ -24,7 +24,7 @@ export function SignInDialog({ onClose }: { onClose: () => void }) {
       <button aria-label="Kapat" className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
       <div aria-label="Giriş yap" aria-modal="true" className="relative max-h-full w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl shadow-slate-900/20" role="dialog">
         <SignInPanel
-          cancelLabel="Kapat"
+          cancelAs="close"
           guestSubmitLabel="Giriş yap"
           description="Yarışta skorun sıralamaya işlenir; düelloda ve odada rakiplerin seni adınla görür. Antrenman için giriş gerekmez."
           onCancel={onClose}

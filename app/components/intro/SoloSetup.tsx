@@ -5,7 +5,7 @@ import { flagUrl, type GameMode, type PlayKind, type TurkeyPrompt, type WorldPro
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { setQuestionPrompt, setTurkeyPrompt, setWorldScope } from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
-import { CONTINENTS, continentInfo, countryCount, isContinentScope, scopeCountryCount, type WorldScope } from "@/lib/world-countries";
+import { CONTINENTS, continentInfo, countries, isContinentScope, scopeCountryCount, type WorldScope } from "@/lib/world-countries";
 import { gameInfo } from "./games";
 import { Field, ScopeChip, Segmented, SetupShell } from "./SetupParts";
 
@@ -24,16 +24,10 @@ const TURKEY_PROMPT_NOTES: Record<TurkeyPrompt, string> = {
   plate: "Soru olarak plaka kodu gelir, sen o ilin yerini bulursun. Yarışta ayrı bir sıralaması var.",
 };
 
-const SCOPE_LOCK_NOTE = `Yarışta bayrak turu ${countryCount("hard")} ülkenin tamamından sorulur.`;
-
-/**
- * Kapsamın ne anlama geldiğini yazıyla söyler. Havuzlar haritada vurgulanmaz: "en bilinen 58 ülke"
- * gibi bir seçim haritada anlamlı bir şekil oluşturmuyor, kıtalar ise oluşturuyor.
- */
+/** Kapsamın ne anlama geldiğini yazıyla söyler. Tüm ülkeler haritada vurgulanmaz, kıtalar vurgulanır. */
 function scopeNote(scope: WorldScope): string {
   if (isContinentScope(scope)) return `${continentInfo(scope).label} kıtasındaki ${scopeCountryCount(scope)} ülke, haritada vurgulandı.`;
-  if (scope === "normal") return `Adı daha çok bilinen ${countryCount("normal")} ülke.`;
-  return `Haritadaki ${countryCount("hard")} ülkenin tamamı.`;
+  return `Haritadaki ${countries.length} ülkenin tamamı.`;
 }
 
 type SoloSetupProps = {
@@ -42,7 +36,6 @@ type SoloSetupProps = {
   scope: WorldScope;
   prompt: WorldPrompt;
   turkeyPrompt: TurkeyPrompt;
-  isScopeLocked: boolean;
   isReady: boolean;
   /** Yarışta giriş yapılmamışsa tuş bunu önceden söyler; giriş adımı sürpriz olmasın. */
   needsSignIn: boolean;
@@ -52,14 +45,10 @@ type SoloSetupProps = {
 };
 
 /** Adım 2, Yarış ve Antrenman: soru tipi ve (dünyada) kapsam. */
-export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocked, isReady, needsSignIn, onMapChange, onBack, onStart }: SoloSetupProps) {
+export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isReady, needsSignIn, onMapChange, onBack, onStart }: SoloSetupProps) {
   // Yarış turu sunucuda açılır; bağlantı yokken başlatılırsa skoru kaydedilemez. Antrenman bağlantısız da oynanır.
   const isOnline = useIsOnline();
   const isBlockedOffline = kind === "ranked" && !isOnline;
-  const poolScopes: { id: WorldScope; label: string }[] = [
-    { id: "normal", label: "Normal" },
-    { id: "hard", label: kind === "ranked" ? "Zor" : "Tümü" },
-  ];
 
   return (
     <SetupShell
@@ -70,11 +59,12 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
       onAction={onStart}
       onBack={onBack}
       onMapChange={onMapChange}
-      previewScope={map === "world" ? scope : "normal"}
+      previewScope={map === "world" ? scope : "all"}
     >
       {map === "world" ? (
         <>
-          <Field label="Soru">
+          {/* Yarış her zaman tüm ülkelerden sorulur; kapsam seçimi (tümü ya da bir kıta) yalnızca antrenmanda var. */}
+          <Field label="Soru" note={kind === "ranked" ? `${countries.length} ülkenin tamamı sorulur.` : undefined}>
             <Segmented label="Soru tipi" onChange={setQuestionPrompt} options={PROMPT_OPTIONS} value={prompt} />
             {prompt === "flag" && (
               <Image
@@ -88,39 +78,29 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isScopeLocke
             )}
           </Field>
 
-          <Field noteOn={isScopeLocked ? "all" : "tall"} label="Kapsam" note={isScopeLocked ? SCOPE_LOCK_NOTE : scopeNote(scope)}>
-            {/* Antrenmanda havuzların altında kıtalar da var. Alçak ekranda altısı tek ızgarada üçerli iki satır olur. */}
-            <div
-              className={`grid gap-2 short:gap-1.5 ${kind === "practice" ? "grid-cols-2 short:grid-cols-3" : "w-fit grid-cols-2"}`}
-              role="radiogroup"
-            >
-              {poolScopes.map((option) => (
+          {kind === "practice" && (
+            <Field noteOn="tall" label="Kapsam" note={scopeNote(scope)}>
+              {/* Tümü tam satır, altında dört kıta ikişerli; alçak ekranda üçerli iki satır olur. */}
+              <div className="grid grid-cols-2 gap-2 short:grid-cols-3 short:gap-1.5" role="radiogroup">
                 <ScopeChip
-                  count={scopeCountryCount(option.id)}
-                  disabled={isScopeLocked}
-                  isSelected={scope === option.id}
-                  key={option.id}
-                  label={option.label}
-                  onClick={() => setWorldScope(option.id)}
+                  className="col-span-2 short:col-span-1"
+                  count={scopeCountryCount("all")}
+                  isSelected={scope === "all"}
+                  label="Tümü"
+                  onClick={() => setWorldScope("all")}
                 />
-              ))}
-              {kind === "practice" && (
-                <>
-                  <span aria-hidden="true" className="col-span-full my-0.5 border-t border-slate-100 short:hidden" />
-                  {CONTINENTS.map((continent) => (
-                    <ScopeChip
-                      count={scopeCountryCount(continent.id)}
-                      disabled={false}
-                      isSelected={scope === continent.id}
-                      key={continent.id}
-                      label={continent.label}
-                      onClick={() => setWorldScope(continent.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-          </Field>
+                {CONTINENTS.map((continent) => (
+                  <ScopeChip
+                    count={scopeCountryCount(continent.id)}
+                    isSelected={scope === continent.id}
+                    key={continent.id}
+                    label={continent.label}
+                    onClick={() => setWorldScope(continent.id)}
+                  />
+                ))}
+              </div>
+            </Field>
+          )}
         </>
       ) : (
         <Field label="Soru" note={`${provinces.length} ilin tamamı sorulur. ${TURKEY_PROMPT_NOTES[turkeyPrompt]}`}>

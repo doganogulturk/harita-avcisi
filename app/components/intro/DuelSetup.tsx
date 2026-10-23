@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
-import { DUEL_MODES, DUEL_RULES, duelPath, type DuelRule } from "@/lib/duel";
+import { DUEL_MODES, DUEL_RULES, duelPath, variantFor, type DuelRule } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
@@ -11,12 +11,6 @@ import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences"
 import { gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
-
-/** Seçilen haritada geçerli modu döndürür; başka haritada kalmış bir mod o haritanın ilk moduna düşer. */
-export function variantFor(map: GameMode, variant: string): BoardVariant {
-  const options = DUEL_MODES.find((group) => group.mode === map)?.options ?? [];
-  return options.find((option) => option.variant === variant)?.variant ?? options[0]?.variant ?? "normal";
-}
 
 export function modeOptions(map: GameMode): { id: BoardVariant; label: string }[] {
   return (DUEL_MODES.find((group) => group.mode === map)?.options ?? []).map((option) => ({ id: option.variant, label: option.label }));

@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
+import { variantFor } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
-import { modeOptions, variantFor } from "./DuelSetup";
+import { modeOptions } from "./DuelSetup";
 import { formatMinutes, gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";

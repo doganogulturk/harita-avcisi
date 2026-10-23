@@ -17,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    // Menüler ve antrenman dikeyde de kullanılır; süreli oyunda "yan çevir" ekranı çıkar.
+    // Tüm ekranlar ve oyunlar dikeyde de kullanılır; yatayda harita büyür.
     orientation: "any",
     background_color: "#f8fafc",
     theme_color: "#f8fafc",

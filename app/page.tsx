@@ -5,20 +5,18 @@ import { GameMap, nextQuestionCountdown, streakCelebration } from "./components/
 import { GameTopBar } from "./components/GameTopBar";
 import { IntroScreen } from "./components/IntroScreen";
 import { ResultScreen } from "./components/ResultScreen";
-import { RotateOverlay } from "./components/RotateOverlay";
 import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { type IntroGame } from "@/lib/intro-preferences";
-import { useLandscapeGate } from "@/lib/hooks/useLandscapeGate";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
-import { commonCountries, continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
+import { continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
 import {
   BOARDS,
   boardIdFor,
@@ -43,8 +41,11 @@ const PENDING_CHOICE_KEY = "harita-avcisi:pending-choice";
 function readPendingChoice(): PlayChoice | null {
   try {
     const raw = sessionStorage.getItem(PENDING_CHOICE_KEY);
-    // Eski sürümlerin kaydettiği seçimde `kind` yok; o zamanlar yalnızca sıralamalı tur vardı.
-    return raw ? { kind: "ranked", ...(JSON.parse(raw) as Omit<PlayChoice, "kind">) } : null;
+    // Eski sürümlerin kaydettiği seçimde `kind` yok; o zamanlar yalnızca sıralamalı tur vardı. Kaldırılan dünya
+    // "normal" modu 179 ülkelik dünya turuna çevrilir.
+    if (!raw) return null;
+    const choice: PlayChoice = { kind: "ranked", ...(JSON.parse(raw) as Omit<PlayChoice, "kind">) };
+    return choice.mode === "world" ? { ...choice, difficulty: "hard" } : choice;
   } catch {
     return null;
   }
@@ -59,10 +60,9 @@ function writePendingChoice(choice: PlayChoice | null) {
   }
 }
 
-function poolFor({ mode, difficulty, continent }: PlayChoice): Question[] {
+function poolFor({ mode, continent }: PlayChoice): Question[] {
   if (mode === "turkey") return provinces;
-  if (continent) return countriesIn(continent);
-  return difficulty === "hard" ? countries : commonCountries;
+  return continent ? countriesIn(continent) : countries;
 }
 
 /** Sıralamalı tur 10 soru sorar; antrenman tüm havuzu sırayla dolaşır. */
@@ -117,7 +117,7 @@ export default function Home() {
     answers: answerRecords,
     durationMs: completionDurationMs,
   });
-  // Antrenman havuzu sıralamanınkinden dar olabilir (kıta, Normal havuzda bayrak); liste o havuzdan seçilir.
+  // Antrenman havuzu sıralamanınkinden dar olabilir (kıta); liste o havuzdan seçilir.
   const practicePoolIds = useMemo(() => (isPractice ? poolFor(choice).map(correctLocationId) : null), [choice, isPractice]);
   // Yarışta bu turun cevapları kaydedildikten sonra çekilir; oyuncunun az önceki cevapları da sayılsın.
   // Yarışta liste, sıralamada seçili sekmenin modunu izler; antrenmanda oynanan moddur.
@@ -154,15 +154,6 @@ export default function Home() {
     });
   }, [choice, phase, questionIndex, questions]);
 
-  // Dikeyde başlatılan süreli tur, telefon yan çevrilince (ya da "Dikeyde devam et" denince) başlar; süre çevirirken
-  // işlemesin. Antrenman süresiz olduğu için dikeyde de hemen başlar.
-  const landscape = useLandscapeGate(beginRound);
-
-  function startGame(nextChoice: PlayChoice) {
-    if (nextChoice.kind === "practice") beginRound(nextChoice);
-    else landscape.request(nextChoice);
-  }
-
   function beginRound(nextChoice: PlayChoice) {
     setChoice(nextChoice);
     round.start(roundFor(nextChoice));
@@ -180,7 +171,7 @@ export default function Home() {
    */
   function play(choice: PlayChoice) {
     if (player || choice.kind === "practice") {
-      startGame(choice);
+      beginRound(choice);
       return;
     }
     setAuthError(null);
@@ -229,7 +220,7 @@ export default function Home() {
     if ("error" in result) return setAuthError(result.error);
     setPlayer(result.player);
     writePendingChoice(null);
-    if (pendingChoice) startGame(pendingChoice);
+    if (pendingChoice) beginRound(pendingChoice);
   }
 
   async function signOut() {
@@ -248,16 +239,15 @@ export default function Home() {
     cancelPendingChoice();
   }
 
-  // Android geri tuşu: yan çevirmeyi bekleyen tur bırakılır; oyundan ve sonuçtan ana menüye, giriş adımından oyun
-  // seçimine dönülür. Ana menüde ayar ekranından kartlara geçiş tarayıcı geçmişiyle olur (IntroScreen).
+  // Android geri tuşu: oyundan ve sonuçtan ana menüye, giriş adımından oyun seçimine dönülür. Ana menüde ayar ekranından
+  // kartlara geçiş tarayıcı geçmişiyle olur (IntroScreen).
   useBackHandler(
     () => {
-      if (landscape.isWaiting) landscape.cancel();
-      else if (phase !== "ready") goHome();
+      if (phase !== "ready") goHome();
       else cancelPendingChoice();
     },
     BACK_PRIORITY.screen,
-    phase !== "ready" || pendingChoice !== null || landscape.isWaiting,
+    phase !== "ready" || pendingChoice !== null,
   );
 
   // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
@@ -348,9 +338,6 @@ export default function Home() {
           </section>
         )}
       </div>
-
-      {/* Menüler, sonuç ve antrenman dikeyde de kullanılır; uyarı yalnızca süreli turda ya da yan çevrilmeyi bekleyen turda. */}
-      {((phase === "playing" && !isPractice) || landscape.isWaiting) && <RotateOverlay onCancel={landscape.isWaiting ? landscape.cancel : undefined} />}
     </main>
   );
 }

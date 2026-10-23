@@ -27,7 +27,7 @@ import {
   type IntroGame,
 } from "@/lib/intro-preferences";
 import { roomPath } from "@/lib/room";
-import { isContinentScope, type WorldScope } from "@/lib/world-countries";
+import { type WorldScope } from "@/lib/world-countries";
 
 type IntroScreenProps = {
   player: Player | null;
@@ -135,14 +135,11 @@ export function IntroScreen({
   };
 
   const kind: PlayKind = selectedGame === "practice" ? "practice" : "ranked";
-  // Kıtaların kendi sıralaması yok; yarışta kapsam 179 ülkelik havuza düşer.
-  const scope: WorldScope = kind === "ranked" && isContinentScope(storedScope) ? "hard" : storedScope;
-  // Yarışta bayrak turu tek bir sıralamaya bağlı olduğu için havuzu kendisi belirler.
-  const isScopeLocked = kind === "ranked" && prompt === "flag";
-  const effectiveScope: WorldScope = isScopeLocked ? "hard" : scope;
+  // Kıtaların kendi sıralaması yok; yarış her zaman 179 ülkenin tamamından sorulur.
+  const scope: WorldScope = kind === "ranked" ? "all" : storedScope;
 
   const choiceFor = (mode: GameMode, playKind: PlayKind): PlayChoice =>
-    mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, playKind === "ranked" && isContinentScope(storedScope) ? "hard" : storedScope, prompt);
+    mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, storedScope, prompt);
 
   // Adım 2 tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez): telefonda geri hareketi ve Android'in geri
   // tuşu siteden çıkmak yerine oyun seçimine döner. Kayıttan dönülünce (geri / ileri) adım kayıttaki oyuna uyar.
@@ -228,14 +225,13 @@ export function IntroScreen({
         <SoloSetup
           isReady={readyModes.includes(map)}
           needsSignIn={kind === "ranked" && !player}
-          isScopeLocked={isScopeLocked}
           kind={kind}
           map={map}
           onBack={goBack}
           onMapChange={setIntroMap}
           onStart={start}
           prompt={prompt}
-          scope={effectiveScope}
+          scope={scope}
           turkeyPrompt={turkeyPrompt}
         />
       );

@@ -23,7 +23,7 @@ ve oynanacak haritanın küçük önizlemesi; sağda daha geniş panelde oyunun 
 her adımdan ilk adıma döner. İkinci adım tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez); telefonda geri
 hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda hatırlanır.
 
-Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; havuz seçimlerinde (Normal / Tümü) vurgu yapılmaz, kapsam
+Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; Tümü seçiliyken vurgu yapılmaz, kapsam
 yan paneldeki tek satırlık açıklamayla anlatılır.
 
 İlk ziyarette açılış animasyonundan sonra üç ekranlık bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
@@ -46,8 +46,7 @@ kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821"
 | --- | --- | --- |
 | Türkiye | 81 il | İl adı |
 | Plaka | 81 il | İlin plaka kodu; cevaptan sonra ilin adı da gösterilir |
-| Dünya · Normal | 58 tanınmış ülke | Ülke adı |
-| Dünya · Zor | 179 ülke | Ülke adı |
+| Dünya | 179 ülke | Ülke adı |
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
 
 Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
@@ -61,7 +60,7 @@ yanlış oranının güvenilir alt sınırına (Wilson, %95) göre. Yalnızca or
 yanlış bilinen yer (1/1, %100), yedi kez sorulup altısında yanlış bilinen yerin (6/7) önüne geçiyordu; bu ölçü az
 sorulan yerleri geri iter. Sıralama tarayıcıda yapılır (`useMostMissed.ts`). Her yerin altında en çok neyle
 karıştırıldığı yazar ("Tunceli sanılıyor"); oyuncunun o turda kendisinin de yanlış
-yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada Normal, Zor ve Bayrak ayrı değerlendirilir.
+yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada isim ile Bayrak ayrı değerlendirilir.
 Giriş ekranındaki Yarış kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
 
@@ -73,7 +72,7 @@ En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; yalnızca 
 havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatistiğe katılmaz.
 
 - **Türkiye:** 81 il, isimle ya da plakayla
-- **Dünya:** Normal (58) ya da Tümü (179); sorular isimle veya bayrakla
+- **Dünya:** 179 ülkenin tümü ya da bir kıta (aşağıda); sorular isimle veya bayrakla
 - **Kıtalar:** Afrika, Amerika, Asya ve Avrupa. Harita seçilen kıtaya yakınlaşarak açılır; kıta dışındaki ülkeler soluk ve tıklanamaz olur. İki kıtaya yayılan ülkeler (Türkiye, Rusya, Kazakistan, Azerbaycan, Gürcistan, Ermenistan, Kıbrıs) hem Avrupa'da hem Asya'da sorulur. Okyanusya'nın haritada yalnızca 6 ülkesi olduğu için kıta seçeneği yoktur.
 
 Oyun sırasında üst bardaki çıkış tuşu turu bırakıp ana menüye döner; yanlışlıkla başlatılan bir tur için
@@ -82,7 +81,7 @@ sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 ### Düello
 
 İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Düello** kartı seçilince ikinci adımda
-harita ve mod (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak) ile kural seçilir, düello kurulunca
+harita ve mod (Türkiye: Şehir, Plaka · Dünya: Ülke, Bayrak) ile kural seçilir, düello kurulunca
 `/duello?kod=<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Düello kartındaki
 **Kodla katıl** alanına kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
 sayımla başlar.
@@ -127,16 +126,9 @@ yerine oturur, yanlış tıklanan yer sarsılır, puan yeşil yanıp büyür. Ü
 "🔥 3 seri" rozeti belirir. Android'de (tarayıcı ve uygulama) doğru cevapta kısa, yanlışta çift titreşim olur
 (`lib/haptics.ts`); iPhone Safari titreşimi desteklemez. Hareket azaltma açıksa animasyonlar oynamaz. Doğru cevap görünümün dışındaysa harita onu gösterecek şekilde kayar ve sonraki soruda oyuncunun bıraktığı görünüme döner.
 
-**Yön.** Menüler, ayarlar, sonuçlar, düello sonucu ve oda panosu dikeyde de kullanılır. Harita dikeyde yaklaşık yarı
-boyuta indiği için:
-
-- **Antrenman** dikeyde serbesttir; haritanın sol altında kapatılabilir bir "Yan çevirirsen harita büyür" ipucu durur.
-- **Süreli oyunlarda** (yarış, düello lobisi ve oyunu, oda turu) dikeyde "Telefonunu yan çevir" ekranı çıkar. Dikeyde
-  başlatılan tur hemen başlamaz; süre telefon yan çevrilene kadar işlemez, **Vazgeç** isteği bırakır. Oyuncu
-  **Dikeyde devam et** derse tur hemen başlar ve bu tercih tarayıcıda hatırlanır, ekran bir daha çıkmaz
-  (`lib/hooks/useLandscapeGate.ts`).
-
-Mobil uygulama da aynı davranır; orada "Yatay moda geç" ekranı yataya kendisi kilitler (aşağıda).
+**Yön.** Tüm ekranlar ve oyunlar (antrenman, yarış, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
+zorunlu değildir. Harita dikeyde yaklaşık yarı boyuta indiği için haritanın sol altında kapatılabilir bir "Yan
+çevirirsen harita büyür" ipucu durur. Mobil uygulamada ipucunun yerinde **Yatay moda geç** tuşu vardır (aşağıda).
 
 ### Sağlamlık
 
@@ -160,7 +152,7 @@ yazı tipiyle bilgisayardaki Chrome'da üretilir; logo ya da tanıtım cümlesi 
 node scripts/generate-og-image.mjs
 ```
 
-Yarış sonucundaki **Skorumu paylaş** (antrenman skoru karşılaştırılabilir olmadığı için orada yok) telefonda sistemin paylaşma menüsünü açar ("Harita Avcısı'nda Dünya · Normal
+Yarış sonucundaki **Skorumu paylaş** (antrenman skoru karşılaştırılabilir olmadığı için orada yok) telefonda sistemin paylaşma menüsünü açar ("Harita Avcısı'nda Dünya
 yarışında 9/10 yaptım, süre 00:47. Sıralamada 3. sıradayım. Sen kaç yaparsın?" ve site bağlantısı); menü yoksa
 (masaüstü tarayıcı, Android uygulaması) aynı metni panoya kopyalar.
 
@@ -193,9 +185,9 @@ npm run android   # derle, kopyala, Android Studio'da aç
 kendisi yazar, Android boyutlarını `capacitor-assets` üretir (komut betiğin başında). iOS açılış ekranı tam ekran bir
 resim değil, `LaunchScreen.storyboard`'da düz zemin ve ortada rozettir.
 
-Uygulama sitedeki gibi dikeyde de açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Süreli oyunun
-"yan çevir" ekranındaki **Yatay moda geç** uygulamada ekranı yataya kilitler (`@capacitor/screen-orientation`;
-telefonun yön kilidi açık olsa bile döner); oyun ekranı kapanınca kilit kalkar.
+Uygulama sitedeki gibi dikeyde de açılır (iPhone'da `Info.plist`, Android'de `AndroidManifest.xml`). Dikeyde oyun
+haritasının sol altındaki **Yatay moda geç** ekranı yataya kilitler (`@capacitor/screen-orientation`, `lib/orientation.ts`;
+telefonun yön kilidi açık olsa bile döner); oyun haritası kapanınca kilit kalkar.
 
 Uygulamaya özgü davranışlar:
 
@@ -262,7 +254,7 @@ lib/
                         (finish_round), sıralamaları çeker, realtime abonelik.
                         useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
   turkish-plates.ts     81 il + plaka kodu
-  world-countries.ts    179 ülke + ISO kodu; Normal havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
+  world-countries.ts    179 ülke + ISO kodu; eski "normal" düellolarının havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
   shuffle.ts            Fisher-Yates karıştırma
   supabase.ts           Supabase istemcisi (env yoksa null döner)
   auth.ts               Google ve misafir girişi (ana sayfa ve düello ortak kullanır)
@@ -323,9 +315,13 @@ Yarış sonuçları `game_results` tablosunda tutulur; antrenman sonuçları hi�
 | --- | --- | --- |
 | Türkiye | `turkey` | `normal` |
 | Plaka | `turkey` | `plates` |
-| Dünya | `world` | `normal` |
-| Dünya · Zor | `world` | `hard` |
+| Dünya | `world` | `hard` |
+| (eski) Dünya · Normal | `world` | `normal` |
 | Bayrak | `world` | `flags` |
+
+Dünyanın 58 tanınmış ülkelik `normal` türü oyundan kaldırıldı: arayüzde seçilemez, sıralaması gösterilmez, eski
+skorlar tabloda durur. Sunucu bu türü güncellenmemiş uygulamalardan gelebilecek istekler için kabul etmeye devam eder;
+eski `normal` düello ve odalar "Dünya · Tanınmış ülkeler" diye görünür, rövanşları 179 ülkelik modla kurulur.
 
 RLS politikaları sıralamayı herkese açar: giriş yapmamış ziyaretçi de sıralamayı okuyabilir. Tarayıcının
 tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki iki fonksiyonla kaydedilir:

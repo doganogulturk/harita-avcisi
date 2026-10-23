@@ -59,7 +59,7 @@ function GroupIcon({ mode }: { mode: "turkey" | "world" }) {
   );
 }
 
-/** Harita ve mod seçimi (Türkiye: Şehir, Plaka · Dünya: Normal, Zor, Bayrak): düello ve oda kurarken. */
+/** Harita ve mod seçimi (Türkiye: Şehir, Plaka · Dünya: Ülke, Bayrak): düello ve oda kurarken. */
 export function ModePicker({ mode, variant, onChange }: { mode: GameMode; variant: BoardVariant; onChange: (mode: GameMode, variant: BoardVariant) => void }) {
   return (
     <div>

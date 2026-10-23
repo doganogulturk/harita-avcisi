@@ -7,6 +7,7 @@ import {
   duelModeLabel,
   duelSides,
   locationLabel,
+  variantFor,
   type DuelAnswer,
   type DuelSettings,
   type DuelState,
@@ -45,7 +46,9 @@ function AnswerCell({ state, answer, tone }: { state: DuelState; answer: DuelAns
 function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isRequestingRematch }: Omit<DuelResultProps, "onHome">) {
   const { me, opponent } = duelSides(state);
   const [isChoosing, setIsChoosing] = useState(false);
-  const [settings, setSettings] = useState<DuelSettings>({ mode: state.game_mode, variant: state.variant, rule: state.rule });
+  // Eski (kaldırılmış) bir moddaki düellonun rövanşı güncel modla kurulur.
+  const currentSettings: DuelSettings = { mode: state.game_mode, variant: variantFor(state.game_mode, state.variant), rule: state.rule };
+  const [settings, setSettings] = useState<DuelSettings>(currentSettings);
   const rematch = state.rematch;
   const opponentName = opponent?.name ?? "Rakibin";
 
@@ -94,7 +97,7 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
             <button
               className={`${SHIMMER_BUTTON} !px-3 !text-lg`}
               disabled={isRequestingRematch}
-              onClick={() => onRematch({ mode: state.game_mode, variant: state.variant, rule: state.rule })}
+              onClick={() => onRematch(currentSettings)}
               type="button"
             >
               ↻ Rövanş
