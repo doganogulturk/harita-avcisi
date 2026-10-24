@@ -1,7 +1,7 @@
 import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
-import { PlayerBadge } from "./PlayerBadge";
+import { AccountMenu } from "./AccountMenu";
 import { RoundReview } from "./RoundReview";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { ShareScoreButton } from "./ShareScoreButton";
@@ -90,7 +90,7 @@ function ResultShell({
         <button aria-label="Ana menü" className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
           <Logo isHeading={false} />
         </button>
-        <PlayerBadge onSignOut={onSignOut} player={player} />
+        <AccountMenu onSignOut={onSignOut} player={player} />
       </header>
       <div className="grid gap-3 md:min-h-0 md:flex-1 md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         {aside}

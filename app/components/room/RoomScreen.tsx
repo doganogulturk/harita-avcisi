@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Logo } from "../Logo";
-import { PlayerBadge } from "../PlayerBadge";
+import { AccountMenu } from "../AccountMenu";
 import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
 import { readPlayTipsSeen, setPlayTipsSeen } from "@/lib/intro-preferences";
@@ -79,7 +79,7 @@ export function RoomScreen({ code }: { code: string }) {
         <button aria-label="Ana sayfa" onClick={goHome} type="button">
           <Logo isHeading={false} />
         </button>
-        <PlayerBadge onSignOut={signOut} player={player} />
+        <AccountMenu onSignOut={signOut} player={player} />
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 lg:overflow-hidden lg:px-8 lg:py-5">{children}</div>
       {tipsRound !== null && (

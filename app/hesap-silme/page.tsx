@@ -21,7 +21,7 @@ export default function AccountDeletionPage() {
       <ol>
         <li>Harita Avcısı&apos;nı aç (uygulamada ya da sitede) ve silmek istediğin hesapla giriş yapmış ol.</li>
         <li>
-          Ana menüde sağ üstteki <strong>ⓘ</strong> menüsünden <strong>Hesap silme</strong>&apos;yi seç; bu sayfa açılır.
+          Ana menüde sağ üstteki profil resmine dokun, açılan menüden <strong>Hesap silme</strong>&apos;yi seç; bu sayfa açılır.
         </li>
         <li>
           Sayfanın sonundaki <strong>Hesabımı sil</strong> tuşuna dokun ve açılan pencerede onayla.

@@ -7,7 +7,7 @@ import { usePlayer } from "@/lib/hooks/usePlayer";
 
 /**
  * Hesap Silme sayfasının sonundaki silme kutusu. Hesabı silme oyunun ana ekranında durmaz (orada görünmesi insanı silmeye
- * yöneltir); ana menüdeki ⓘ → Hesap silme ile bu sayfaya gelinir. Giriş yapılmışsa kutu çıkar, onay penceresinden
+ * yöneltir); ana menüdeki hesap menüsü (profil resmi) → Hesap silme ile bu sayfaya gelinir. Giriş yapılmışsa kutu çıkar, onay penceresinden
  * sonra hesap silinir. Giriş yapılmamışsa (ya da sayfa mağaza kaydından açıldıysa) yalnızca sayfanın metni kalır.
  */
 export function AccountDeletionPanel() {

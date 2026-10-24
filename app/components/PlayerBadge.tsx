@@ -19,10 +19,9 @@ const INITIAL_SIZE = {
   md: "text-base",
 };
 
-export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }: PlayerBadgeProps) {
-  if (!player) return null;
-
-  const avatar = player.avatarUrl ? (
+/** Oyuncunun profil resmi; yoksa adının baş harfi. Hesap menüsü (AccountMenu) de bunu kullanır. */
+export function PlayerAvatar({ player, size = "md" }: { player: Player; size?: keyof typeof AVATAR_SIZE }) {
+  return player.avatarUrl ? (
     <Image
       alt=""
       className={`${AVATAR_SIZE[size]} shrink-0 rounded-full border border-cyan-200 object-cover`}
@@ -37,6 +36,13 @@ export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }:
       {player.name.slice(0, 1).toUpperCase()}
     </span>
   );
+}
+
+/** Oyun üst barında (geniş ekran) oyuncunun resmi, adı ve çıkış bağlantısı. Ekran başlıklarında AccountMenu kullanılır. */
+export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }: PlayerBadgeProps) {
+  if (!player) return null;
+
+  const avatar = <PlayerAvatar player={player} size={size} />;
 
   const linkClass = `font-semibold text-slate-400 underline-offset-2 transition hover:underline ${size === "sm" ? "text-[10px] lg:text-xs" : "text-xs"}`;
 

@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { Guide } from "./intro/Guide";
-import { LegalMenu } from "./LegalMenu";
+import { AccountMenu } from "./AccountMenu";
 import { PlayButton } from "./PlayButton";
-import { PlayerBadge } from "./PlayerBadge";
 import { SignInDialog } from "./SignInDialog";
 import { LeaderboardPanel } from "./LeaderboardPanel";
 import { useLeaders } from "@/lib/hooks/useLeaderboard";
@@ -282,7 +281,6 @@ export function IntroScreen({
             </button>
           </h1>
           <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
-            <PlayerBadge onSignOut={onSignOut} player={player} />
             {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
             {!player && supabaseConfigured && !pendingChoice && (
               <button
@@ -293,7 +291,7 @@ export function IntroScreen({
                 Giriş yap
               </button>
             )}
-            <LegalMenu onShowGuide={() => setIsGuideRequested(true)} />
+            <AccountMenu onShowGuide={() => setIsGuideRequested(true)} onSignOut={onSignOut} player={player} />
           </div>
         </header>
 

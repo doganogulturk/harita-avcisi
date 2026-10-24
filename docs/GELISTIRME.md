@@ -18,7 +18,9 @@ ve Dünya'nın birincisi yazar ("Türkiye'de 1. Murat · 10/10 · 00:42"; giriş
 yalnızca ad kısalır). Zeminde silik
 enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur, kartlar
 en fazla 46rem yüksekliğe uzar ve yazıları büyür; kartlar ekranı doldurup boş görünmez. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
-kaplamaz; başlığın sağındaki ⓘ tuşunun menüsündedir (orada tanıtımı yeniden açan **Nasıl oynanır?** de var).
+kaplamaz; başlığın sağındaki hesap menüsündedir (`AccountMenu`): profil resmine (giriş yoksa kişi simgesine) dokununca
+açılır, içinde oyuncunun adı, tanıtımı yeniden açan **Nasıl oynanır?**, yasal sayfalar ve **Çıkış yap** durur. Aynı menü
+sonuç, düello ve oda ekranlarının başlığında da vardır; dikey telefonda da çıkış yapılabilir.
 
 İkinci adım dört oyunda aynı düzendedir: solda üstte yuvarlak **←** tuşu ve oyunun adı, altında Türkiye / Dünya seçimi
 ve oynanacak haritanın küçük önizlemesi; sağda daha geniş panelde oyunun kendi ayarları. Eylem tuşu (**Başla**,
@@ -35,7 +37,7 @@ Türkiye ve dünya haritalarında isim, plaka ve bayrak soruları; sorulan yer y
 (yan çevir ve iki parmakla yakınlaştır animasyonları), dört oyun, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
 tuşlarla gezilir; **Geç** her ekranda durur. Son ekranın asıl tuşu **Başlayalım** ana ekrandaki oyun seçimine döner; giriş
 yapılmamışsa Google ve misafir girişi seçenek olarak sunulur. Görüldüğü tarayıcıda hatırlanır, giriş yapmış oyuncuya
-gösterilmez; başlıktaki ⓘ menüsünde **Nasıl oynanır?** ile yeniden açılır.
+gösterilmez; başlıktaki hesap menüsünde **Nasıl oynanır?** ile yeniden açılır.
 
 Sayfa ilk açıldığında oyunun adı ekranın ortasında belirir, ardından bu katman çekilerek seçim ekranı açılır.
 Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **←** ile ilk adıma dönüşte
@@ -331,7 +333,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ### Hesap silme
 
 Giriş yapmış oyuncu hesabını uygulamanın içinden kalıcı olarak silebilir (App Store ve Google Play bunu şart koşar):
-ana menüdeki ⓘ → **Hesap silme** sayfasının sonundaki **Hesabımı sil** (`legal/AccountDeletionPanel.tsx`). Tuş ana
+ana menüdeki hesap menüsü → **Hesap silme** sayfasının sonundaki **Hesabımı sil** (`legal/AccountDeletionPanel.tsx`). Tuş ana
 ekranda durmaz; orada görünmesi insanı silmeye yöneltir. Onaydan sonra `delete_my_account()` fonksiyonu oturumdaki kullanıcının `auth.users`
 satırını siler; skorlar, turlar, cevaplar, düellolar ve odalar `on delete cascade` ile birlikte gider.
 

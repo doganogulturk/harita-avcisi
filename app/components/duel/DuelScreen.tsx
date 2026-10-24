@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "../Logo";
-import { PlayerBadge } from "../PlayerBadge";
+import { AccountMenu } from "../AccountMenu";
 import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
 import { duelPath, type DuelSettings } from "@/lib/duel";
@@ -72,7 +72,7 @@ export function DuelScreen({ code }: { code: string }) {
       <button aria-label="Ana sayfa" onClick={goHome} type="button">
         <Logo isHeading={false} />
       </button>
-      <PlayerBadge onSignOut={signOut} player={player} />
+      <AccountMenu onSignOut={signOut} player={player} />
     </header>
   );
 
