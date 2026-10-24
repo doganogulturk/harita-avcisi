@@ -131,6 +131,16 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 - Oda turları genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine de işlenir.
 - Bir oyuncunun aynı anda en fazla 3 açık odası olabilir.
 
+### Profil
+
+Hesap menüsündeki **Profilim** `/profil` sayfasını açar; profili yalnızca oyuncunun kendisi görür. Başlıkta profil
+resmi, ad, hesap türü (Google / Misafir) ve ilk oyun tarihi; altında yarış özeti (tur, başarı oranı, en uzun seri,
+oynanan gün), düellolar (oynanan, galibiyet, beraberlik, mağlubiyet), her sıralamadaki en iyi sonuç ve sıra ve son
+10 yarış turu. Düello kartlarına dokununca alttan açılan sayfada o sonuçtaki düellolar listelenir (son 100): rakip, mod
+ve kural, tarih, skor; hükmen biten düello işaretlenir. Misafir hesapta verinin çıkışta ya da cihaz
+değişince kaybolacağı yazar. Antrenman kaydedilmediği için profilde yoktur; oda turları yarış turu sayılır. Veri tek bir
+sunucu fonksiyonundan gelir (`my_profile`). Alttan açılan sayfa sıralamayla ortaktır (`BottomSheet.tsx`).
+
 ### Harita
 
 Harita tekerlek, sürükleme, iki parmakla sıkıştırma ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Dokunmatikte

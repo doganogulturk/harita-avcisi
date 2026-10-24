@@ -12,11 +12,13 @@ type PlayerBadgeProps = {
 const AVATAR_SIZE = {
   sm: "h-7 w-7 lg:h-9 lg:w-9",
   md: "h-10 w-10",
+  lg: "h-16 w-16",
 };
 
 const INITIAL_SIZE = {
   sm: "text-xs lg:text-sm",
   md: "text-base",
+  lg: "text-2xl",
 };
 
 /** Oyuncunun profil resmi; yoksa adının baş harfi. Hesap menüsü (AccountMenu) de bunu kullanır. */

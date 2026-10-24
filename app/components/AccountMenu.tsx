@@ -17,7 +17,7 @@ const ITEM_CLASS = "block w-full rounded-lg px-3 py-2 text-left text-sm font-sem
 
 /**
  * Ekran başlıklarının sağındaki hesap menüsü: profil resmine (giriş yoksa kişi simgesine) dokununca açılır. İçinde
- * oyuncunun adı, "Nasıl oynanır?", yasal sayfalar ve Çıkış yap durur. Ayrı bir bilgi tuşu ve dikey telefonda görünmeyen
+ * oyuncunun adı, Profilim, "Nasıl oynanır?", yasal sayfalar ve Çıkış yap durur. Ayrı bir bilgi tuşu ve dikey telefonda görünmeyen
  * çıkış bağlantısı yerine tek ve her ekranda aynı yer.
  */
 export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps) {
@@ -76,7 +76,10 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
               <p className="truncate px-3 pt-1.5 pb-2 text-sm font-bold text-slate-900" title={player.name}>
                 {player.name}
               </p>
-              <div className="mx-3 mb-1 border-t border-slate-100" />
+              <Link className={`${ITEM_CLASS} font-bold text-slate-900 hover:bg-slate-100 focus-visible:bg-slate-100`} href="/profil">
+                Profilim
+              </Link>
+              <div className="mx-3 my-1 border-t border-slate-100" />
             </>
           )}
           {onShowGuide && (
