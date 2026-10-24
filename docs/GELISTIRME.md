@@ -280,7 +280,7 @@ lib/
     useMapMarkup.ts     SVG haritayı indirip önbelleğe alır ve tıklanabilir yapar
     useMapZoom.ts       viewBox tabanlı yakınlaştırma, kaydırma ve açılış görünümü
     useMostMissed.ts    location_stats view'inden o modda en çok yanlış yapılan yerleri çeker
-    useLeaderboard.ts   Yarış turunu sunucuda açar (start_round), sonucu tur başına bir kez kaydeder
+    useLeaderboard.ts   Yarış turunu sunucuda açar ve sorularını alır (start_ranked_round), sonucu tur başına bir kez kaydeder
                         (finish_round), sıralamaları çeker, realtime abonelik.
                         useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
   turkish-plates.ts     81 il + plaka kodu
@@ -354,13 +354,21 @@ skorlar tabloda durur. Sunucu bu türü güncellenmemiş uygulamalardan gelebile
 eski `normal` düello ve odalar "Dünya · Tanınmış ülkeler" diye görünür, rövanşları 179 ülkelik modla kurulur.
 
 RLS politikaları sıralamayı herkese açar: giriş yapmamış ziyaretçi de sıralamayı okuyabilir. Tarayıcının
-tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki iki fonksiyonla kaydedilir:
+tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki fonksiyonlarla kaydedilir:
 
-- `start_round(game_mode, variant)`: yarış turu başlarken `game_rounds` tablosunda bir tur açar ve
-  kimliğini döndürür. Tur tarayıcıda beklemeden başlar, istek arka planda sürer.
+- `start_ranked_round(game_mode, variant)`: yarış turu başlarken `game_rounds` tablosunda bir tur açar, 10 sorusunu
+  sunucuda seçer (düello ve odayla aynı havuzdan, `duel_pool`) ve turla birlikte saklar; tur kimliğini ve soruları
+  sırayla döndürür. Tur tarayıcıda ancak sorular gelince başlar (arada "Tur hazırlanıyor" katmanı); süre sorular gelince
+  işlemeye başlar. Sunucuya ulaşılamazsa tur yerel sorularla oynanır ve sonucu kaydedilemez.
+- `start_round(game_mode, variant)`: eski yol. Yalnızca tur açar, soruları tarayıcı seçer; güncellenmemiş uygulamalar
+  ve `start_ranked_round` eklenmemiş bir veritabanı için durur (istemci "fonksiyon yok" yanıtında buna döner). Bütün
+  uygulamalar güncellendiğinde kapatılmalı: o zamana kadar bu yolla açılan turun sonucu yalnızca süre ve biçimden
+  denetlenir.
 - `finish_round(round_id, duration_ms, answers)`: `answers`, cevaplanan soruların sırayla listesidir
   (`[{"location": "34", "selected": "41"}, ...]`). Puanı ve en uzun seriyi bu listeden kendisi hesaplar; turun
-  oyuncuya ait olduğunu, daha önce kaydedilmediğini ve sürenin mümkün olduğunu denetleyip sonucu yazar.
+  oyuncuya ait olduğunu, daha önce kaydedilmediğini ve sürenin mümkün olduğunu denetleyip sonucu yazar. Turun soruları
+  sunucuda seçildiyse cevapların sırayla tam o sorulara verildiğini de doğrular; tarayıcı kendi seçtiği sorularla
+  uydurulmuş bir sonuç gönderemez.
   Soruların bitmediği tur ancak 120 saniye dolduysa kabul edilir; 10 soruluk tur en az 30 saniye sürer
   (9 × 3 saniyelik gösterim + soru başına 0,3 saniye). Kaydedilen süre, sunucunun ölçtüğünden belirgin
   biçimde kısa olamaz. Oyuncunun adı ve fotoğrafı tarayıcıdan değil oturumdan alınır.

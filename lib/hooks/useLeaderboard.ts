@@ -34,18 +34,32 @@ const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], "turkey-plates": [], "wor
 // Supabase aynı adlı kanalı yeniden kullanır; kapanmakta olan eski kanala dinleyici eklenmesin diye her abonelik ayrı adla açılır.
 let channelSequence = 0;
 
+/** Sunucuda açılan yarış turu: kimliği ve sunucunun seçtiği sorular (yer kimlikleri, sırayla; eski yolda boş). */
+export type RankedRound = { roundId: string; questions: string[] };
+
 /**
- * Yarış turunu sunucuda açar; sonuç kaydedilirken süreyi sunucu bu andan itibaren ölçer.
- * Tur tarayıcıda beklemeden başlar, bu istek arka planda sürer. Açılamazsa null döner ve
- * turun sonucu kaydedilemez.
+ * Yarış turunu sunucuda açar ve sorularını sunucuya seçtirir; sonuç kaydedilirken süreyi sunucu bu andan itibaren
+ * ölçer, cevapları da bu sorularla karşılaştırır. Tur ancak sorular gelince başlar. Açılamazsa null döner; tur yerel
+ * sorularla oynanır ama sonucu kaydedilemez.
  */
-export function startRankedRound(choice: PlayChoice): Promise<string | null> {
+export async function startRankedRound(choice: PlayChoice): Promise<RankedRound | null> {
   const supabase = getSupabaseClient();
-  if (!supabase) return Promise.resolve(null);
-  return Promise.resolve(supabase.rpc("start_round", { p_game_mode: choice.mode, p_variant: boardVariantFor(choice) })).then(
-    ({ data, error }) => (error || typeof data !== "string" ? null : data),
-    () => null,
-  );
+  if (!supabase) return null;
+  const params = { p_game_mode: choice.mode, p_variant: boardVariantFor(choice) };
+  try {
+    const { data, error } = await supabase.rpc("start_ranked_round", params);
+    // Veritabanına start_ranked_round henüz eklenmediyse (geçiş SQL'i çalıştırılmadan yayına girildiyse) eski yolla
+    // açılır: sorular tarayıcıda seçilir (questions boş), sonuç eskisi gibi kaydedilir.
+    if (error?.code === "PGRST202") {
+      const legacy = await supabase.rpc("start_round", params);
+      return !legacy.error && typeof legacy.data === "string" ? { roundId: legacy.data, questions: [] } : null;
+    }
+    const round = data as { round_id?: unknown; questions?: unknown } | null;
+    if (error || typeof round?.round_id !== "string" || !Array.isArray(round.questions)) return null;
+    return { roundId: round.round_id, questions: round.questions.map(String) };
+  } catch {
+    return null;
+  }
 }
 
 /** Tüm sıralamaları tek seferde çeker. Herhangi biri başarısız olursa null döner. */

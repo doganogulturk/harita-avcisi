@@ -15,6 +15,7 @@ import { canLockLandscape, isPortraitPhoneNow } from "@/lib/orientation";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
+import { questionForLocation } from "@/lib/duel";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
@@ -171,12 +172,33 @@ export default function Home() {
     if (tipsChoice) beginRound(tipsChoice);
   }
 
+  // Yarış turunun soruları sunucudan beklenirken "Tur hazırlanıyor" katmanı durur; süre sorular gelince başlar.
+  const [isPreparing, setIsPreparing] = useState(false);
+
+  /**
+   * Yarış turu sunucuda açılır ve sorularını sunucu seçer: skor o sorularla doğrulanır, süre sunucuda ölçülür.
+   * Misafir girişinden hemen sonra `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır. Sunucuya
+   * ulaşılamazsa tur yerel sorularla oynanır, sonucu kaydedilemez (sonuç ekranı bunu söyler). Antrenman hemen başlar.
+   */
   function beginRound(nextChoice: PlayChoice) {
+    if (nextChoice.kind === "practice") return launchRound(nextChoice, roundFor(nextChoice), null);
+    if (isPreparing) return;
+    setIsPreparing(true);
+    void startRankedRound(nextChoice).then((started) => {
+      setIsPreparing(false);
+      const serverQuestions = started?.questions.map((id) => questionForLocation(nextChoice.mode, id)) ?? [];
+      const isComplete = serverQuestions.length === QUESTIONS_PER_ROUND && serverQuestions.every((question) => question !== undefined);
+      if (started && isComplete) launchRound(nextChoice, serverQuestions as Question[], started.roundId);
+      // Eski yol (sunucuda start_ranked_round yok): tur açıldı ama soruları tarayıcı seçer.
+      else if (started && started.questions.length === 0) launchRound(nextChoice, roundFor(nextChoice), started.roundId);
+      else launchRound(nextChoice, roundFor(nextChoice), null);
+    });
+  }
+
+  function launchRound(nextChoice: PlayChoice, nextQuestions: Question[], serverRoundId: string | null) {
     setChoice(nextChoice);
-    round.start(roundFor(nextChoice));
-    // Yarış turu sunucuda da açılır; süre sunucuda ölçülsün. Misafir girişinden hemen sonra
-    // `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır.
-    setServerRound(nextChoice.kind === "ranked" ? startRankedRound(nextChoice) : null);
+    round.start(nextQuestions);
+    setServerRound(nextChoice.kind === "ranked" ? Promise.resolve(serverRoundId) : null);
     setBoardId(boardIdFor(nextChoice));
     setPendingChoice(null);
     resetLeaderboards();
@@ -359,6 +381,14 @@ export default function Home() {
           </section>
         )}
       </div>
+      {isPreparing && (
+        <div aria-live="polite" className="delayed-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm" role="status">
+          <p className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-xl shadow-slate-900/10">
+            <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-200 border-t-cyan-600" />
+            Tur hazırlanıyor…
+          </p>
+        </div>
+      )}
       {tipsChoice && <PlayTips canLockLandscape={canLockLandscape()} onCancel={() => setTipsChoice(null)} onDone={finishTips} />}
     </main>
   );

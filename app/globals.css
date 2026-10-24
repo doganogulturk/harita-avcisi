@@ -804,3 +804,18 @@ body {
   -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
   mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
 }
+
+/* Kısa süren beklemelerde (ör. yarış sorularının sunucudan gelmesi) katman belirip kaybolmasın: çeyrek saniye sonra
+   görünür. */
+@keyframes delayed-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.delayed-fade {
+  animation: delayed-fade 200ms ease-out 250ms both;
+}

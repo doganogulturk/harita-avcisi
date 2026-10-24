@@ -41,7 +41,8 @@ to anon, authenticated
 using (true);
 
 -- Yarış turları. Tur başlarken açılır, sonuç kaydedilince kapanır; süreyi sunucu ölçer.
--- Tarayıcı bu tabloya doğrudan erişemez, yalnızca start_round ve finish_round kullanılır.
+-- Tarayıcı bu tabloya doğrudan erişemez, yalnızca start_ranked_round (eski uygulamalarda start_round) ve
+-- finish_round kullanılır.
 create table if not exists do_harita_avcisi.game_rounds (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -53,6 +54,11 @@ create table if not exists do_harita_avcisi.game_rounds (
 
 create index if not exists game_rounds_user_id_started_at_idx
 on do_harita_avcisi.game_rounds (user_id, started_at);
+
+-- Turun soruları, sırayla (start_ranked_round seçer). finish_round cevapları bunlarla karşılaştırır; tarayıcı kendi
+-- sorularını seçip uydurulmuş bir sonuç gönderemez. Eski uygulamaların start_round ile açtığı turlarda ve oda turlarında
+-- (sorular room_questions'ta) boştur.
+alter table do_harita_avcisi.game_rounds add column if not exists questions text[];
 
 alter table do_harita_avcisi.game_rounds enable row level security;
 revoke all on do_harita_avcisi.game_rounds from anon, authenticated;
@@ -204,6 +210,15 @@ begin
     raise exception 'Geçersiz sonuç.';
   end if;
 
+  -- Yarış turunun soruları sunucuda seçildiyse (start_ranked_round) cevaplar sırayla o sorulara verilmiş olmalı.
+  if v_round.questions is not null and exists (
+    select 1
+    from jsonb_array_elements(p_answers) with ordinality as item(answer, position)
+    where v_round.questions[item.position] is distinct from item.answer ->> 'location'
+  ) then
+    raise exception 'Geçersiz sonuç.';
+  end if;
+
   -- Oda turunda sorular sunucudan gelir; cevaplar sırayla o turun sorularına verilmiş olmalı.
   if v_round.room_id is not null and exists (
     select 1
@@ -277,9 +292,41 @@ begin
 end;
 $$;
 
+/*
+ * Yarış turunu açar ve 10 sorusunu sunucuda seçer (düello ve odayla aynı havuzdan, duel_pool). Sorular turla
+ * birlikte saklanır ve tarayıcıya sırayla döner; finish_round cevapları bunlarla karşılaştırır.
+ * start_round eski uygulamalar için duruyor: onunla açılan turun sorusu saklanmaz, sonucu yalnızca süre ve biçim
+ * kontrolüyle kaydedilir. Uygulamaların hepsi start_ranked_round'a geçince start_round kapatılmalı.
+ */
+create or replace function do_harita_avcisi.start_ranked_round(p_game_mode text, p_variant text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_round_id uuid := do_harita_avcisi.start_round(p_game_mode, p_variant);
+  v_questions text[];
+begin
+  select array_agg(location_id) into v_questions
+  from (
+    select location_id
+    from unnest(do_harita_avcisi.duel_pool(p_game_mode, p_variant)) as location_id
+    order by random()
+    limit 10
+  ) as picked;
+
+  update do_harita_avcisi.game_rounds set questions = v_questions where id = v_round_id;
+
+  return jsonb_build_object('round_id', v_round_id, 'questions', to_jsonb(v_questions));
+end;
+$$;
+
 revoke all on function do_harita_avcisi.start_round(text, text) from public, anon;
+revoke all on function do_harita_avcisi.start_ranked_round(text, text) from public, anon;
 revoke all on function do_harita_avcisi.finish_round(uuid, integer, jsonb) from public, anon;
 grant execute on function do_harita_avcisi.start_round(text, text) to authenticated;
+grant execute on function do_harita_avcisi.start_ranked_round(text, text) to authenticated;
 grant execute on function do_harita_avcisi.finish_round(uuid, integer, jsonb) to authenticated;
 
 -- Her sıralamada (game_mode + variant) her yerin kaç kez sorulduğu, kaç kez yanlış cevaplandığı ve
