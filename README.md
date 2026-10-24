@@ -8,18 +8,49 @@ ya da arkadaşlarınla oynanan bir harita oyunu.
 ## Oyunlar
 
 - **Yarış:** 10 soru, 120 saniye. Skorun sıralamaya işlenir.
-- **Antrenman:** Süre ve giriş yok. İstediğin kadar oyna, kıtaları tek tek çalış.
+- **Antrenman:** Süre ve giriş yok. İstediğin kadar oyna, dünyayı ya da kıtaları tek tek çalış.
 - **Düello:** Bir arkadaşına kod gönder, aynı sorulara aynı anda cevap verin.
 - **Oda:** Bir grupla birkaç tur boyunca yarışın, oda sıralamasında kim önde görün.
 
-Her modda Türkiye (il adı ya da plaka) veya dünya (ülke adı ya da bayrak) haritası seçilebilir.
+Her oyunda Türkiye (il adı ya da plaka) veya Dünya (179 ülkenin tamamı; ülke adı ya da bayrak) haritası seçilebilir.
+Türkiye, Plaka, Dünya ve Bayrak'ın her birinin kendi sıralaması vardır.
+
+## Öne çıkanlar
+
+- **Telefonda dikey ve yatay:** Bütün ekranlar ve oyunlar dikeyde de oynanır. Dikeyde ilk oyundan önce yan çevirmeyi
+  ve iki parmakla yakınlaştırmayı gösteren kısa bir ipucu açılır; yatayda harita iki kat büyür.
+- **Öğreten harita:** Yanlış cevapta tıklanan yerin adı yazar; doğru yer küçükse (Malta, Dominika) harita oraya
+  yakınlaşır. Tur sonunda soru soru döküm görünür.
+- **Profil:** Yarış özeti, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki yerin
+  ve son turların. Profili yalnızca sen görürsün.
+- **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
+- **Ana ekran:** Yarış kartında Türkiye'nin ve Dünya'nın birincisi; sıralama telefonda alttan açılır.
 
 ## Nerede oynanır
 
-- **Web:** Tarayıcıdan, kurulum gerekmeden.
-- **iOS ve Android:** Mağaza uygulamaları hazırlanıyor.
+- **Web:** Tarayıcıdan, kurulum gerekmeden. Ana ekrana uygulama olarak da eklenebilir.
+- **Android:** Google Play'de kapalı testte.
+- **iOS:** Hazırlanıyor.
 
 Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giriş gerekmez.
+
+## Yol haritası
+
+Sıradaki işler, öncelik sırasıyla:
+
+1. **Günlük meydan okuma:** Herkese aynı 10 soru, günde bir hak, günlük sıralama ve paylaşılabilir sonuç.
+2. **Seri ve rozetler:** Gün serisi ve başarı rozetleri ("81 ilin hepsini bildin", "Bayrakta 10/10"); profilde görünür.
+3. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+4. **İngilizce dil desteği.**
+
+Teknik işler:
+
+- Android uygulamasının yeni sürümü yayılınca eski tur açma yolunu (`start_round`) kapatmak; skor doğrulaması o zaman
+  bütün turlarda geçerli olur.
+- Puan, seri ve süre mantığı için birim testleri; ana sayfa bileşeninin sadeleştirilmesi.
+
+Sonraya bırakılan fikirler: karanlık tema, misafir hesabı Google hesabına bağlama, profilde zayıf yerlere özel
+antrenman.
 
 ## Yasal
 
