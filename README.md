@@ -21,8 +21,10 @@ Türkiye, Plaka, Dünya ve Bayrak'ın her birinin kendi sıralaması vardır.
   ve iki parmakla yakınlaştırmayı gösteren kısa bir ipucu açılır; yatayda harita iki kat büyür.
 - **Öğreten harita:** Yanlış cevapta tıklanan yerin adı yazar; doğru yer küçükse (Malta, Dominika) harita oraya
   yakınlaşır. Tur sonunda soru soru döküm görünür.
-- **Profil:** Yarış özeti, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki yerin
-  ve son turların. Profili yalnızca sen görürsün.
+- **Profil:** Yarış özeti, rozetler, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki
+  yerin ve son turların. Profili yalnızca sen görürsün.
+- **Rozetler:** Gün serisi, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 16 başarı; yeni
+  rozet sonuç ekranında kutlanır.
 - **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
 - **Günün meydan okuması:** Her gün Türkiye, Plaka, Dünya ve Bayrak için herkese aynı 10 soru, günde bir hak, günlük
   sıralama, gün serisi ve paylaşılabilir sonuç (🟩🟥 kareleriyle).
@@ -40,9 +42,8 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Rozetler:** Başarı rozetleri ("81 ilin hepsini bildin", "Bayrakta 10/10", "7 günlük seri"); profilde görünür.
-2. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
-3. **İngilizce dil desteği.**
+1. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+2. **İngilizce dil desteği.**
 
 Teknik işler:
 

@@ -12,6 +12,7 @@ import {
   type DuelSettings,
   type DuelState,
 } from "@/lib/duel";
+import { NewBadges } from "../NewBadges";
 import { DuelAvatar, DuelSettingsPicker, SHIMMER_BUTTON, TONE_TEXT, type DuelTone } from "./DuelParts";
 
 type DuelResultProps = {
@@ -144,6 +145,10 @@ export function DuelResult(props: DuelResultProps) {
           <DuelAvatar avatar={opponent.avatar} name={opponent.name} size="md" tone="opponent" />
         </div>
         {forfeitNote && <p className="text-sm text-slate-500">{forfeitNote}</p>}
+        {/* Düello galibiyeti rozetleri; düello bittiğinde sunucuya sorulur. */}
+        <div className="w-full text-left empty:hidden">
+          <NewBadges isSaved={state.status === "finished"} />
+        </div>
         {myWins + opponentWins > 1 && (
           <span className="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">
             Seri: Sen {myWins} – {opponentWins} {opponent.name}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
+import { NewBadges } from "./NewBadges";
 import { AccountMenu } from "./AccountMenu";
 import { RoundReview } from "./RoundReview";
 import { boardOf, dailyShareText, useDailyLeaderboards, useDailyStatus } from "@/lib/daily";
@@ -277,6 +278,7 @@ export function ResultScreen({
             <RoundReview answers={answerRecords} choice={choice} />
 
             <SaveNotice onRetry={onRetrySave} result={saveResult} />
+            <NewBadges isSaved={saveResult === "saved"} />
 
             {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
                 ayar ekranında seçilir. */}
@@ -456,6 +458,7 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
 
           <RoundReview answers={answerRecords} choice={choice} />
           <SaveNotice onRetry={onRetrySave} result={saveResult} />
+          <NewBadges isSaved={saveResult === "saved"} />
 
           <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
             <ShareScoreButton text={dailyShareText(boardId, answers, score, durationMs)} />

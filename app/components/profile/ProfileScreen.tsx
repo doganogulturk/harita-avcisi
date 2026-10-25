@@ -8,6 +8,7 @@ import { BottomSheet } from "../BottomSheet";
 import { DuelAvatar } from "../duel/DuelParts";
 import { Logo } from "../Logo";
 import { PlayerAvatar } from "../PlayerBadge";
+import { BADGE_GROUPS, BADGES, useBadges, type BadgeInfo, type BadgeState } from "@/lib/badges";
 import { DUEL_RULES, duelModeLabel } from "@/lib/duel";
 import { BOARDS, choiceForBoard, choiceLabel, formatTime, QUESTIONS_PER_ROUND, type BoardVariant, type GameMode } from "@/lib/game";
 import { usePlayer } from "@/lib/hooks/usePlayer";
@@ -99,6 +100,61 @@ function DuelRow({ duel }: { duel: ProfileDuel }) {
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${result.className}`}>{result.label}</span>
       </div>
     </li>
+  );
+}
+
+/** Tek rozet satırı: simge, ad, kazanıldıysa tarihi, değilse nasıl kazanılacağı; sağda ✓ ya da ilerleme ("3/7"). */
+function BadgeRow({ info, state }: { info: BadgeInfo; state: BadgeState | undefined }) {
+  const isEarned = Boolean(state?.earned_at);
+  const showsProgress = !isEarned && state !== undefined && state.goal > 1;
+  return (
+    <li className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 ${isEarned ? "bg-amber-50" : "bg-slate-50"}`}>
+      <span aria-hidden="true" className={`w-8 shrink-0 text-center text-2xl leading-none ${isEarned ? "" : "opacity-40 grayscale"}`}>
+        {info.emoji}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm leading-tight font-bold ${isEarned ? "text-slate-900" : "text-slate-500"}`}>{info.title}</p>
+        <p className={`mt-0.5 text-xs leading-snug ${isEarned ? "text-amber-700" : "text-slate-500"}`}>
+          {isEarned && state?.earned_at ? DATE.format(new Date(state.earned_at)) : info.description}
+        </p>
+        {showsProgress && (
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-full rounded-full bg-cyan-500" style={{ width: `${(state.progress / state.goal) * 100}%` }} />
+          </div>
+        )}
+      </div>
+      <span className={`shrink-0 text-sm font-bold tabular-nums ${isEarned ? "text-amber-600" : "text-slate-400"}`}>
+        {isEarned ? "✓" : showsProgress ? `${state.progress}/${state.goal}` : ""}
+      </span>
+    </li>
+  );
+}
+
+/**
+ * Rozetler, gruplarıyla (gün serisi, günlük meydan okuma, kusursuz tur...) ve her grupta kademe sırasıyla: aşağı doğru
+ * 3 → 7 → 30 gün gibi ilerler. Telefonda tek sütun; geniş ekranda gruplar iki sütunda yan yana. Kazanılanlar renkli ve
+ * tarihli, kazanılmamışlar soluk; nasıl kazanılacağı ve hedefi birden büyükse ilerlemesi yazar.
+ */
+function BadgesSection({ badges }: { badges: BadgeState[] }) {
+  const earnedCount = badges.filter((badge) => badge.earned_at).length;
+  return (
+    <section className={CARD}>
+      <p className={EYEBROW}>
+        Rozetler <span className="ml-1 text-slate-400">{earnedCount} / {BADGES.length}</span>
+      </p>
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-x-5 gap-y-4 lg:grid-cols-2">
+        {BADGE_GROUPS.map((group) => (
+          <div key={group.id}>
+            <p className="mb-1.5 text-xs font-bold text-slate-500">{group.title}</p>
+            <ul className="flex flex-col gap-1.5">
+              {BADGES.filter((badge) => badge.group === group.id).map((info) => (
+                <BadgeRow info={info} key={info.id} state={badges.find((badge) => badge.id === info.id)} />
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -236,6 +292,7 @@ export function ProfileScreen() {
   const router = useRouter();
   const [player, setPlayer, isPlayerLoaded] = usePlayer();
   const profile = useProfile(player);
+  const badges = useBadges(player);
 
   const signOut = async () => {
     await getSupabaseClient()?.auth.signOut();
@@ -282,6 +339,8 @@ export function ProfileScreen() {
                   <span className="font-bold">Misafir hesap:</span> çıkış yaparsan ya da cihaz değiştirirsen istatistiklerin kaybolur.
                 </p>
               )}
+
+              {badges && <BadgesSection badges={badges} />}
 
               {profile === undefined ? (
                 <p className="py-12 text-center text-sm text-slate-500">İstatistiklerin yükleniyor…</p>

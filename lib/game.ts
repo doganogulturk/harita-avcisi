@@ -47,12 +47,12 @@ export function isPlateChoice(choice: PlayChoice): boolean {
 
 export function choiceLabel(choice: PlayChoice): string {
   const { kind, mode, difficulty, continent } = choice;
+  if (choice.daily) return `Günün meydan okuması · ${isFlagChoice(choice) ? "Bayrak" : isPlateChoice(choice) ? "Plaka" : mode === "turkey" ? "Türkiye" : "Dünya"}`;
   if (kind === "ranked" && isFlagChoice(choice)) return "Bayrak";
   if (kind === "ranked" && isPlateChoice(choice)) return "Plaka";
   const map =
     mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya" : "Dünya · Tanınmış ülkeler";
   const label = isFlagChoice(choice) ? `${map} · Bayrak` : isPlateChoice(choice) ? `${map} · Plaka` : map;
-  if (choice.daily) return `Günün meydan okuması · ${isFlagChoice(choice) ? "Bayrak" : isPlateChoice(choice) ? "Plaka" : map}`;
   return kind === "practice" ? `Antrenman · ${label}` : label;
 }
 

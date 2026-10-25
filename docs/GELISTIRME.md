@@ -169,6 +169,20 @@ ve kural, tarih, skor; hükmen biten düello işaretlenir. Misafir hesapta verin
 değişince kaybolacağı yazar. Antrenman kaydedilmediği için profilde yoktur; oda turları yarış turu sayılır. Veri tek bir
 sunucu fonksiyonundan gelir (`my_profile`). Alttan açılan sayfa sıralamayla ortaktır (`BottomSheet.tsx`).
 
+### Rozetler
+
+16 rozet var (`lib/badges.ts`): gün serisi (3, 7, 30 gün), ilk günlük meydan okuma, tam gün (aynı gün dört meydan
+okuma), Türkiye / Plaka / Dünya / Bayrak'ta 10/10, Şimşek (45 saniyenin altında 10/10), 81 il ve 100 ülke (yarışlarda
+en az bir kez doğru bilinen farklı yerler), ilk ve 10. düello galibiyeti, Kürsü (bir sıralamada ilk üç) ve Zirve (bir
+sıralamada birinci). Hangisinin kazanıldığını ve ilerlemeyi sunucu mevcut veriden hesaplar (`my_badges`); kazanılan rozet
+`player_badges` tablosuna yazılır ve kaybolmaz (sıralamada geçilse de Kürsü kalır). Geçmişte hak edilmiş rozetler ilk
+çağrıda verilir.
+
+Profilde rozetler gruplarıyla (gün serisi, günlük meydan okuma, kusursuz tur, harita ustalığı, düello, sıralama) ve her
+grupta kademe sırasıyla dizilir (3 → 7 → 30 gün); telefonda tek sütun, geniş ekranda gruplar iki sütunda. Her rozet bir
+satırdır: kazanılanlar renkli ve tarihli, kazanılmamışlar soluk; nasıl kazanılacağı ve ilerlemesi (ör. "54/81") yazar. Yarış, günlük meydan okuma ve düello sonuç ekranında yeni kazanılan rozetler kısa bir kutlamayla çıkar (en fazla
+üçü tek tek, fazlası "+2 rozet daha"); profile bağlantı verir.
+
 ### Harita
 
 Harita tekerlek, sürükleme, iki parmakla sıkıştırma ve +/− tuşlarıyla yakınlaştırılıp kaydırılabilir. Dokunmatikte
