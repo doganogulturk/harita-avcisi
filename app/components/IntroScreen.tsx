@@ -11,6 +11,7 @@ import { LeaderboardPanel } from "./LeaderboardPanel";
 import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
+import { DailyStrip } from "./intro/DailyStrip";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
@@ -43,6 +44,8 @@ type IntroScreenProps = {
   authError: string | null;
   supabaseConfigured: boolean;
   onPlay: (choice: PlayChoice) => void;
+  /** Günlük meydan okuma açılamadıysa şeritte gösterilen not. */
+  dailyNotice?: string | null;
   onCancelPendingChoice: () => void;
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
@@ -91,6 +94,7 @@ export function IntroScreen({
   authError,
   supabaseConfigured,
   onPlay,
+  dailyNotice = null,
   onCancelPendingChoice,
   onGoogleSignIn,
   onGuestSignIn,
@@ -254,14 +258,18 @@ export function IntroScreen({
     }
 
     return (
-      <ModeGrid
-        rankedLeaders={rankedLeaders}
-        introDelayMs={INTRO_CARD_DELAY_MS}
-        introStepMs={INTRO_CARD_STEP_MS}
-        onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
-        onSelect={selectGame}
-        onShowLeaderboard={() => setIsLeaderboardOpen(true)}
-      />
+      <>
+        {/* Günün meydan okuması kartların üstünde; dört oyun kartı kalan yeri paylaşır. */}
+        <DailyStrip notice={dailyNotice} onPlay={onPlay} player={player} />
+        <ModeGrid
+          rankedLeaders={rankedLeaders}
+          introDelayMs={INTRO_CARD_DELAY_MS}
+          introStepMs={INTRO_CARD_STEP_MS}
+          onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
+          onSelect={selectGame}
+          onShowLeaderboard={() => setIsLeaderboardOpen(true)}
+        />
+      </>
     );
   };
 
@@ -295,7 +303,7 @@ export function IntroScreen({
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 short:gap-2 lg:gap-5">{content()}</div>
       </div>
 
       {isLeaderboardOpen && (

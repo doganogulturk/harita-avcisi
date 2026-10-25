@@ -131,6 +131,31 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 - Oda turları genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine de işlenir.
 - Bir oyuncunun aynı anda en fazla 3 açık odası olabilir.
 
+### Günlük meydan okuma
+
+Her gün (Türkiye saatiyle, gece yarısı değişir) Türkiye, Plaka, Dünya ve Bayrak için ayrı birer meydan okuma vardır. Bir
+modun 10 sorusu o gün ilk başlatıldığında sunucuda seçilir ve gün boyu herkes için aynıdır. Her oyuncu her modu günde bir
+kez oynar; başlatılıp bırakılan tur da hakkı kullanır. Tur yarışla aynı biçimdedir (10 soru, 120 saniye), sunucuda
+doğrulanır ve genel sıralamaya da işlenir. Giriş gerekir (misafir de olur). Meydan okuma yerel sorularla oynanmaz:
+sunucuya ulaşılamazsa ya da mod bugün oynandıysa ana ekrandaki şeritte not çıkar.
+
+Ana ekranda kartların üstünde **Günün meydan okuması** şeridi durur: dört mod, oynananın skoru, bırakılanın "Bırakıldı"
+yazısı, gün serisi ve yeni meydan okumaya kalan süre. Oynanmamış moda dokununca tur başlar; oynanana dokununca o modun
+günlük sıralaması ve paylaşma tuşu alttan açılır. Sonuç ekranında skor, süre, günün sıralamasındaki yer, gün serisi,
+soru soru kareler, paylaşma tuşu ve günün sıralaması vardır; "Tekrar oyna" yoktur.
+
+Gün serisi: en az bir meydan okumanın bitirildiği ardışık günler. Bir gün kaçırılırsa sıfırlanır; bugün henüz oynanmadıysa
+dünden geriye sayılır. Paylaşım metni:
+
+```
+Harita Avcısı · 25 Ekim · Dünya
+🟩🟩🟥🟩🟩🟩🟥🟩🟩🟩 8/10 · 01:12
+```
+
+Sunucu: `start_daily_round` turu açar (soruları `daily_challenges` tablosunda saklar), `daily_leaderboard` view'i bugünün
+sonuçlarını, `my_daily` oyuncunun bugünkü durumunu ve serisini döndürür; tur ve sonuç `daily_day` sütununu taşır
+(`lib/daily.ts`, `intro/DailyStrip.tsx`).
+
 ### Profil
 
 Hesap menüsündeki **Profilim** `/profil` sayfasını açar; profili yalnızca oyuncunun kendisi görür. Başlıkta profil

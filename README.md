@@ -24,6 +24,8 @@ Türkiye, Plaka, Dünya ve Bayrak'ın her birinin kendi sıralaması vardır.
 - **Profil:** Yarış özeti, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki yerin
   ve son turların. Profili yalnızca sen görürsün.
 - **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
+- **Günün meydan okuması:** Her gün Türkiye, Plaka, Dünya ve Bayrak için herkese aynı 10 soru, günde bir hak, günlük
+  sıralama, gün serisi ve paylaşılabilir sonuç (🟩🟥 kareleriyle).
 - **Ana ekran:** Yarış kartında Türkiye'nin ve Dünya'nın birincisi; sıralama telefonda alttan açılır.
 
 ## Nerede oynanır
@@ -38,10 +40,9 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Günlük meydan okuma:** Herkese aynı 10 soru, günde bir hak, günlük sıralama ve paylaşılabilir sonuç.
-2. **Seri ve rozetler:** Gün serisi ve başarı rozetleri ("81 ilin hepsini bildin", "Bayrakta 10/10"); profilde görünür.
-3. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
-4. **İngilizce dil desteği.**
+1. **Rozetler:** Başarı rozetleri ("81 ilin hepsini bildin", "Bayrakta 10/10", "7 günlük seri"); profilde görünür.
+2. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+3. **İngilizce dil desteği.**
 
 Teknik işler:
 

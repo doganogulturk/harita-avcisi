@@ -16,6 +16,9 @@ type LeaderboardProps = {
   tall?: boolean;
   /** Liste kabın kalan yüksekliğini doldurur ve orada kayar; sekmeler yerinde kalır (sıralama penceresi). */
   fillHeight?: boolean;
+  /** Başlık ve boş liste yazısı; günün sıralamasında "Günün sıralaması" ve "Bugün henüz kimse oynamadı". */
+  title?: string;
+  emptyText?: string;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -112,6 +115,8 @@ export function Leaderboard({
   isLoading,
   tall = false,
   fillHeight = false,
+  title = "Sıralama",
+  emptyText = "Bu haritada henüz sonuç yok.",
   onBoardChange,
 }: LeaderboardProps) {
   const entries = leaderboards[boardId];
@@ -125,7 +130,7 @@ export function Leaderboard({
 
   return (
     <div className={fillHeight ? "flex min-h-0 flex-1 flex-col" : ""}>
-      {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">Sıralama</p>}
+      {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">{title}</p>}
       {/* Beş sekme tek satırda: başlık ayrı satırda durur, sekmeler kartın tam genişliğini yazılarının boyuna göre paylaşır;
           dikey telefonda yazı ve iç boşluk küçülür. En dar telefonlarda sığmazsa satır yana kayar. */}
       <div className={`no-scrollbar flex shrink-0 gap-0.5 overflow-x-auto rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
@@ -149,7 +154,7 @@ export function Leaderboard({
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">
-            {isStillLoading ? "Sıralama yükleniyor..." : "Bu haritada henüz sonuç yok."}
+            {isStillLoading ? "Sıralama yükleniyor..." : emptyText}
           </p>
         ) : (
           <ol className="space-y-1.5">

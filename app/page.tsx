@@ -15,6 +15,7 @@ import { canLockLandscape, isPortraitPhoneNow } from "@/lib/orientation";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
+import { startDailyRound } from "@/lib/daily";
 import { questionForLocation } from "@/lib/duel";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
@@ -174,6 +175,14 @@ export default function Home() {
 
   // Yarış turunun soruları sunucudan beklenirken "Tur hazırlanıyor" katmanı durur; süre sorular gelince başlar.
   const [isPreparing, setIsPreparing] = useState(false);
+  // Günlük meydan okuma açılamadıysa (bugün oynandı, bağlantı yok) ana ekrandaki şeritte gösterilen not.
+  const [dailyNotice, setDailyNotice] = useState<string | null>(null);
+
+  /** Sunucunun verdiği yer kimliklerinden soruları kurar; eksik ya da tanınmayan varsa null. */
+  function questionsFrom(choice: PlayChoice, ids: string[]): Question[] | null {
+    const built = ids.map((id) => questionForLocation(choice.mode, id));
+    return built.length === QUESTIONS_PER_ROUND && built.every((question) => question !== undefined) ? (built as Question[]) : null;
+  }
 
   /**
    * Yarış turu sunucuda açılır ve sorularını sunucu seçer: skor o sorularla doğrulanır, süre sunucuda ölçülür.
@@ -184,11 +193,22 @@ export default function Home() {
     if (nextChoice.kind === "practice") return launchRound(nextChoice, roundFor(nextChoice), null);
     if (isPreparing) return;
     setIsPreparing(true);
+    setDailyNotice(null);
+    // Günlük meydan okuma yalnızca sunucunun sorularıyla oynanır: herkes aynı soruları çözer, yerel yedek yok.
+    if (nextChoice.daily) {
+      void startDailyRound(nextChoice).then((started) => {
+        setIsPreparing(false);
+        if (started === "played") return setDailyNotice("Bu meydan okumayı bugün oynadın; yenisi gece yarısı.");
+        const dailyQuestions = started && questionsFrom(nextChoice, started.questions);
+        if (!started || !dailyQuestions) return setDailyNotice("Meydan okuma açılamadı. Bağlantını kontrol edip tekrar dene.");
+        launchRound(nextChoice, dailyQuestions, started.roundId);
+      });
+      return;
+    }
     void startRankedRound(nextChoice).then((started) => {
       setIsPreparing(false);
-      const serverQuestions = started?.questions.map((id) => questionForLocation(nextChoice.mode, id)) ?? [];
-      const isComplete = serverQuestions.length === QUESTIONS_PER_ROUND && serverQuestions.every((question) => question !== undefined);
-      if (started && isComplete) launchRound(nextChoice, serverQuestions as Question[], started.roundId);
+      const serverQuestions = started && questionsFrom(nextChoice, started.questions);
+      if (started && serverQuestions) launchRound(nextChoice, serverQuestions, started.roundId);
       // Eski yol (sunucuda start_ranked_round yok): tur açıldı ama soruları tarayıcı seçer.
       else if (started && started.questions.length === 0) launchRound(nextChoice, roundFor(nextChoice), started.roundId);
       else launchRound(nextChoice, roundFor(nextChoice), null);
@@ -300,6 +320,7 @@ export default function Home() {
       <div className="flex min-h-0 w-full flex-1 flex-col">
         {phase === "ready" ? (
           <IntroScreen
+            dailyNotice={dailyNotice}
             authError={authError}
             isSigningIn={isSigningIn}
             onCancelPendingChoice={cancelPendingChoice}

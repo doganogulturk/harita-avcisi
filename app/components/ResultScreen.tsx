@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Leaderboard } from "./Leaderboard";
 import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
 import { AccountMenu } from "./AccountMenu";
 import { RoundReview } from "./RoundReview";
+import { boardOf, dailyShareText, useDailyLeaderboards, useDailyStatus } from "@/lib/daily";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { ShareScoreButton } from "./ShareScoreButton";
 import {
@@ -199,6 +201,24 @@ export function ResultScreen({
   onHome,
   onSignOut,
 }: ResultScreenProps) {
+  if (choice.daily) {
+    return (
+      <DailyResult
+        answerRecords={answerRecords}
+        bestStreak={bestStreak}
+        choice={choice}
+        durationMs={durationMs}
+        onHome={onHome}
+        onRetrySave={onRetrySave}
+        onSignOut={onSignOut}
+        player={player}
+        questionCount={questionCount}
+        saveResult={saveResult}
+        score={score}
+      />
+    );
+  }
+
   if (choice.kind === "practice") {
     return (
       <PracticeResult
@@ -384,6 +404,84 @@ function PracticeResult({
       player={player}
     >
       <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+    </ResultShell>
+  );
+}
+
+type DailyResultProps = {
+  player: Player | null;
+  choice: PlayChoice;
+  score: number;
+  questionCount: number;
+  bestStreak: number;
+  durationMs: number;
+  answerRecords: AnswerRecord[];
+  saveResult: SaveResult | null;
+  onRetrySave: () => void;
+  onHome: () => void;
+  onSignOut: () => void;
+};
+
+/**
+ * Günün meydan okumasının sonucu: skor, süre, günün sıralamasındaki yer ve gün serisi; soru soru kareler ve paylaşma
+ * tuşu; sağda günün sıralaması. Meydan okuma günde bir kez oynandığı için "Tekrar oyna" yoktur; ana menüde diğer
+ * meydan okumalar beklenir. Sıra ve seri, sonuç kaydedildikten sonra sunucudan gelir.
+ */
+function DailyResult({ player, choice, score, questionCount, bestStreak, durationMs, answerRecords, saveResult, onRetrySave, onHome, onSignOut }: DailyResultProps) {
+  const boardId = boardIdFor(choice);
+  const [shownBoard, setShownBoard] = useState<BoardId>(boardId);
+  const status = useDailyStatus(player, saveResult);
+  const leaderboards = useDailyLeaderboards(saveResult !== null, saveResult);
+  const mine = status?.results.find((result) => boardOf(result) === boardId);
+  const answers = answerRecords.map((answer) => answer.location === answer.selected);
+
+  return (
+    <ResultShell
+      onHome={onHome}
+      aside={
+        <aside className={SUMMARY_CARD}>
+          <SummaryHeading eyebrow={choiceLabel(choice)} title="Meydan okuma tamam" />
+
+          <div className={SCORE_ROW}>
+            <p className="shrink-0 font-display leading-none font-bold text-slate-900 tabular-nums">
+              <span className={SCORE_NUMBER}>{score}</span>
+              <span className="text-3xl text-slate-400 short:text-2xl">/{questionCount}</span>
+            </p>
+            <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
+              <StatTile label="Günün sırası" value={mine ? `${mine.rank}. / ${mine.players}` : "—"} />
+              <StatTile label="Gün serisi" value={status ? `🔥 ${status.streak}` : "—"} />
+            </dl>
+          </div>
+
+          <RoundReview answers={answerRecords} choice={choice} />
+          <SaveNotice onRetry={onRetrySave} result={saveResult} />
+
+          <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
+            <ShareScoreButton text={dailyShareText(boardId, answers, score, durationMs)} />
+            <button className={`${RESULT_LINK_CLASS} text-cyan-700 hover:text-cyan-800`} onClick={onHome} type="button">
+              Diğer meydan okumalar
+            </button>
+            {bestStreak >= 3 && <p className="text-center text-xs text-slate-500">En uzun doğru serin: {bestStreak}</p>}
+          </div>
+        </aside>
+      }
+      onSignOut={onSignOut}
+      player={player}
+    >
+      <section className={RESULT_CARD}>
+        <Leaderboard
+          boardId={shownBoard}
+          currentPlayerId={player?.id}
+          emptyText="Bugün bu meydan okumayı henüz kimse bitirmedi."
+          isLoading={leaderboards === null}
+          leaderboardError={null}
+          leaderboards={leaderboards ?? { turkey: [], "turkey-plates": [], "world-hard": [], "world-flags": [] }}
+          onBoardChange={setShownBoard}
+          tall
+          title="Günün sıralaması"
+        />
+      </section>
     </ResultShell>
   );
 }

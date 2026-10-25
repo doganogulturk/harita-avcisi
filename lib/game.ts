@@ -32,9 +32,10 @@ export type TurkeyPrompt = Extract<QuestionPrompt, "name" | "plate">;
 /**
  * Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır.
  * `continent` yalnızca dünya antrenmanında kullanılır; o kıtanın tüm ülkeleri sorulur.
- * `prompt` verilmezse soru ülke/il adıyla sorulur.
+ * `prompt` verilmezse soru ülke/il adıyla sorulur. `daily`: günün meydan okuması (lib/daily.ts); sıralamalı bir turdur,
+ * soruları gün boyu herkes için aynıdır.
  */
-export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent; prompt?: QuestionPrompt };
+export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent; prompt?: QuestionPrompt; daily?: boolean };
 
 export function isFlagChoice(choice: PlayChoice): boolean {
   return choice.mode === "world" && choice.prompt === "flag";
@@ -51,6 +52,7 @@ export function choiceLabel(choice: PlayChoice): string {
   const map =
     mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya" : "Dünya · Tanınmış ülkeler";
   const label = isFlagChoice(choice) ? `${map} · Bayrak` : isPlateChoice(choice) ? `${map} · Plaka` : map;
+  if (choice.daily) return `Günün meydan okuması · ${isFlagChoice(choice) ? "Bayrak" : isPlateChoice(choice) ? "Plaka" : map}`;
   return kind === "practice" ? `Antrenman · ${label}` : label;
 }
 
