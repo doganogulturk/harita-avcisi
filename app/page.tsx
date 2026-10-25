@@ -175,7 +175,7 @@ export default function Home() {
 
   // Yarış turunun soruları sunucudan beklenirken "Tur hazırlanıyor" katmanı durur; süre sorular gelince başlar.
   const [isPreparing, setIsPreparing] = useState(false);
-  // Günlük meydan okuma açılamadıysa (bugün oynandı, bağlantı yok) ana ekrandaki şeritte gösterilen not.
+  // Günlük meydan okuma açılamadıysa (bugün oynandı, bağlantı yok) ana ekranda günün meydan okuması sayfasında gösterilen not.
   const [dailyNotice, setDailyNotice] = useState<string | null>(null);
 
   /** Sunucunun verdiği yer kimliklerinden soruları kurar; eksik ya da tanınmayan varsa null. */

@@ -139,9 +139,12 @@ kez oynar; başlatılıp bırakılan tur da hakkı kullanır. Tur yarışla ayn�
 doğrulanır ve genel sıralamaya da işlenir. Giriş gerekir (misafir de olur). Meydan okuma yerel sorularla oynanmaz:
 sunucuya ulaşılamazsa ya da mod bugün oynandıysa ana ekrandaki şeritte not çıkar.
 
-Ana ekranda kartların üstünde **Günün meydan okuması** şeridi durur: dört mod, oynananın skoru, bırakılanın "Bırakıldı"
-yazısı, gün serisi ve yeni meydan okumaya kalan süre. Oynanmamış moda dokununca tur başlar; oynanana dokununca o modun
-günlük sıralaması ve paylaşma tuşu alttan açılır. Sonuç ekranında skor, süre, günün sıralamasındaki yer, gün serisi,
+Ana ekranın başlığında, profil resminin yanında bir rozet durur: gün serisi ("🔥 3"; seri yoksa "🗓 Günlük"); bugün
+oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta. Hiç açılmadıysa bir halka atar. Dokununca **Günün meydan
+okuması** alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve dört mod ikişerli (oynanmamışta "Oyna",
+bitirilende skor, bırakılanda "Bırakıldı"). Oynanmamış moda dokununca tur başlar; bitirilen mod seçilir ve altında o
+modun günlük sıralaması, oyuncunun sonucu ve paylaşma tuşu görünür. Her ekranda yalnızca rozet vardır; kartlar ekranı
+doldurur. Meydan okuma açılamazsa (bugün oynandı, bağlantı yok) sayfa kendiliğinden açılır ve notu gösterir. Sonuç ekranında skor, süre, günün sıralamasındaki yer, gün serisi,
 soru soru kareler, paylaşma tuşu ve günün sıralaması vardır; "Tekrar oyna" yoktur.
 
 Gün serisi: en az bir meydan okumanın bitirildiği ardışık günler. Bir gün kaçırılırsa sıfırlanır; bugün henüz oynanmadıysa
@@ -154,7 +157,7 @@ Harita Avcısı · 25 Ekim · Dünya
 
 Sunucu: `start_daily_round` turu açar (soruları `daily_challenges` tablosunda saklar), `daily_leaderboard` view'i bugünün
 sonuçlarını, `my_daily` oyuncunun bugünkü durumunu ve serisini döndürür; tur ve sonuç `daily_day` sütununu taşır
-(`lib/daily.ts`, `intro/DailyStrip.tsx`).
+(`lib/daily.ts`, `intro/DailyChallenge.tsx`: rozet ve alttan açılan sayfa).
 
 ### Profil
 

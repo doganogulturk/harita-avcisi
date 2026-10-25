@@ -11,7 +11,8 @@ import { LeaderboardPanel } from "./LeaderboardPanel";
 import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
-import { DailyStrip } from "./intro/DailyStrip";
+import { DailyBadge, DailySheet } from "./intro/DailyChallenge";
+import { useDailyStatus } from "@/lib/daily";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
@@ -44,7 +45,7 @@ type IntroScreenProps = {
   authError: string | null;
   supabaseConfigured: boolean;
   onPlay: (choice: PlayChoice) => void;
-  /** Günlük meydan okuma açılamadıysa şeritte gösterilen not. */
+  /** Günlük meydan okuma açılamadıysa günün meydan okuması sayfasında gösterilen not; sayfayı da açar. */
   dailyNotice?: string | null;
   onCancelPendingChoice: () => void;
   onGoogleSignIn: () => void;
@@ -186,6 +187,15 @@ export function IntroScreen({
     onPlay(choiceFor(map, kind));
   };
 
+  // Günün meydan okuması: başlıktaki rozet ve alttan açılan sayfa aynı durumu kullanır.
+  const dailyStatus = useDailyStatus(player, null);
+  const [dailySheet, setDailySheet] = useState<{ board: BoardId | null } | null>(null);
+  // Meydan okuma açılamadıysa not, dikey telefonda da görünsün diye sayfa açılır.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- ana sayfadan gelen not bir kez sayfayı açar.
+    if (dailyNotice) setDailySheet((current) => current ?? { board: null });
+  }, [dailyNotice]);
+
   // Yarış kartında Türkiye'nin ve Dünya'nın (isimle) birincisi; yüklenmeyen satır gösterilmez.
   const leaders = useLeaders(supabaseConfigured && selectedGame === null);
   const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
@@ -258,18 +268,14 @@ export function IntroScreen({
     }
 
     return (
-      <>
-        {/* Günün meydan okuması kartların üstünde; dört oyun kartı kalan yeri paylaşır. */}
-        <DailyStrip notice={dailyNotice} onPlay={onPlay} player={player} />
-        <ModeGrid
-          rankedLeaders={rankedLeaders}
-          introDelayMs={INTRO_CARD_DELAY_MS}
-          introStepMs={INTRO_CARD_STEP_MS}
-          onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
-          onSelect={selectGame}
-          onShowLeaderboard={() => setIsLeaderboardOpen(true)}
-        />
-      </>
+      <ModeGrid
+        rankedLeaders={rankedLeaders}
+        introDelayMs={INTRO_CARD_DELAY_MS}
+        introStepMs={INTRO_CARD_STEP_MS}
+        onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
+        onSelect={selectGame}
+        onShowLeaderboard={() => setIsLeaderboardOpen(true)}
+      />
     );
   };
 
@@ -289,6 +295,9 @@ export function IntroScreen({
             </button>
           </h1>
           <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
+            {supabaseConfigured && selectedGame === null && !pendingChoice && (
+              <DailyBadge onOpen={() => setDailySheet({ board: null })} player={player} status={dailyStatus} />
+            )}
             {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
             {!player && supabaseConfigured && !pendingChoice && (
               <button
@@ -303,8 +312,19 @@ export function IntroScreen({
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 short:gap-2 lg:gap-5">{content()}</div>
+        <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
       </div>
+
+      {dailySheet && (
+        <DailySheet
+          initialBoardId={dailySheet.board}
+          notice={dailyNotice}
+          onClose={() => setDailySheet(null)}
+          onPlay={onPlay}
+          playerId={player?.id}
+          status={dailyStatus}
+        />
+      )}
 
       {isLeaderboardOpen && (
         <LeaderboardPanel

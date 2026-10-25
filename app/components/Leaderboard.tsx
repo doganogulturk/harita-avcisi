@@ -19,6 +19,8 @@ type LeaderboardProps = {
   /** Başlık ve boş liste yazısı; günün sıralamasında "Günün sıralaması" ve "Bugün henüz kimse oynamadı". */
   title?: string;
   emptyText?: string;
+  /** Sekmeler gizlenir; sıralama dışarıdan seçilir (günün meydan okumasında mod düğmeleri). */
+  hideTabs?: boolean;
   onBoardChange: (boardId: BoardId) => void;
 };
 
@@ -117,6 +119,7 @@ export function Leaderboard({
   fillHeight = false,
   title = "Sıralama",
   emptyText = "Bu haritada henüz sonuç yok.",
+  hideTabs = false,
   onBoardChange,
 }: LeaderboardProps) {
   const entries = leaderboards[boardId];
@@ -133,21 +136,23 @@ export function Leaderboard({
       {showTitle && <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">{title}</p>}
       {/* Beş sekme tek satırda: başlık ayrı satırda durur, sekmeler kartın tam genişliğini yazılarının boyuna göre paylaşır;
           dikey telefonda yazı ve iç boşluk küçülür. En dar telefonlarda sığmazsa satır yana kayar. */}
-      <div className={`no-scrollbar flex shrink-0 gap-0.5 overflow-x-auto rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
-        {BOARDS.map((board) => (
-          <button
-            aria-selected={boardId === board.id}
-            className={`flex-auto rounded-full px-1.5 py-1.5 text-[11px] max-[22.5rem]:px-1 font-bold whitespace-nowrap transition sm:px-3 sm:text-sm ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
-            key={board.id}
-            onClick={() => onBoardChange(board.id)}
-            ref={boardId === board.id ? selectedTabRef : undefined}
-            role="tab"
-            type="button"
-          >
-            {board.label}
-          </button>
-        ))}
-      </div>
+      {!hideTabs && (
+        <div className={`no-scrollbar flex shrink-0 gap-0.5 overflow-x-auto rounded-full bg-slate-100 p-1 ${showTitle ? "mt-3" : ""}`} role="tablist">
+          {BOARDS.map((board) => (
+            <button
+              aria-selected={boardId === board.id}
+              className={`flex-auto rounded-full px-1.5 py-1.5 text-[11px] max-[22.5rem]:px-1 font-bold whitespace-nowrap transition sm:px-3 sm:text-sm ${boardId === board.id ? "bg-white text-cyan-700 shadow-sm" : "text-slate-500 hover:text-cyan-700"}`}
+              key={board.id}
+              onClick={() => onBoardChange(board.id)}
+              ref={boardId === board.id ? selectedTabRef : undefined}
+              role="tab"
+              type="button"
+            >
+              {board.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={`overflow-y-auto pr-1 ${fillHeight ? "mt-3 min-h-0 flex-1" : tall ? "mt-4 max-h-[28rem]" : "mt-3 max-h-[20rem]"}`}>
         {leaderboardError ? (
