@@ -6,6 +6,7 @@ import {
   BOARDS,
   boardIdFor,
   boardVariantFor,
+  emptyLeaderboards,
   LEADERBOARD_LIMIT,
   type AnswerRecord,
   type BoardId,
@@ -29,7 +30,7 @@ type FinishedRound = {
 
 export type Leaderboards = Record<BoardId, LeaderboardEntry[]>;
 
-const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], "turkey-plates": [], "world-hard": [], "world-flags": [] };
+const EMPTY_LEADERBOARDS: Leaderboards = emptyLeaderboards();
 
 // Supabase aynı adlı kanalı yeniden kullanır; kapanmakta olan eski kanala dinleyici eklenmesin diye her abonelik ayrı adla açılır.
 let channelSequence = 0;

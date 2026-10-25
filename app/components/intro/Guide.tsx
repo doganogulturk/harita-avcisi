@@ -9,6 +9,7 @@ import { flagUrl, GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, loca
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { provinces } from "@/lib/turkish-plates";
+import { capitalOf } from "@/lib/world-capitals";
 import { countries } from "@/lib/world-countries";
 import { GameIcon, GAMES } from "./games";
 
@@ -40,7 +41,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
     {
       eyebrow: "Nasıl oynanır",
       title: "Sorulan yeri haritada bul",
-      body: "Ekrana bir il, ülke, plaka ya da bayrak gelir; haritada yerine dokunursun. Doğruysa yeşil yanar, yanlışsa doğru yer gösterilir.",
+      body: "Ekrana bir il, ülke, başkent, plaka ya da bayrak gelir; haritada yerine dokunursun. Doğruysa yeşil yanar, yanlışsa doğru yer gösterilir.",
       visual: <MapDemo />,
     },
     ...(isTouch
@@ -197,10 +198,10 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
   );
 }
 
-type DemoQuestion = { mode: GameMode; id: string; prompt: "name" | "plate" | "flag" };
+type DemoQuestion = { mode: GameMode; id: string; prompt: "name" | "plate" | "flag" | "capital" };
 
 /**
- * Tanıtım haritasında sırayla sorulanlar: Türkiye ve dünya, isim, plaka ve bayrak soruları karışık. Önce soru çıkar,
+ * Tanıtım haritasında sırayla sorulanlar: Türkiye ve dünya, isim, plaka, bayrak ve başkent soruları karışık. Önce soru çıkar,
  * bir an sonra doğru yer yeşil yanar.
  */
 const DEMO_QUESTIONS: DemoQuestion[] = [
@@ -210,6 +211,7 @@ const DEMO_QUESTIONS: DemoQuestion[] = [
   { mode: "world", id: "br", prompt: "flag" },
   { mode: "world", id: "eg", prompt: "name" },
   { mode: "turkey", id: "61", prompt: "name" },
+  { mode: "world", id: "au", prompt: "capital" },
 ];
 const DEMO_STEP_MS = 1300;
 
@@ -261,6 +263,11 @@ function MapDemo() {
           <>
             <Image alt="" className="h-6 w-auto rounded-[3px] border border-slate-200 lg:h-8" height={24} src={flagUrl(question.id)} unoptimized width={32} />
             hangi ülke?
+          </>
+        ) : question.prompt === "capital" ? (
+          <>
+            <span aria-hidden="true">🏛️</span>
+            {capitalOf(question.id)} hangi ülke?
           </>
         ) : (
           `${name} nerede?`

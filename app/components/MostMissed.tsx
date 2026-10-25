@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { flagUrl, formatPlate, isFlagChoice, isPlateChoice, locationName, type LocationStat, type PlayChoice } from "@/lib/game";
+import { flagUrl, formatPlate, isCapitalChoice, isFlagChoice, isPlateChoice, locationName, type LocationStat, type PlayChoice } from "@/lib/game";
+import { capitalOf } from "@/lib/world-capitals";
 
 type MostMissedProps = {
   choice: PlayChoice;
@@ -21,6 +22,11 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
   const { mode } = choice;
   const showPlate = isPlateChoice(choice);
   const showFlag = isFlagChoice(choice);
+  // Başkent turunda sorulan, başkenttir; yanında ülkesi.
+  const askedName = (locationId: string) => {
+    const capital = isCapitalChoice(choice) ? capitalOf(locationId) : undefined;
+    return capital ? `${capital} · ${locationName(mode, locationId)}` : locationName(mode, locationId);
+  };
 
   return (
     <section className={`flex flex-col ${className}`}>
@@ -55,7 +61,7 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
               <div className="min-w-0 flex-1">
                 <p className="flex min-w-0 items-center gap-2 font-bold text-slate-900">
                   {showPlate && <span className="font-mono text-cyan-700 tabular-nums">{formatPlate(Number(stat.location_id))}</span>}
-                  <span className="truncate">{locationName(mode, stat.location_id)}</span>
+                  <span className="truncate">{askedName(stat.location_id)}</span>
                   {missedLocationIds.includes(stat.location_id) && (
                     <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">Sen de</span>
                   )}

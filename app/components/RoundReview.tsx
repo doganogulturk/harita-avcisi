@@ -3,14 +3,16 @@
 import Image from "next/image";
 import { useState } from "react";
 import { PlateBadge } from "./GameTopBar";
-import { flagUrl, formatPlate, isFlagChoice, isPlateChoice, locationName, type AnswerRecord, type PlayChoice } from "@/lib/game";
+import { flagUrl, formatPlate, isCapitalChoice, isFlagChoice, isPlateChoice, locationName, type AnswerRecord, type PlayChoice } from "@/lib/game";
+import { capitalOf } from "@/lib/world-capitals";
 
 /** Antrenmanda cevap sayısı sınırsız; liste açılınca bu yüksekliği aşarsa kendi içinde kayar. */
 const LIST_MAX_HEIGHT = "max-h-72";
 
-/** Sorulan yer: bayrak turunda bayrak, plaka turunda plaka; adı her zaman yanında. */
+/** Sorulan yer: bayrak turunda bayrak, plaka turunda plaka, başkent turunda başkent; adı her zaman yanında. */
 function AskedLocation({ choice, location }: { choice: PlayChoice; location: string }) {
-  const name = locationName(choice.mode, location);
+  const capital = isCapitalChoice(choice) ? capitalOf(location) : undefined;
+  const name = capital ? `${capital} · ${locationName(choice.mode, location)}` : locationName(choice.mode, location);
   return (
     <span className="flex min-w-0 items-center gap-2">
       {isFlagChoice(choice) && (

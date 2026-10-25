@@ -22,11 +22,11 @@ export type LeaderboardEntry = {
 export type PlayKind = "ranked" | "practice";
 
 /**
- * Soruda ne gösterilir: yerin adı, ülkenin bayrağı ya da ilin plakası.
- * Bayrak yalnızca dünya haritasında, plaka yalnızca Türkiye haritasında kullanılır.
+ * Soruda ne gösterilir: yerin adı, ülkenin bayrağı ya da başkenti, ilin plakası.
+ * Bayrak ve başkent yalnızca dünya haritasında, plaka yalnızca Türkiye haritasında kullanılır.
  */
-export type QuestionPrompt = "name" | "flag" | "plate";
-export type WorldPrompt = Extract<QuestionPrompt, "name" | "flag">;
+export type QuestionPrompt = "name" | "flag" | "capital" | "plate";
+export type WorldPrompt = Extract<QuestionPrompt, "name" | "flag" | "capital">;
 export type TurkeyPrompt = Extract<QuestionPrompt, "name" | "plate">;
 
 /**
@@ -45,14 +45,25 @@ export function isPlateChoice(choice: PlayChoice): boolean {
   return choice.mode === "turkey" && choice.prompt === "plate";
 }
 
+export function isCapitalChoice(choice: PlayChoice): boolean {
+  return choice.mode === "world" && choice.prompt === "capital";
+}
+
+/** Soru tipinin adı (Bayrak, Başkent, Plaka); yer adıyla sorulan turda yok. */
+function promptLabel(choice: PlayChoice): string | undefined {
+  if (isFlagChoice(choice)) return "Bayrak";
+  if (isCapitalChoice(choice)) return "Başkent";
+  if (isPlateChoice(choice)) return "Plaka";
+}
+
 export function choiceLabel(choice: PlayChoice): string {
   const { kind, mode, difficulty, continent } = choice;
-  if (choice.daily) return `Günün meydan okuması · ${isFlagChoice(choice) ? "Bayrak" : isPlateChoice(choice) ? "Plaka" : mode === "turkey" ? "Türkiye" : "Dünya"}`;
-  if (kind === "ranked" && isFlagChoice(choice)) return "Bayrak";
-  if (kind === "ranked" && isPlateChoice(choice)) return "Plaka";
+  const prompt = promptLabel(choice);
+  if (choice.daily) return `Günün meydan okuması · ${prompt ?? (mode === "turkey" ? "Türkiye" : "Dünya")}`;
+  if (kind === "ranked" && prompt) return prompt;
   const map =
     mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya" : "Dünya · Tanınmış ülkeler";
-  const label = isFlagChoice(choice) ? `${map} · Bayrak` : isPlateChoice(choice) ? `${map} · Plaka` : map;
+  const label = prompt ? `${map} · ${prompt}` : map;
   return kind === "practice" ? `Antrenman · ${label}` : label;
 }
 
@@ -87,23 +98,34 @@ export const GAME_MODES: GameMode[] = ["turkey", "world"];
  * Her oynanış türünün kendi sıralaması var; bayrak ve plaka turları isimli turlarla yarışmaz. Dünyanın isimli
  * sıralaması veritabanında "hard" türüdür (179 ülke); kaldırılan "normal" türün eski skorları gösterilmez.
  */
-export type BoardId = "turkey" | "turkey-plates" | "world-hard" | "world-flags";
+export type BoardId = "turkey" | "turkey-plates" | "world-hard" | "world-flags" | "world-capitals";
 
-/** Veritabanındaki `variant` sütunu. Bayrak turları 179 ülkenin tamamından, plaka turları 81 ilden sorulur. */
-export type BoardVariant = WorldDifficulty | "flags" | "plates";
+/**
+ * Veritabanındaki `variant` sütunu. Bayrak turları 179 ülkenin tamamından, başkent turları başkenti listede olan
+ * ülkelerden (lib/world-capitals.ts), plaka turları 81 ilden sorulur.
+ */
+export type BoardVariant = WorldDifficulty | "flags" | "capitals" | "plates";
 
 export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: BoardVariant }[] = [
   { id: "turkey", label: "Türkiye", mode: "turkey", variant: "normal" },
   { id: "turkey-plates", label: "Plaka", mode: "turkey", variant: "plates" },
   { id: "world-hard", label: "Dünya", mode: "world", variant: "hard" },
   { id: "world-flags", label: "Bayrak", mode: "world", variant: "flags" },
+  { id: "world-capitals", label: "Başkent", mode: "world", variant: "capitals" },
 ];
 
+/** Her sıralama için boş liste; sıralamalar yüklenemediğinde ya da henüz yüklenmediğinde. */
+export function emptyLeaderboards(): Record<BoardId, LeaderboardEntry[]> {
+  return Object.fromEntries(BOARDS.map((board) => [board.id, []])) as unknown as Record<BoardId, LeaderboardEntry[]>;
+}
+
 export const FLAG_CHOICE: PlayChoice = { kind: "ranked", mode: "world", difficulty: "hard", prompt: "flag" };
+export const CAPITAL_CHOICE: PlayChoice = { kind: "ranked", mode: "world", difficulty: "hard", prompt: "capital" };
 export const PLATE_CHOICE: PlayChoice = { kind: "ranked", mode: "turkey", difficulty: "normal", prompt: "plate" };
 
 export function choiceForBoard(board: { mode: GameMode; variant: BoardVariant }): PlayChoice {
   if (board.variant === "flags") return FLAG_CHOICE;
+  if (board.variant === "capitals") return CAPITAL_CHOICE;
   if (board.variant === "plates") return PLATE_CHOICE;
   return { kind: "ranked", mode: board.mode, difficulty: board.variant };
 }
@@ -113,7 +135,7 @@ export function choiceForBoard(board: { mode: GameMode; variant: BoardVariant })
  * Kıta yalnızca antrenmanda seçilebilir; kendi sıralaması olmadığı için yarışta yok sayılır.
  */
 export function worldChoice(kind: PlayKind, scope: WorldScope, prompt: WorldPrompt): PlayChoice {
-  if (kind === "ranked") return prompt === "flag" ? FLAG_CHOICE : { kind, mode: "world", difficulty: "hard" };
+  if (kind === "ranked") return prompt === "flag" ? FLAG_CHOICE : prompt === "capital" ? CAPITAL_CHOICE : { kind, mode: "world", difficulty: "hard" };
   if (isContinentScope(scope)) return { kind, mode: "world", difficulty: "hard", continent: scope, prompt };
   return { kind, mode: "world", difficulty: "hard", prompt };
 }
@@ -125,6 +147,7 @@ export function turkeyChoice(kind: PlayKind, prompt: TurkeyPrompt): PlayChoice {
 
 export function boardVariantFor(choice: PlayChoice): BoardVariant {
   if (isFlagChoice(choice)) return "flags";
+  if (isCapitalChoice(choice)) return "capitals";
   if (isPlateChoice(choice)) return "plates";
   return choice.difficulty;
 }
@@ -132,6 +155,7 @@ export function boardVariantFor(choice: PlayChoice): BoardVariant {
 export function boardIdFor(choice: PlayChoice): BoardId {
   if (choice.mode === "turkey") return isPlateChoice(choice) ? "turkey-plates" : "turkey";
   if (isFlagChoice(choice)) return "world-flags";
+  if (isCapitalChoice(choice)) return "world-capitals";
   return "world-hard";
 }
 

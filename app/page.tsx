@@ -20,6 +20,7 @@ import { questionForLocation } from "@/lib/duel";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
+import { capitalOf } from "@/lib/world-capitals";
 import { continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
 import {
   BOARDS,
@@ -27,6 +28,7 @@ import {
   choiceForBoard,
   correctLocationId,
   flagUrl,
+  isCapitalChoice,
   isFlagChoice,
   GAME_MODES,
   QUESTIONS_PER_ROUND,
@@ -64,9 +66,11 @@ function writePendingChoice(choice: PlayChoice | null) {
   }
 }
 
-function poolFor({ mode, continent }: PlayChoice): Question[] {
-  if (mode === "turkey") return provinces;
-  return continent ? countriesIn(continent) : countries;
+function poolFor(choice: PlayChoice): Question[] {
+  if (choice.mode === "turkey") return provinces;
+  const pool = choice.continent ? countriesIn(choice.continent) : countries;
+  // Başkent turunda başkenti listede olmayan ülkeler (tartışmalılar, bağlı topraklar) sorulmaz.
+  return isCapitalChoice(choice) ? pool.filter((country) => capitalOf(country.code)) : pool;
 }
 
 /** Sıralamalı tur 10 soru sorar; antrenman tüm havuzu sırayla dolaşır. */

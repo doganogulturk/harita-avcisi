@@ -13,7 +13,7 @@ create table if not exists do_harita_avcisi.game_results (
   display_name text not null default 'Oyuncu',
   avatar_url text,
   game_mode text not null default 'turkey' check (game_mode in ('turkey', 'world')),
-  variant text not null default 'normal' check (variant in ('normal', 'hard', 'flags', 'plates')),
+  variant text not null default 'normal' check (variant in ('normal', 'hard', 'flags', 'plates', 'capitals')),
   score smallint not null check (score between 0 and 10),
   duration_ms integer not null check (duration_ms >= 0),
   best_streak smallint not null check (best_streak between 0 and 10),
@@ -47,7 +47,7 @@ create table if not exists do_harita_avcisi.game_rounds (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   game_mode text not null check (game_mode in ('turkey', 'world')),
-  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates')),
+  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates', 'capitals')),
   started_at timestamptz not null default now(),
   finished_at timestamptz
 );
@@ -89,10 +89,10 @@ begin
     raise exception 'Tur başlatmak için giriş gerekir.';
   end if;
 
-  -- Plaka ve isim Türkiye'de; isim (Normal / Zor) ve bayrak dünyada sorulur.
+  -- Plaka ve isim Türkiye'de; isim (Normal / Zor), bayrak ve başkent dünyada sorulur.
   if not (
     (p_game_mode = 'turkey' and p_variant in ('normal', 'plates'))
-    or (p_game_mode = 'world' and p_variant in ('normal', 'hard', 'flags'))
+    or (p_game_mode = 'world' and p_variant in ('normal', 'hard', 'flags', 'capitals'))
   ) then
     raise exception 'Geçersiz tur: % / %', p_game_mode, p_variant;
   end if;
@@ -401,7 +401,7 @@ revoke all on do_harita_avcisi.leaderboard from anon, authenticated;
 grant select on do_harita_avcisi.leaderboard to anon, authenticated;
 
 -- ---------------------------------------------------------------------------------------------------------------
--- Günlük meydan okuma: her gün (Türkiye saatiyle) Türkiye, Plaka, Dünya ve Bayrak için ayrı birer meydan okuma.
+-- Günlük meydan okuma: her gün (Türkiye saatiyle) Türkiye, Plaka, Dünya, Bayrak ve Başkent için ayrı birer meydan okuma.
 -- Bir modun soruları o gün ilk başlatıldığında seçilir ve gün boyu herkes için aynıdır. Her oyuncu her modu günde bir
 -- kez oynar; tur normal bir yarış turudur (finish_round doğrular) ve genel sıralamaya da işlenir.
 
@@ -442,7 +442,7 @@ begin
   if v_user_id is null then
     raise exception 'Günlük meydan okuma için giriş gerekir.';
   end if;
-  if not ((p_game_mode = 'turkey' and p_variant in ('normal', 'plates')) or (p_game_mode = 'world' and p_variant in ('hard', 'flags'))) then
+  if not ((p_game_mode = 'turkey' and p_variant in ('normal', 'plates')) or (p_game_mode = 'world' and p_variant in ('hard', 'flags', 'capitals'))) then
     raise exception 'Geçersiz meydan okuma: % / %', p_game_mode, p_variant;
   end if;
   if exists (
@@ -595,7 +595,7 @@ create table if not exists do_harita_avcisi.duels (
   -- Rövanşlar aynı seriye bağlanır; seri skoru bu kimlik üzerinden sayılır.
   series_id uuid not null,
   game_mode text not null check (game_mode in ('turkey', 'world')),
-  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates')),
+  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates', 'capitals')),
   rule text not null check (rule in ('snatch', 'shared')),
   host_id uuid not null references auth.users(id) on delete cascade,
   host_name text not null,
@@ -654,7 +654,8 @@ revoke all on do_harita_avcisi.duel_answers from anon, authenticated;
 
 -- duel_pool:başla (scripts/generate-duel-pools.mjs üretir; elle düzenlemeyin)
 -- Düello sorularının seçildiği havuzlar. Türkiye'de 81 il (plaka), dünyada lib/world-countries.ts'teki
--- Normal havuzu (58 ülke) ya da tamamı (179 ülke); Bayrak düellosu tamamından sorulur.
+-- Normal havuzu (58 ülke) ya da tamamı (179 ülke); Bayrak düellosu tamamından, Başkent düellosu
+-- lib/world-capitals.ts'te başkenti olan 174 ülkeden sorulur.
 create or replace function do_harita_avcisi.duel_pool(p_game_mode text, p_variant text)
 returns text[]
 language sql
@@ -668,6 +669,19 @@ as $$
       'ph', 'fi', 'fr', 'za', 'kr', 'hr', 'in', 'nl', 'iq', 'ir', 'ie', 'es', 'se', 'ch', 'it', 'jp',
       'ca', 'kz', 'ke', 'co', 'cu', 'hu', 'mx', 'eg', 'ng', 'no', 'pk', 'pe', 'pl', 'pt', 'ro', 'ru',
       'sa', 'cl', 'th', 'tr', 'ua', 'uy', 've', 'vn', 'nz', 'gr'
+    ]
+    when p_variant = 'capitals' then array[
+      'af', 'de', 'us', 'ao', 'ar', 'al', 'au', 'at', 'az', 'bs', 'bd', 'by', 'be', 'bz', 'bj', 'ae',
+      'gb', 'bo', 'ba', 'bw', 'br', 'bn', 'bg', 'bf', 'bi', 'bt', 'cv', 'dz', 'dj', 'td', 'cz', 'cn',
+      'dk', 'cd', 'do', 'dm', 'ec', 'gq', 'sv', 'id', 'er', 'am', 'ee', 'sz', 'et', 'ma', 'ci', 'ph',
+      'fi', 'fr', 'ga', 'gm', 'gh', 'gn', 'gw', 'gt', 'gy', 'za', 'kr', 'ss', 'ge', 'ht', 'hr', 'in',
+      'nl', 'hn', 'iq', 'ir', 'ie', 'es', 'se', 'ch', 'it', 'is', 'jm', 'jp', 'kh', 'cm', 'ca', 'me',
+      'qa', 'kz', 'ke', 'cy', 'kg', 'co', 'km', 'cg', 'cr', 'kw', 'kp', 'mk', 'cu', 'la', 'ls', 'lv',
+      'lr', 'ly', 'lt', 'lb', 'lu', 'hu', 'mg', 'mw', 'mv', 'my', 'ml', 'mt', 'mu', 'mx', 'eg', 'mn',
+      'md', 'mr', 'mz', 'mm', 'na', 'np', 'ne', 'ng', 'ni', 'no', 'cf', 'uz', 'pk', 'pa', 'pg', 'py',
+      'pe', 'pl', 'pt', 'ro', 'rw', 'ru', 'lc', 'vc', 'st', 'sn', 'sc', 'rs', 'sl', 'sg', 'sk', 'si',
+      'sb', 'so', 'lk', 'sd', 'sr', 'sy', 'sa', 'cl', 'tj', 'tz', 'th', 'tw', 'tg', 'tt', 'tn', 'tr',
+      'tm', 'ug', 'ua', 'om', 'uy', 'jo', 'vu', 've', 'vn', 'ye', 'nz', 'gr', 'zm', 'zw'
     ]
     else array[
       'af', 'de', 'us', 'ao', 'ar', 'al', 'au', 'at', 'az', 'bs', 'bd', 'by', 'be', 'bz', 'bj', 'ae',
@@ -737,7 +751,7 @@ as $$
 begin
   if not (
     (p_game_mode = 'turkey' and p_variant in ('normal', 'plates'))
-    or (p_game_mode = 'world' and p_variant in ('normal', 'hard', 'flags'))
+    or (p_game_mode = 'world' and p_variant in ('normal', 'hard', 'flags', 'capitals'))
   ) or p_rule not in ('snatch', 'shared') then
     raise exception 'Geçersiz düello ayarı.';
   end if;
@@ -1199,7 +1213,7 @@ create table if not exists do_harita_avcisi.rooms (
   code text not null unique,
   name text not null check (char_length(name) between 1 and 30),
   game_mode text not null check (game_mode in ('turkey', 'world')),
-  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates')),
+  variant text not null check (variant in ('normal', 'hard', 'flags', 'plates', 'capitals')),
   round_count smallint not null check (round_count in (1, 3, 5)),
   duration_minutes smallint not null check (duration_minutes in (15, 30, 60)),
   max_players smallint not null check (max_players between 2 and 50),
@@ -1751,13 +1765,14 @@ begin
             select daily_day from do_harita_avcisi.game_results
             where user_id = v_user_id and daily_day is not null
             group by daily_day
-            having count(distinct (game_mode, variant)) >= 4
+            having count(distinct (game_mode, variant)) >= 5
           ) as full_days
         ), 1),
         ('perfect_turkey', coalesce((select score from best_scores where game_mode = 'turkey' and variant = 'normal'), 0), 10),
         ('perfect_plates', coalesce((select score from best_scores where game_mode = 'turkey' and variant = 'plates'), 0), 10),
         ('perfect_world', coalesce((select score from best_scores where game_mode = 'world' and variant = 'hard'), 0), 10),
         ('perfect_flags', coalesce((select score from best_scores where game_mode = 'world' and variant = 'flags'), 0), 10),
+        ('perfect_capitals', coalesce((select score from best_scores where game_mode = 'world' and variant = 'capitals'), 0), 10),
         ('lightning', (select count(*)::integer from best_scores where lightning), 1),
         ('provinces_81', coalesce((select places from correct_places where game_mode = 'turkey'), 0), 81),
         ('countries_100', coalesce((select places from correct_places where game_mode = 'world'), 0), 100),

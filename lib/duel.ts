@@ -1,5 +1,6 @@
 import { choiceForBoard, formatPlate, type BoardVariant, type GameMode, type PlayChoice, type Question } from "@/lib/game";
 import { provinces } from "@/lib/turkish-plates";
+import { capitalOf } from "@/lib/world-capitals";
 import { countries } from "@/lib/world-countries";
 
 /**
@@ -36,6 +37,7 @@ export const DUEL_MODES: { mode: GameMode; title: string; options: { variant: Bo
     options: [
       { variant: "hard", label: "Ülke" },
       { variant: "flags", label: "Bayrak" },
+      { variant: "capitals", label: "Başkent" },
     ],
   },
 ];
@@ -80,7 +82,8 @@ export function locationLabel(mode: GameMode, variant: BoardVariant, locationId:
   const question = questionForLocation(mode, locationId);
   if (!question) return locationId.toUpperCase();
   if ("city" in question) return variant === "plates" ? `${formatPlate(question.plate)} ${question.city}` : question.city;
-  return question.name;
+  const capital = variant === "capitals" ? capitalOf(question.code) : undefined;
+  return capital ? `${capital} · ${question.name}` : question.name;
 }
 
 export type DuelPlayer = { id: string; name: string; avatar: string | null; ready: boolean; score: number; online: boolean };

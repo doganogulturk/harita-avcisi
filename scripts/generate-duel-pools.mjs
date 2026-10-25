@@ -8,6 +8,9 @@ const countries = [...countriesSource.matchAll(/\{ code: "([a-z]{2})", name: "[^
   ([, code, tier]) => ({ code, tier }),
 );
 if (countries.length === 0) throw new Error("lib/world-countries.ts içinde ülke bulunamadı.");
+const capitalsSource = readFileSync(new URL("../lib/world-capitals.ts", import.meta.url), "utf8");
+const capitalCodes = new Set([...capitalsSource.matchAll(/^  ([a-z]{2}): "/gm)].map(([, code]) => code));
+if (capitalCodes.size === 0) throw new Error("lib/world-capitals.ts içinde başkent bulunamadı.");
 
 const sqlArray = (codes) => {
   const lines = [];
@@ -19,10 +22,13 @@ const sqlArray = (codes) => {
 
 const common = countries.filter((country) => country.tier === "common").map((country) => country.code);
 const all = countries.map((country) => country.code);
+// Başkent turları, başkenti listede olan ülkelerden sorulur (tartışmalılar ve bağlı topraklar yok).
+const capitals = all.filter((code) => capitalCodes.has(code));
 
 const block = `-- duel_pool:başla (scripts/generate-duel-pools.mjs üretir; elle düzenlemeyin)
 -- Düello sorularının seçildiği havuzlar. Türkiye'de 81 il (plaka), dünyada lib/world-countries.ts'teki
--- Normal havuzu (${common.length} ülke) ya da tamamı (${all.length} ülke); Bayrak düellosu tamamından sorulur.
+-- Normal havuzu (${common.length} ülke) ya da tamamı (${all.length} ülke); Bayrak düellosu tamamından, Başkent düellosu
+-- lib/world-capitals.ts'te başkenti olan ${capitals.length} ülkeden sorulur.
 create or replace function do_harita_avcisi.duel_pool(p_game_mode text, p_variant text)
 returns text[]
 language sql
@@ -32,6 +38,7 @@ as $$
   select case
     when p_game_mode = 'turkey' then array(select plate::text from generate_series(1, 81) as plate)
     when p_variant = 'normal' then ${sqlArray(common)}
+    when p_variant = 'capitals' then ${sqlArray(capitals)}
     else ${sqlArray(all)}
   end;
 $$;
@@ -42,4 +49,4 @@ const schema = readFileSync(schemaUrl, "utf8");
 const pattern = /-- duel_pool:başla[\s\S]*?-- duel_pool:bitir/;
 if (!pattern.test(schema)) throw new Error("schema.sql içinde duel_pool bloğu bulunamadı.");
 writeFileSync(schemaUrl, schema.replace(pattern, () => block));
-console.log(`duel_pool güncellendi: ${common.length} Normal, ${all.length} toplam ülke.`);
+console.log(`duel_pool güncellendi: ${common.length} Normal, ${capitals.length} Başkent, ${all.length} toplam ülke.`);

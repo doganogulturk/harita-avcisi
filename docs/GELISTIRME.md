@@ -33,7 +33,7 @@ Kıta seçildiğinde o kıta önizleme haritasında vurgulanır; Tümü seçiliy
 yan paneldeki tek satırlık açıklamayla anlatılır.
 
 İlk ziyarette açılış animasyonundan sonra bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
-Türkiye ve dünya haritalarında isim, plaka ve bayrak soruları; sorulan yer yeşil yanar), dokunmatik cihazda **Telefonda**
+Türkiye ve dünya haritalarında isim, plaka, bayrak ve başkent soruları; sorulan yer yeşil yanar), dokunmatik cihazda **Telefonda**
 (yan çevir ve iki parmakla yakınlaştır animasyonları), dört oyun, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
 tuşlarla gezilir; **Geç** her ekranda durur. Son ekranın asıl tuşu **Başlayalım** ana ekrandaki oyun seçimine döner; giriş
 yapılmamışsa Google ve misafir girişi seçenek olarak sunulur. Görüldüğü tarayıcıda hatırlanır, giriş yapmış oyuncuya
@@ -55,11 +55,17 @@ kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821"
 | Plaka | 81 il | İlin plaka kodu; cevaptan sonra ilin adı da gösterilir |
 | Dünya | 179 ülke | Ülke adı |
 | Bayrak | 179 ülke | Ülkenin bayrağı; cevaptan sonra adı da gösterilir |
+| Başkent | 174 ülke | Ülkenin başkenti (🏛️ Kanberra); cevaptan sonra ülkenin adı da gösterilir |
+
+Başkentler `lib/world-capitals.ts`'tedir; adlar TDK yazımını ve Türkçede yerleşik kullanımı izler (Pekin, Moskova).
+Başkenti tartışmalı olan İsrail ile ülke olmayan bağlı topraklar (Falkland Adaları, Grönland, Porto Riko, Yeni Kaledonya)
+bu turda sorulmaz. Birden çok başkenti olan ülkelerde en bilineni seçildi (La Paz, Pretorya, Amsterdam).
 
 Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
 
 Sonuç ekranında skorun altında soru başına küçük bir kare durur (yeşil doğru, kırmızı yanlış); **Soruları gör** ile her
-soru bir satır olur: sorulan yer (bayrak turunda bayrak, plaka turunda plaka) ve yanlışsa tıklanan yer. Antrenmanda da
+soru bir satır olur: sorulan yer (bayrak turunda bayrak, plaka turunda plaka, başkent turunda "Kanberra · Avustralya")
+ve yanlışsa tıklanan yer. Antrenmanda da
 vardır; liste uzarsa kendi içinde kayar.
 
 Tur bitince sonuç ekranında asıl tuş **Tekrar oyna** aynı turu yeniden başlatır; **Başka tur seç** Yarış'ın ayar
@@ -71,7 +77,7 @@ yanlış oranının güvenilir alt sınırına (Wilson, %95) göre. Yalnızca or
 yanlış bilinen yer (1/1, %100), yedi kez sorulup altısında yanlış bilinen yerin (6/7) önüne geçiyordu; bu ölçü az
 sorulan yerleri geri iter. Sıralama tarayıcıda yapılır (`useMostMissed.ts`). Her yerin altında en çok neyle
 karıştırıldığı yazar ("Tunceli sanılıyor"); oyuncunun o turda kendisinin de yanlış
-yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada isim ile Bayrak ayrı değerlendirilir.
+yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada isim, Bayrak ve Başkent ayrı değerlendirilir.
 Giriş ekranındaki Yarış kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
 
@@ -83,7 +89,8 @@ En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; yalnızca 
 havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatistiğe katılmaz.
 
 - **Türkiye:** 81 il, isimle ya da plakayla
-- **Dünya:** 179 ülkenin tümü ya da bir kıta (aşağıda); sorular isimle veya bayrakla
+- **Dünya:** 179 ülkenin tümü ya da bir kıta (aşağıda); sorular isimle, bayrakla veya başkentle (başkentte kıta sayıları
+  başkenti sorulan ülkelere göre yazar)
 - **Kıtalar:** Afrika, Amerika, Asya ve Avrupa. Harita seçilen kıtaya yakınlaşarak açılır; kıta dışındaki ülkeler soluk ve tıklanamaz olur. İki kıtaya yayılan ülkeler (Türkiye, Rusya, Kazakistan, Azerbaycan, Gürcistan, Ermenistan, Kıbrıs) hem Avrupa'da hem Asya'da sorulur. Okyanusya'nın haritada yalnızca 6 ülkesi olduğu için kıta seçeneği yoktur.
 
 Oyun sırasında üst bardaki çıkış tuşu turu bırakıp ana menüye döner; yanlışlıkla başlatılan bir tur için
@@ -92,7 +99,7 @@ sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 ### Düello
 
 İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Düello** kartı seçilince ikinci adımda
-harita ve mod (Türkiye: Şehir, Plaka · Dünya: Ülke, Bayrak) ile kural seçilir, düello kurulunca
+harita ve mod (Türkiye: Şehir, Plaka · Dünya: Ülke, Bayrak, Başkent) ile kural seçilir, düello kurulunca
 `/duello?kod=<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Düello kartındaki
 **Kodla katıl** alanına kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
 sayımla başlar.
@@ -133,7 +140,7 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 
 ### Günlük meydan okuma
 
-Her gün (Türkiye saatiyle, gece yarısı değişir) Türkiye, Plaka, Dünya ve Bayrak için ayrı birer meydan okuma vardır. Bir
+Her gün (Türkiye saatiyle, gece yarısı değişir) Türkiye, Plaka, Dünya, Bayrak ve Başkent için ayrı birer meydan okuma vardır. Bir
 modun 10 sorusu o gün ilk başlatıldığında sunucuda seçilir ve gün boyu herkes için aynıdır. Her oyuncu her modu günde bir
 kez oynar; başlatılıp bırakılan tur da hakkı kullanır. Tur yarışla aynı biçimdedir (10 soru, 120 saniye), sunucuda
 doğrulanır ve genel sıralamaya da işlenir. Giriş gerekir (misafir de olur). Meydan okuma yerel sorularla oynanmaz:
@@ -141,7 +148,7 @@ sunucuya ulaşılamazsa ya da mod bugün oynandıysa ana ekrandaki şeritte not 
 
 Ana ekranın başlığında, profil resminin yanında bir rozet durur: gün serisi ("🔥 3"; seri yoksa "🗓 Günlük"); bugün
 oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta. Hiç açılmadıysa bir halka atar. Dokununca **Günün meydan
-okuması** alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve dört mod ikişerli (oynanmamışta "Oyna",
+okuması** alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve beş mod ikişerli, tek kalan tam satır (oynanmamışta "Oyna",
 bitirilende skor, bırakılanda "Bırakıldı"). Oynanmamış moda dokununca tur başlar; bitirilen mod seçilir ve altında o
 modun günlük sıralaması, oyuncunun sonucu ve paylaşma tuşu görünür. Her ekranda yalnızca rozet vardır; kartlar ekranı
 doldurur. Meydan okuma açılamazsa (bugün oynandı, bağlantı yok) sayfa kendiliğinden açılır ve notu gösterir. Sonuç ekranında skor, süre, günün sıralamasındaki yer, gün serisi,
@@ -171,8 +178,8 @@ sunucu fonksiyonundan gelir (`my_profile`). Alttan açılan sayfa sıralamayla o
 
 ### Rozetler
 
-16 rozet var (`lib/badges.ts`): gün serisi (3, 7, 30 gün), ilk günlük meydan okuma, tam gün (aynı gün dört meydan
-okuma), Türkiye / Plaka / Dünya / Bayrak'ta 10/10, Şimşek (45 saniyenin altında 10/10), 81 il ve 100 ülke (yarışlarda
+17 rozet var (`lib/badges.ts`): gün serisi (3, 7, 30 gün), ilk günlük meydan okuma, tam gün (aynı gün beş meydan
+okuma), Türkiye / Plaka / Dünya / Bayrak / Başkent'te 10/10, Şimşek (45 saniyenin altında 10/10), 81 il ve 100 ülke (yarışlarda
 en az bir kez doğru bilinen farklı yerler), ilk ve 10. düello galibiyeti, Kürsü (bir sıralamada ilk üç) ve Zirve (bir
 sıralamada birinci). Hangisinin kazanıldığını ve ilerlemeyi sunucu mevcut veriden hesaplar (`my_badges`); kazanılan rozet
 `player_badges` tablosuna yazılır ve kaybolmaz (sıralamada geçilse de Kürsü kalır). Geçmişte hak edilmiş rozetler ilk
@@ -294,6 +301,21 @@ npm run dev
 
 Uygulama `http://localhost:3000` adresinde çalışır. Antrenman Supabase olmadan da oynanabilir; yarış turları için aşağıdaki Supabase kurulumu gerekir.
 
+### Testler
+
+```bash
+npm test
+```
+
+Testler `tests/` altındadır (Vitest) ve tarayıcı ya da Supabase gerektirmez:
+
+- `game.test.ts`, `daily.test.ts`: tur seçimi, sıralamalar, etiketler, günün Türkiye saatiyle değişmesi, paylaşım metni.
+- `data.test.ts`: 179 ülkenin ve 81 ilin haritada olması, kıtalar, başkentler, rozet kimlikleri.
+- `sql.test.ts`: `supabase/schema.sql` bellekte çalışan bir PostgreSQL'e (PGlite) yüklenir; Supabase'in `auth` şeması ve
+  rolleri en küçük hâliyle taklit edilir. Puanın ve serinin sunucuda hesaplanması, uydurulmuş ya da sırası değiştirilmiş
+  soruların reddi, günlük meydan okuma (herkese aynı sorular, günde bir hak, seri), başkent havuzu ve rozetler denenir.
+  Şemaya dokunan her değişiklikten sonra çalıştırın.
+
 ## Proje yapısı
 
 ```
@@ -336,6 +358,7 @@ lib/
                         (finish_round), sıralamaları çeker, realtime abonelik.
                         useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
   turkish-plates.ts     81 il + plaka kodu
+  world-capitals.ts     Başkent turunda sorulan 174 ülkenin Türkçe başkent adları
   world-countries.ts    179 ülke + ISO kodu; eski "normal" düellolarının havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
   shuffle.ts            Fisher-Yates karıştırma
   supabase.ts           Supabase istemcisi (env yoksa null döner)
@@ -346,7 +369,8 @@ lib/
   room.ts               Oda tipleri ve ayar seçenekleri
   hooks/useRoom.ts      Odaya katılır, durumu yoklar, odayı ve turları başlatır
 scripts/
-  generate-duel-pools.mjs  Düello soru havuzlarını world-countries.ts'ten schema.sql'e yazar
+  generate-duel-pools.mjs  Soru havuzlarını world-countries.ts ve world-capitals.ts'ten schema.sql'e yazar
+tests/                  Birim ve sunucu testleri (npm test)
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
 supabase/schema.sql     do_harita_avcisi şeması: tablolar, RLS politikaları, tur fonksiyonları, leaderboard ve location_stats view'leri, realtime
@@ -400,6 +424,7 @@ Yarış sonuçları `game_results` tablosunda tutulur; antrenman sonuçları hi�
 | Dünya | `world` | `hard` |
 | (eski) Dünya · Normal | `world` | `normal` |
 | Bayrak | `world` | `flags` |
+| Başkent | `world` | `capitals` |
 
 Dünyanın 58 tanınmış ülkelik `normal` türü oyundan kaldırıldı: arayüzde seçilemez, sıralaması gösterilmez, eski
 skorlar tabloda durur. Sunucu bu türü güncellenmemiş uygulamalardan gelebilecek istekler için kabul etmeye devam eder;
@@ -455,7 +480,8 @@ oyuncu cevap verene ya da soru bitene kadar gönderilmez. Tarayıcı durumu oyun
 sonuçta 1,5 saniyede bir sorar; realtime aboneliği gerekmez.
 
 Soruları sunucu seçtiği için soru havuzları `duel_pool` fonksiyonunda durur. Bu fonksiyon elle yazılmaz:
-`lib/world-countries.ts` değişirse `node scripts/generate-duel-pools.mjs` çalıştırılıp `schema.sql` yeniden uygulanır.
+`lib/world-countries.ts` ya da `lib/world-capitals.ts` değişirse `node scripts/generate-duel-pools.mjs` çalıştırılıp
+`schema.sql` yeniden uygulanır. Başkent havuzu, başkenti listede olan ülkelerdir.
 
 ### Oda
 

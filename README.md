@@ -12,8 +12,8 @@ ya da arkadaşlarınla oynanan bir harita oyunu.
 - **Düello:** Bir arkadaşına kod gönder, aynı sorulara aynı anda cevap verin.
 - **Oda:** Bir grupla birkaç tur boyunca yarışın, oda sıralamasında kim önde görün.
 
-Her oyunda Türkiye (il adı ya da plaka) veya Dünya (179 ülkenin tamamı; ülke adı ya da bayrak) haritası seçilebilir.
-Türkiye, Plaka, Dünya ve Bayrak'ın her birinin kendi sıralaması vardır.
+Her oyunda Türkiye (il adı ya da plaka) veya Dünya (179 ülkenin tamamı; ülke adı, bayrak ya da başkent) haritası
+seçilebilir. Türkiye, Plaka, Dünya, Bayrak ve Başkent'in her birinin kendi sıralaması vardır.
 
 ## Öne çıkanlar
 
@@ -23,10 +23,12 @@ Türkiye, Plaka, Dünya ve Bayrak'ın her birinin kendi sıralaması vardır.
   yakınlaşır. Tur sonunda soru soru döküm görünür.
 - **Profil:** Yarış özeti, rozetler, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki
   yerin ve son turların. Profili yalnızca sen görürsün.
-- **Rozetler:** Gün serisi, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 16 başarı; yeni
+- **Başkentler:** Ekrana başkent gelir (Kanberra), sen ülkesini bulursun; cevaptan sonra ülkenin adı da yazar. Yarış,
+  antrenman (kıtalarla), düello, oda ve günün meydan okumasında oynanır.
+- **Rozetler:** Gün serisi, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 17 başarı; yeni
   rozet sonuç ekranında kutlanır.
 - **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
-- **Günün meydan okuması:** Her gün Türkiye, Plaka, Dünya ve Bayrak için herkese aynı 10 soru, günde bir hak, günlük
+- **Günün meydan okuması:** Her gün Türkiye, Plaka, Dünya, Bayrak ve Başkent için herkese aynı 10 soru, günde bir hak, günlük
   sıralama, gün serisi ve paylaşılabilir sonuç (🟩🟥 kareleriyle).
 - **Ana ekran:** Yarış kartında Türkiye'nin ve Dünya'nın birincisi; sıralama telefonda alttan açılır.
 
@@ -42,14 +44,15 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Yeni içerik:** Başkentler (dünya haritasıyla), Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+1. **Android'in yeni sürümü:** Son eklenen özelliklerle Google Play'e yükleme.
 2. **İngilizce dil desteği.**
+3. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
 
 Teknik işler:
 
 - Android uygulamasının yeni sürümü yayılınca eski tur açma yolunu (`start_round`) kapatmak; skor doğrulaması o zaman
   bütün turlarda geçerli olur.
-- Puan, seri ve süre mantığı için birim testleri; ana sayfa bileşeninin sadeleştirilmesi.
+- Ana sayfa bileşeninin sadeleştirilmesi.
 
 Sonraya bırakılan fikirler: karanlık tema, misafir hesabı Google hesabına bağlama, profilde zayıf yerlere özel
 antrenman.

@@ -5,7 +5,7 @@ import { BottomSheet } from "../BottomSheet";
 import { Leaderboard } from "../Leaderboard";
 import { ShareScoreButton } from "../ShareScoreButton";
 import { boardOf, dailyChoice, dailyDateLabel, dailyShareText, msUntilNextDaily, useDailyLeaderboards, type DailyStatus } from "@/lib/daily";
-import { BOARDS, formatTime, QUESTIONS_PER_ROUND, type BoardId, type PlayChoice, type Player } from "@/lib/game";
+import { BOARDS, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type PlayChoice, type Player } from "@/lib/game";
 
 /** "05:12" biçiminde saat ve dakika; geri sayım yarım dakikada bir güncellenir. */
 function hoursMinutes(ms: number): string {
@@ -103,7 +103,7 @@ type DailySheetProps = {
 };
 
 /**
- * Günün meydan okuması, alttan açılan sayfada: seri ve kalan süre, dört mod ikişerli büyük düğmeler. Oynanmamış moda
+ * Günün meydan okuması, alttan açılan sayfada: seri ve kalan süre, beş mod ikişerli büyük düğmeler (tek kalan tam satır). Oynanmamış moda
  * dokununca tur başlar; bitirilen ya da bırakılan mod seçilir ve altında o modun günlük sıralaması, oyuncunun sonucu ve
  * paylaşma tuşu görünür.
  */
@@ -128,7 +128,7 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
           return (
             <button
               aria-pressed={state.isOpen ? undefined : isSelected}
-              className={`flex items-center justify-between gap-2 rounded-2xl border-2 px-3 py-2.5 text-left transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${stateClass(state)} ${
+              className={`flex items-center justify-between gap-2 rounded-2xl border-2 px-3 py-2.5 text-left transition last:odd:col-span-2 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${stateClass(state)} ${
                 isSelected ? "ring-2 ring-cyan-500 ring-offset-1" : ""
               }`}
               key={board.id}
@@ -174,7 +174,7 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
             hideTabs
             isLoading={leaderboards === null}
             leaderboardError={null}
-            leaderboards={leaderboards ?? { turkey: [], "turkey-plates": [], "world-hard": [], "world-flags": [] }}
+            leaderboards={leaderboards ?? emptyLeaderboards()}
             onBoardChange={setSelected}
             showTitle={false}
           />

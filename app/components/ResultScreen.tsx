@@ -13,6 +13,7 @@ import {
   BOARDS,
   choiceForBoard,
   choiceLabel,
+  emptyLeaderboards,
   formatTime,
   GAME_DURATION_SECONDS,
   QUESTIONS_PER_ROUND,
@@ -479,7 +480,7 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
           emptyText="Bugün bu meydan okumayı henüz kimse bitirmedi."
           isLoading={leaderboards === null}
           leaderboardError={null}
-          leaderboards={leaderboards ?? { turkey: [], "turkey-plates": [], "world-hard": [], "world-flags": [] }}
+          leaderboards={leaderboards ?? emptyLeaderboards()}
           onBoardChange={setShownBoard}
           tall
           title="Günün sıralaması"

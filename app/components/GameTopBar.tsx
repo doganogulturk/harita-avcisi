@@ -7,6 +7,7 @@ import {
   formatPlate,
   formatTime,
   GAME_DURATION_SECONDS,
+  isCapitalChoice,
   isFlagChoice,
   isPlateChoice,
   questionName,
@@ -15,6 +16,7 @@ import {
   type Player,
   type Question,
 } from "@/lib/game";
+import { capitalOf } from "@/lib/world-capitals";
 
 type GameTopBarProps = {
   player: Player | null;
@@ -103,7 +105,7 @@ function timeTone(remainingGameSeconds: number, tones: [danger: string, warning:
   return tones[2];
 }
 
-/** Sorulan şey: ülke / il adı, bayrak ya da plaka; bayrak ve plakada cevaptan sonra yanında adı. */
+/** Sorulan şey: ülke / il adı, bayrak, başkent ya da plaka; bayrak, başkent ve plakada cevaptan sonra yanında adı. */
 function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { choice: PlayChoice; question: Question | undefined; answerState: AnswerState; isNarrow?: boolean }) {
   const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-base" : "text-base lg:text-2xl"}`;
   if (question && isFlagChoice(choice) && "code" in question) {
@@ -122,6 +124,23 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
         />
         {/* Adı cevaptan sonra göster; oyuncu yanlış bildiği bayrağı da öğrensin. */}
         {answerState && <span className={answerName}>{question.name}</span>}
+      </>
+    );
+  }
+  const capital = question && isCapitalChoice(choice) && "code" in question ? capitalOf(question.code) : undefined;
+  if (question && capital) {
+    return (
+      <>
+        <span aria-hidden="true" className={`shrink-0 ${isNarrow ? "text-xl" : "text-xl lg:text-2xl"}`}>
+          🏛️
+        </span>
+        <h1 className={`min-w-0 truncate leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "text-xl" : "text-xl lg:text-3xl"}`}>
+          <span className="sr-only">Başkenti </span>
+          {capital}
+          <span className="sr-only"> olan ülke hangisi?</span>
+        </h1>
+        {/* Ülkenin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği başkenti de öğrensin. */}
+        {answerState && <span className={`shrink-0 ${answerName} text-slate-500`}>· {questionName(question)}</span>}
       </>
     );
   }

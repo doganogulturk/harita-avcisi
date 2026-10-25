@@ -48,7 +48,7 @@ function createPreference<T extends string>(key: string, isValid: (value: string
 export type IntroGame = "ranked" | "practice" | "duel" | "room";
 
 const MAPS: GameMode[] = ["turkey", "world"];
-const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag"];
+const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag", "capital"];
 const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 // Eski sürümlerin kaydettiği "normal" ve "hard" geçersiz sayılır ve "all"a düşer; kıta seçimleri korunur.
 const SCOPES: WorldScope[] = ["all", "africa", "america", "asia", "europe"];
@@ -81,7 +81,7 @@ export const [useTurkeyPrompt, setTurkeyPrompt] = createPreference<TurkeyPrompt>
 
 /** Son kurulan düellonun ayarları ("turkey|normal|snatch"); düello kurulumu bunlarla açılır. */
 export type DuelSettingsKey = `${"turkey" | "world"}|${string}|${"snatch" | "shared"}`;
-const DUEL_SETTINGS: string[] = ["turkey|normal", "turkey|plates", "world|normal", "world|hard", "world|flags"].flatMap((mode) => [
+const DUEL_SETTINGS: string[] = ["turkey|normal", "turkey|plates", "world|normal", "world|hard", "world|flags", "world|capitals"].flatMap((mode) => [
   `${mode}|snatch`,
   `${mode}|shared`,
 ]);

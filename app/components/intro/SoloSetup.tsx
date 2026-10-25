@@ -5,13 +5,15 @@ import { flagUrl, type GameMode, type PlayKind, type TurkeyPrompt, type WorldPro
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { setQuestionPrompt, setTurkeyPrompt, setWorldScope } from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
-import { CONTINENTS, continentInfo, countries, isContinentScope, scopeCountryCount, type WorldScope } from "@/lib/world-countries";
+import { capitalOf } from "@/lib/world-capitals";
+import { CONTINENTS, continentInfo, countries, isContinentScope, scopeCountryCount, scopeLocationIds, type WorldScope } from "@/lib/world-countries";
 import { gameInfo } from "./games";
 import { Field, ScopeChip, Segmented, SetupShell } from "./SetupParts";
 
 const PROMPT_OPTIONS: { id: WorldPrompt; label: string }[] = [
   { id: "name", label: "İsim" },
   { id: "flag", label: "Bayrak" },
+  { id: "capital", label: "Başkent" },
 ];
 
 const TURKEY_PROMPT_OPTIONS: { id: TurkeyPrompt; label: string }[] = [
@@ -24,10 +26,21 @@ const TURKEY_PROMPT_NOTES: Record<TurkeyPrompt, string> = {
   plate: "Soru olarak plaka kodu gelir, sen o ilin yerini bulursun. Yarışta ayrı bir sıralaması var.",
 };
 
+/** Kapsamda sorulacak ülke sayısı; başkent turunda başkenti listede olmayanlar (tartışmalılar, bağlı topraklar) sayılmaz. */
+function questionCount(scope: WorldScope, prompt: WorldPrompt): number {
+  return prompt === "capital" ? [...scopeLocationIds(scope)].filter((code) => capitalOf(code)).length : scopeCountryCount(scope);
+}
+
 /** Kapsamın ne anlama geldiğini yazıyla söyler. Tüm ülkeler haritada vurgulanmaz, kıtalar vurgulanır. */
-function scopeNote(scope: WorldScope): string {
-  if (isContinentScope(scope)) return `${continentInfo(scope).label} kıtasındaki ${scopeCountryCount(scope)} ülke, haritada vurgulandı.`;
-  return `Haritadaki ${countries.length} ülkenin tamamı.`;
+function scopeNote(scope: WorldScope, prompt: WorldPrompt): string {
+  if (isContinentScope(scope)) return `${continentInfo(scope).label} kıtasındaki ${questionCount(scope, prompt)} ülke, haritada vurgulandı.`;
+  return prompt === "capital" ? `Başkenti sorulan ${questionCount(scope, prompt)} ülkenin tamamı.` : `Haritadaki ${countries.length} ülkenin tamamı.`;
+}
+
+/** Yarışta soru tipinin altındaki not. */
+function rankedNote(prompt: WorldPrompt): string {
+  if (prompt === "capital") return `Soru olarak başkent gelir, sen ülkesini bulursun. ${questionCount("all", prompt)} ülkeden sorulur.`;
+  return `${countries.length} ülkenin tamamı sorulur.`;
 }
 
 type SoloSetupProps = {
@@ -64,7 +77,7 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isReady, nee
       {map === "world" ? (
         <>
           {/* Yarış her zaman tüm ülkelerden sorulur; kapsam seçimi (tümü ya da bir kıta) yalnızca antrenmanda var. */}
-          <Field label="Soru" note={kind === "ranked" ? `${countries.length} ülkenin tamamı sorulur.` : undefined}>
+          <Field label="Soru" note={kind === "ranked" ? rankedNote(prompt) : undefined}>
             <Segmented label="Soru tipi" onChange={setQuestionPrompt} options={PROMPT_OPTIONS} value={prompt} />
             {prompt === "flag" && (
               <Image
@@ -79,19 +92,19 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, isReady, nee
           </Field>
 
           {kind === "practice" && (
-            <Field noteOn="tall" label="Kapsam" note={scopeNote(scope)}>
+            <Field noteOn="tall" label="Kapsam" note={scopeNote(scope, prompt)}>
               {/* Tümü tam satır, altında dört kıta ikişerli; alçak ekranda üçerli iki satır olur. */}
               <div className="grid grid-cols-2 gap-2 short:grid-cols-3 short:gap-1.5" role="radiogroup">
                 <ScopeChip
                   className="col-span-2 short:col-span-1"
-                  count={scopeCountryCount("all")}
+                  count={questionCount("all", prompt)}
                   isSelected={scope === "all"}
                   label="Tümü"
                   onClick={() => setWorldScope("all")}
                 />
                 {CONTINENTS.map((continent) => (
                   <ScopeChip
-                    count={scopeCountryCount(continent.id)}
+                    count={questionCount(continent.id, prompt)}
                     isSelected={scope === continent.id}
                     key={continent.id}
                     label={continent.label}

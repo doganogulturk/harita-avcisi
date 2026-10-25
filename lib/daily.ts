@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BOARDS, boardVariantFor, choiceForBoard, formatTime, QUESTIONS_PER_ROUND, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
+import { BOARDS, boardVariantFor, choiceForBoard, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
 import { type Leaderboards, type RankedRound } from "@/lib/hooks/useLeaderboard";
 import { getSupabaseClient } from "@/lib/supabase";
 
 /**
- * Günlük meydan okuma: her gün (Türkiye saatiyle) Türkiye, Plaka, Dünya ve Bayrak için ayrı birer meydan okuma. Bir
+ * Günlük meydan okuma: her gün (Türkiye saatiyle) Türkiye, Plaka, Dünya, Bayrak ve Başkent için ayrı birer meydan okuma. Bir
  * modun 10 sorusu gün boyu herkes için aynıdır; her oyuncu her modu günde bir kez oynar. Tur normal bir yarış turudur
  * (sunucuda doğrulanır, genel sıralamaya da işlenir); ayrıca günün sıralamasına ve gün serisine sayılır.
  */
@@ -108,8 +108,6 @@ export function useDailyStatus(player: Player | null, refreshKey: unknown) {
   return playerId ? status : null;
 }
 
-const EMPTY_LEADERBOARDS: Leaderboards = { turkey: [], "turkey-plates": [], "world-hard": [], "world-flags": [] };
-
 /** Bugünün sıralamaları (her mod ayrı); açılınca ve `refreshKey` değişince çekilir. */
 export function useDailyLeaderboards(isEnabled: boolean, refreshKey: unknown = null) {
   const [leaderboards, setLeaderboards] = useState<Leaderboards | null>(null);
@@ -133,11 +131,11 @@ export function useDailyLeaderboards(isEnabled: boolean, refreshKey: unknown = n
     ).then(
       (results) => {
         if (!isActive) return;
-        if (results.some((result) => result.error)) return setLeaderboards(EMPTY_LEADERBOARDS);
+        if (results.some((result) => result.error)) return setLeaderboards(emptyLeaderboards());
         setLeaderboards(Object.fromEntries(BOARDS.map((board, index) => [board.id, (results[index].data ?? []) as LeaderboardEntry[]])) as Leaderboards);
       },
       () => {
-        if (isActive) setLeaderboards(EMPTY_LEADERBOARDS);
+        if (isActive) setLeaderboards(emptyLeaderboards());
       },
     );
     return () => {

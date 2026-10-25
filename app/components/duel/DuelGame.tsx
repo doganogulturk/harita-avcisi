@@ -18,7 +18,8 @@ import {
   type DuelPlayer,
   type DuelState,
 } from "@/lib/duel";
-import { flagUrl, isFlagChoice, isPlateChoice, normalizeLocationId } from "@/lib/game";
+import { flagUrl, isCapitalChoice, isFlagChoice, isPlateChoice, normalizeLocationId } from "@/lib/game";
+import { capitalOf } from "@/lib/world-capitals";
 import { DuelAvatar, TONE_TEXT, type DuelTone } from "./DuelParts";
 
 /** Sunucu saatine göre akan saat; geri sayım ve kalan süre bununla çizilir. */
@@ -202,6 +203,18 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
               width={59}
             />
             {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
+          </>
+        ) : isCapitalChoice(choice) && "code" in question && capitalOf(question.code) ? (
+          <>
+            <span aria-hidden="true" className="shrink-0 text-xl lg:text-2xl">
+              🏛️
+            </span>
+            <h1 className="min-w-0 truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">
+              <span className="sr-only">Başkenti </span>
+              {capitalOf(question.code)}
+              <span className="sr-only"> olan ülke hangisi?</span>
+            </h1>
+            {isEnded && <span className="shrink-0 truncate font-display text-xl font-bold text-slate-500 lg:text-2xl">· {question.name}</span>}
           </>
         ) : isPlateChoice(choice) && "plate" in question ? (
           <>
