@@ -128,6 +128,19 @@ describe("günlük meydan okuma", () => {
   });
 });
 
+describe("kod alanı", () => {
+  it("kod düelloya ya da odaya götürür; bilinmeyen kod boş döner", async () => {
+    await as(A);
+    const [{ duel }] = await rows<{ duel: string }>(`select ${S}.create_duel('world', 'capitals', 'snatch') as duel`);
+    const [{ room }] = await rows<{ room: string }>(`select ${S}.create_room('Cuma', 'turkey', 'normal', 3, 30, 10) as room`);
+    await db.exec(`select set_config('test.uid', '', false)`);
+    const kind = async (code: string) => (await rows<{ kind: string | null }>(`select ${S}.code_kind($1) as kind`, [code]))[0].kind;
+    expect(await kind(duel)).toBe("duel");
+    expect(await kind(` ${room.toLowerCase()} `)).toBe("room");
+    expect(await kind("ZZZZZZ")).toBeNull();
+  });
+});
+
 describe("rozetler", () => {
   it("hak edilen rozet bir kez verilir ve yeni olarak işaretlenir", async () => {
     await as(B);

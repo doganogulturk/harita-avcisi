@@ -30,7 +30,8 @@ seçilebilir. Türkiye, Plaka, Dünya, Bayrak ve Başkent'in her birinin kendi s
 - **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
 - **Günün meydan okuması:** Her gün Türkiye, Plaka, Dünya, Bayrak ve Başkent için herkese aynı 10 soru, günde bir hak, günlük
   sıralama, gün serisi ve paylaşılabilir sonuç (🟩🟥 kareleriyle).
-- **Ana ekran:** Yarış kartında Türkiye'nin ve Dünya'nın birincisi; sıralama telefonda alttan açılır.
+- **Ana ekran:** İki kart: Tek başına (Yarış, Antrenman) ve Arkadaşlarla (Düello, Oda; kod alanı kartta). Ayar ekranında
+  oyun, harita ve soru tipi alt alta; seçimlere göre haritada canlı bir önizleme döner.
 
 ## Nerede oynanır
 

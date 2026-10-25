@@ -6,10 +6,11 @@ import { SignInPanel } from "../SignInPanel";
 import { variantFor } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
+import { type IntroGame } from "@/lib/intro-preferences";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
-import { modeOptions } from "./DuelSetup";
-import { formatMinutes, gameInfo } from "./games";
+import { modeOptions, previewPromptFor } from "./DuelSetup";
+import { formatMinutes, gameInfo, groupInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
@@ -17,6 +18,7 @@ type RoomSetupProps = {
   map: GameMode;
   player: Player | null;
   supabaseConfigured: boolean;
+  onGameChange: (game: IntroGame) => void;
   onMapChange: (map: GameMode) => void;
   onBack: () => void;
 };
@@ -24,7 +26,7 @@ type RoomSetupProps = {
 type RoomOptions = Omit<RoomSettings, "mode">;
 
 /** Adım 2, Oda: ad, mod, tur sayısı, süre ve katılımcı sınırı. Giriş yoksa önce giriş adımı gelir. */
-export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack }: RoomSetupProps) {
+export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMapChange, onBack }: RoomSetupProps) {
   // Oda sunucuda kurulur; bağlantı yokken tuş kapalıdır.
   const isOnline = useIsOnline();
   const router = useRouter();
@@ -86,8 +88,14 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
       actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("room").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("room")}
+      group={groupInfo("friends")}
       isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
       map={map}
+      mode={variant}
+      modes={modeOptions(map)}
+      onGameChange={onGameChange}
+      onModeChange={(next) => update({ variant: next as BoardVariant })}
+      previewPrompt={previewPromptFor(variant)}
       note="Her tur 10 soru ve 120 saniye, soruları herkese aynı. Süre sen başlatınca işler; turlar genel sıralamaya da işlenir."
       onAction={() => (player ? void create() : validationError ? setError(validationError) : setIsAuthStep(true))}
       onBack={onBack}
@@ -104,10 +112,6 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
           placeholder="ör. Cuma akşamı"
           value={options.name}
         />
-      </Field>
-
-      <Field label="Mod">
-        <Segmented label="Oda modu" onChange={(next: BoardVariant) => update({ variant: next })} options={modeOptions(map)} value={variant} />
       </Field>
 
       <Field label="Tur sayısı">

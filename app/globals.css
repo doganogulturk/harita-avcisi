@@ -492,6 +492,13 @@ body {
   stroke: #0891b2;
 }
 
+/* Önizlemenin soru döngüsünde doğru yer. */
+.map-preview .map-correct,
+.map-preview g.map-correct path {
+  fill: #34d399;
+  stroke: #047857;
+}
+
 /* Giriş animasyonu: oyunun adı ekranın ortasında belirir (nişangah hedefe kilitlenir, ad soldan
    açılır), sonra bu açılış katmanı çekilirken arkadaki seçim ekranı netleşir. Sayfa yaşamı boyunca
    bir kez oynar; kapsayıcıda data-intro yoksa hiç çalışmaz. */

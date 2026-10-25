@@ -16,22 +16,27 @@ import { useDailyStatus } from "@/lib/daily";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
-import { duelPath } from "@/lib/duel";
+import { joinPathFor } from "@/lib/join-code";
 import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
+  groupOf,
+  setFriendsGame,
   setGuideSeen,
   setIntroMap,
+  setSoloGame,
+  useFriendsGame,
   useGuideSeen,
   useIntroMap,
   useQuestionPrompt,
+  useSoloGame,
   useTurkeyPrompt,
   useWorldScope,
   type IntroGame,
+  type IntroGroup,
 } from "@/lib/intro-preferences";
-import { roomPath } from "@/lib/room";
 import { type WorldScope } from "@/lib/world-countries";
 
-/** Yarış kartında birincisi gösterilen sıralamalar. */
+/** Tek başına kartında birincisi gösterilen sıralamalar. */
 const HIGHLIGHT_BOARDS: { id: BoardId; place: string }[] = [
   { id: "turkey", place: "Türkiye'de" },
   { id: "world-hard", place: "Dünya'da" },
@@ -72,8 +77,8 @@ const INTRO_CONTENT_DELAY_MS = 1400;
 /** İlk kartın gecikmesi; sonraki kartlar birer adım arayla gelir. */
 const INTRO_CARD_DELAY_MS = INTRO_CONTENT_DELAY_MS + 80;
 const INTRO_CARD_STEP_MS = 90;
-/** Son kartın da netleştiği an (4 kart, globals.css'teki intro-focus süresi 700 ms). */
-const INTRO_DONE_MS = INTRO_CARD_DELAY_MS + 3 * INTRO_CARD_STEP_MS + 700;
+/** Son kartın da netleştiği an (2 kart, globals.css'teki intro-focus süresi 700 ms). */
+const INTRO_DONE_MS = INTRO_CARD_DELAY_MS + INTRO_CARD_STEP_MS + 700;
 
 /**
  * Açılış katmanı: oyunun adı ekranın ortasında belirir, sonra katman çekilerek arkadaki
@@ -107,6 +112,8 @@ export function IntroScreen({
   const storedScope = useWorldScope();
   const prompt = useQuestionPrompt();
   const turkeyPrompt = useTurkeyPrompt();
+  const soloGame = useSoloGame();
+  const friendsGame = useFriendsGame();
   // Menünün açıldığı adım ilk çizimde donar; sonradan gelen prop değişikliği adımı değiştirmez.
   const [openedAtGame] = useState(startGame);
   const [selectedGame, setSelectedGame] = useState<IntroGame | null>(openedAtGame);
@@ -176,11 +183,20 @@ export function IntroScreen({
     if (pendingChoice) onCancelPendingChoice();
   };
 
-  // Oyuncu kartların netleşmesini beklemeden bir oyun seçtiyse animasyon da biter.
-  const selectGame = (game: IntroGame) => {
+  // Oyuncu kartların netleşmesini beklemeden bir grup seçtiyse animasyon da biter. Grup en son seçilen oyunuyla açılır.
+  const selectGroup = (group: IntroGroup) => {
+    const game = group === "solo" ? soloGame : friendsGame;
     setIsIntroDone(true);
     setSelectedGame(game);
     window.history.pushState({ [INTRO_STEP_KEY]: game }, "");
+  };
+
+  /** Adım 2'nin en üstündeki seçici (Yarış | Antrenman, Düello | Oda): adım aynı kalır, geçmişe yeni kayıt eklenmez. */
+  const changeGame = (game: IntroGame) => {
+    if (groupOf(game) === "solo") setSoloGame(game as typeof soloGame);
+    else setFriendsGame(game as typeof friendsGame);
+    setSelectedGame(game);
+    if (window.history.state?.[INTRO_STEP_KEY]) window.history.replaceState({ [INTRO_STEP_KEY]: game }, "");
   };
 
   const start = () => {
@@ -196,8 +212,9 @@ export function IntroScreen({
     if (dailyNotice) setDailySheet((current) => current ?? { board: null });
   }, [dailyNotice]);
 
-  // Yarış kartında Türkiye'nin ve Dünya'nın (isimle) birincisi; yüklenmeyen satır gösterilmez.
-  const leaders = useLeaders(supabaseConfigured && selectedGame === null);
+  // Tek başına kartında Türkiye'nin ve Dünya'nın (isimle) birincisi, yarış panelinde seçili sıralamanın birincisi;
+  // yüklenmeyen satır gösterilmez.
+  const leaders = useLeaders(supabaseConfigured);
   const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
   const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, place }) => {
     const leader = leaders[id];
@@ -205,6 +222,7 @@ export function IntroScreen({
       ? [{ place, name: leader.display_name, score: `${leader.score}/${QUESTIONS_PER_ROUND}`, time: formatTime(Math.round(leader.duration_ms / 1000)) }]
       : [];
   });
+  const boardLeader = leaders[rankedBoardId];
 
   const content = () => {
     if (pendingChoice && !player) {
@@ -247,7 +265,7 @@ export function IntroScreen({
 
     if (selectedGame === "duel" || selectedGame === "room") {
       const Setup = selectedGame === "duel" ? DuelSetup : RoomSetup;
-      return <Setup map={map} onBack={goBack} onMapChange={setIntroMap} player={player} supabaseConfigured={supabaseConfigured} />;
+      return <Setup map={map} onBack={goBack} onGameChange={changeGame} onMapChange={setIntroMap} player={player} supabaseConfigured={supabaseConfigured} />;
     }
 
     if (selectedGame) {
@@ -256,8 +274,14 @@ export function IntroScreen({
           isReady={readyModes.includes(map)}
           needsSignIn={kind === "ranked" && !player}
           kind={kind}
+          leader={
+            boardLeader
+              ? { place: "", name: boardLeader.display_name, score: `${boardLeader.score}/${QUESTIONS_PER_ROUND}`, time: formatTime(Math.round(boardLeader.duration_ms / 1000)) }
+              : undefined
+          }
           map={map}
           onBack={goBack}
+          onGameChange={changeGame}
           onMapChange={setIntroMap}
           onStart={start}
           prompt={prompt}
@@ -272,8 +296,13 @@ export function IntroScreen({
         rankedLeaders={rankedLeaders}
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
-        onJoin={(game, code) => router.push(game === "duel" ? duelPath(code) : roomPath(code))}
-        onSelect={selectGame}
+        onJoin={async (code) => {
+          const path = await joinPathFor(code);
+          if (!path) return "Bu kodla bir düello ya da oda bulunamadı.";
+          router.push(path);
+          return null;
+        }}
+        onSelect={selectGroup}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />
     );

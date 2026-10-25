@@ -1,6 +1,6 @@
 import { DUEL_QUESTION_MS, DUEL_QUESTIONS } from "@/lib/duel";
 import { GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND } from "@/lib/game";
-import { type IntroGame } from "@/lib/intro-preferences";
+import { type IntroGame, type IntroGroup } from "@/lib/intro-preferences";
 import { ROOM_DURATIONS, ROOM_MAX_PLAYERS, ROOM_MIN_PLAYERS, ROOM_ROUND_COUNTS } from "@/lib/room";
 
 /**
@@ -144,8 +144,41 @@ export const GAMES: GameInfo[] = [
 
 export const gameInfo = (id: IntroGame): GameInfo => GAMES.find((game) => game.id === id) ?? GAMES[0];
 
-/** Kronometre, döngü oku, çapraz kılıçlar ve bir grup insan. */
-export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame; className?: string }) {
+export type GroupInfo = {
+  id: IntroGroup;
+  title: string;
+  description: string;
+  /** İkinci adımın en üstündeki seçicide, bu sırayla. */
+  games: [IntroGame, IntroGame];
+  cardAction: string;
+  /** Kart, grubun ilk oyununun rengini taşır (Yarış camgöbeği, Düello turuncu). */
+  theme: GameTheme;
+};
+
+/** Giriş ekranının ilk adımındaki iki kart: oyuncunun ilk kararı tek başına mı, arkadaşlarla mı oynayacağı. */
+export const GROUPS: GroupInfo[] = [
+  {
+    id: "solo",
+    title: "Tek başına",
+    description: `Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama; antrenmanda süre yok, istediğin kıtayı çalış.`,
+    games: ["ranked", "practice"],
+    cardAction: "Başla",
+    theme: gameInfo("ranked").theme,
+  },
+  {
+    id: "friends",
+    title: "Arkadaşlarla",
+    description: "Düelloda bir arkadaşınla aynı anda, odada bir grupla birkaç tur. Kodu gönder, kim daha iyi görün.",
+    games: ["duel", "room"],
+    cardAction: "Kur",
+    theme: gameInfo("duel").theme,
+  },
+];
+
+export const groupInfo = (id: IntroGroup): GroupInfo => GROUPS.find((group) => group.id === id) ?? GROUPS[0];
+
+/** Kronometre, döngü oku, çapraz kılıçlar ve bir grup insan; gruplar için tek kişi ve iki kişi. */
+export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame | IntroGroup; className?: string }) {
   return (
     <svg
       aria-hidden="true"
@@ -168,6 +201,19 @@ export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame; cla
         <>
           <path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" />
           <path d="M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2" />
+        </>
+      )}
+      {game === "solo" && (
+        <>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+        </>
+      )}
+      {game === "friends" && (
+        <>
+          <circle cx="8" cy="9" r="3.2" />
+          <circle cx="16.5" cy="7.5" r="3.2" />
+          <path d="M2 20.5a6 6 0 0 1 12 0M13.5 13.6a6 6 0 0 1 8.5 5.4" />
         </>
       )}
       {game === "room" && (

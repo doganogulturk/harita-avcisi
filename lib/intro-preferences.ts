@@ -44,14 +44,34 @@ function createPreference<T extends string>(key: string, isValid: (value: string
   return [() => useSyncExternalStore(subscribe, read, () => fallback), write] as const;
 }
 
-/** Giriş ekranının ilk adımındaki dört oyun. */
+/** Dört oyun; giriş ekranının ilk adımında iki grupta durur: tek başına (Yarış, Antrenman) ve arkadaşlarla (Düello, Oda). */
 export type IntroGame = "ranked" | "practice" | "duel" | "room";
+export type SoloGame = Extract<IntroGame, "ranked" | "practice">;
+export type FriendsGame = Extract<IntroGame, "duel" | "room">;
+export type IntroGroup = "solo" | "friends";
+
+export function groupOf(game: IntroGame): IntroGroup {
+  return game === "ranked" || game === "practice" ? "solo" : "friends";
+}
 
 const MAPS: GameMode[] = ["turkey", "world"];
 const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag", "capital"];
 const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 // Eski sürümlerin kaydettiği "normal" ve "hard" geçersiz sayılır ve "all"a düşer; kıta seçimleri korunur.
 const SCOPES: WorldScope[] = ["all", "africa", "america", "asia", "europe"];
+
+/** Grubun ikinci adımı en son seçilen oyunla açılır; "Tek başına → Başla" yine iki dokunuştur. */
+export const [useSoloGame, setSoloGame] = createPreference<SoloGame>(
+  "harita-avcisi:intro-solo-game",
+  (value): value is SoloGame => value === "ranked" || value === "practice",
+  "ranked",
+);
+
+export const [useFriendsGame, setFriendsGame] = createPreference<FriendsGame>(
+  "harita-avcisi:intro-friends-game",
+  (value): value is FriendsGame => value === "duel" || value === "room",
+  "duel",
+);
 
 /** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
 export const [useIntroMap, setIntroMap] = createPreference<GameMode>(

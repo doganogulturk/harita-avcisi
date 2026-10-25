@@ -3,29 +3,39 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
-import { DUEL_MODES, DUEL_RULES, duelPath, variantFor, type DuelRule } from "@/lib/duel";
-import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
+import { DUEL_MODES, DUEL_RULES, duelChoice, duelPath, variantFor, type DuelRule } from "@/lib/duel";
+import { type BoardVariant, type GameMode, type Player, type QuestionPrompt } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
-import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences";
-import { gameInfo } from "./games";
-import { Field, Segmented, SetupShell } from "./SetupParts";
+import { setDuelSettingsKey, useDuelSettingsKey, type IntroGame } from "@/lib/intro-preferences";
+import { gameInfo, groupInfo } from "./games";
+import { Field, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
+/** Kurulumdaki mod seçenekleri; yer adıyla sorulan mod tek oyunculu oyundaki gibi "İsim" diye yazılır. */
 export function modeOptions(map: GameMode): { id: BoardVariant; label: string }[] {
-  return (DUEL_MODES.find((group) => group.mode === map)?.options ?? []).map((option) => ({ id: option.variant, label: option.label }));
+  return (DUEL_MODES.find((group) => group.mode === map)?.options ?? []).map((option) => ({
+    id: option.variant,
+    label: option.variant === "normal" || option.variant === "hard" ? "İsim" : option.label,
+  }));
+}
+
+/** Önizlemede sorulan soru tipi: modun soruda gösterdiği şey. */
+export function previewPromptFor(variant: BoardVariant): QuestionPrompt {
+  return duelChoice("world", variant).prompt ?? "name";
 }
 
 type DuelSetupProps = {
   map: GameMode;
   player: Player | null;
   supabaseConfigured: boolean;
+  onGameChange: (game: IntroGame) => void;
   onMapChange: (map: GameMode) => void;
   onBack: () => void;
 };
 
 /** Adım 2, Düello: mod ve kural. Giriş yoksa önce giriş adımı gelir, giriş biter bitmez düello kurulur. */
-export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack }: DuelSetupProps) {
+export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMapChange, onBack }: DuelSetupProps) {
   // Düello sunucuda kurulur; bağlantı yokken tuş kapalıdır.
   const isOnline = useIsOnline();
   const router = useRouter();
@@ -73,17 +83,19 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
       actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("duel").action : "Giriş yap ve kur"}
       error={error}
       game={gameInfo("duel")}
+      group={groupInfo("friends")}
       isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
       map={map}
+      mode={variant}
+      modes={modeOptions(map)}
       note="Kurunca bir kod ve bağlantı alırsın; rakibin açınca ikiniz de hazır deyip başlarsınız."
       onAction={() => (player ? void create() : setIsAuthStep(true))}
       onBack={onBack}
+      onGameChange={onGameChange}
       onMapChange={onMapChange}
+      onModeChange={(next) => save(next as BoardVariant, rule)}
+      previewPrompt={previewPromptFor(variant)}
     >
-      <Field label="Mod">
-        <Segmented label="Düello modu" onChange={(next) => save(next, rule)} options={modeOptions(map)} value={variant} />
-      </Field>
-
       {/* Alçak ekranda kurallar yan yana, açıklamaları gizli; seçili kuralın açıklaması altta not olarak kalır. */}
       <Field noteOn="short" label="Kural" note={DUEL_RULES[rule].summary}>
         <div className="flex flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5" role="radiogroup">

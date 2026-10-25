@@ -3,20 +3,29 @@
 import Image from "next/image";
 import { createContext, useContext } from "react";
 import { CornerTab } from "../CornerTab";
-import { ScopePreviewMap } from "../ScopePreviewMap";
-import { flagUrl, type GameMode } from "@/lib/game";
+import { SetupPreviewMap } from "../MapDemo";
+import { flagUrl, type GameMode, type QuestionPrompt } from "@/lib/game";
+import { type IntroGame } from "@/lib/intro-preferences";
 import { type WorldScope } from "@/lib/world-countries";
-import { GameIcon, type GameInfo } from "./games";
+import { gameInfo, GameIcon, type GameInfo, type GroupInfo } from "./games";
 
 /** Seçili seçeneğin rengi oyunun rengini izler; SetupShell içindeki seçiciler buradan okur. */
 const SelectedClass = createContext("border-cyan-600 bg-cyan-600 text-white");
 
 type SetupShellProps = {
+  group: GroupInfo;
+  /** Grubun içinde seçili oyun (Yarış, Antrenman, Düello, Oda); renkleri ve künyesi ondan gelir. */
   game: GameInfo;
+  onGameChange: (game: IntroGame) => void;
   map: GameMode;
-  /** Önizleme haritasında vurgulanacak kapsam; kıta seçilmedikçe vurgu yok. */
-  previewScope?: WorldScope;
   onMapChange: (map: GameMode) => void;
+  /** Soru tipi ya da mod (İsim / Bayrak / Başkent, İsim / Plaka). */
+  modes: { id: string; label: string }[];
+  mode: string;
+  onModeChange: (mode: string) => void;
+  /** Önizlemede sorulan soru tipi ve vurgulanan kapsam (kıta seçilmedikçe vurgu yok). */
+  previewPrompt: QuestionPrompt;
+  previewScope?: WorldScope;
   onBack: () => void;
   /** Tuşun hemen üstündeki kısa açıklama. */
   note?: string;
@@ -24,18 +33,26 @@ type SetupShellProps = {
   actionLabel: string;
   isActionDisabled: boolean;
   onAction: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 /**
- * Adım 2, dört oyunda aynı düzen: solda üstte geri tuşu ve oyunun adı, altında Türkiye / Dünya ve oynanacak haritanın
- * küçük önizlemesi; sağda daha geniş bir panelde oyunun kendi ayarları ve panelin sağ üst köşesinde eylem sekmesi.
+ * Adım 2, iki grupta da aynı düzen. Solda üstte geri tuşu ve grubun adı; altında sırayla oyun (Yarış | Antrenman ya da
+ * Düello | Oda), harita (Türkiye | Dünya) ve soru tipi; en altta bu seçimlerle dönen canlı önizleme. Sağda oyunun kendi
+ * ayarları ve panelin sağ üst köşesinde eylem sekmesi. Oyunu ne oynayacağını belirleyen üç seçim yan yana durur;
+ * önizleme her seçimin sonucunu hemen gösterir.
  */
 export function SetupShell({
+  group,
   game,
+  onGameChange,
   map,
-  previewScope = "all",
   onMapChange,
+  modes,
+  mode,
+  onModeChange,
+  previewPrompt,
+  previewScope = "all",
   onBack,
   note,
   error,
@@ -48,14 +65,15 @@ export function SetupShell({
     <SelectedClass.Provider value={game.theme.selected}>
       {/* Dikey telefonda harita kartı ve ayarlar alt alta durur; ayarlar uzunsa ekran kayar, harita ezilmez. */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 max-md:overflow-y-auto md:flex-row md:gap-4 lg:gap-5">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 max-md:flex-none lg:gap-4 lg:p-5">
+        {/* Dikeyde kart içeriğinden kısa olmaz ama boş kalan yeri alır: önizleme büyür, ekranın altı boş kalmaz. */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 max-md:flex-[1_0_auto] short:gap-1.5 lg:gap-3 lg:p-5">
           <div className="flex shrink-0 items-center gap-2.5 lg:gap-3">
             <BackButton onClick={onBack} />
-            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl lg:h-12 lg:w-12 lg:rounded-2xl ${game.theme.tile}`}>
-              <GameIcon className="h-5 w-5 lg:h-7 lg:w-7" game={game.id} />
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl short:h-8 short:w-8 lg:h-12 lg:w-12 lg:rounded-2xl ${game.theme.tile}`}>
+              <GameIcon className="h-5 w-5 lg:h-7 lg:w-7" game={group.id} />
             </span>
             <div className="min-w-0">
-              <p className="font-display text-2xl leading-none font-bold text-slate-900 lg:text-4xl">{game.title}</p>
+              <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl lg:text-4xl">{group.title}</p>
               {/* Her künyenin önünde bir nokta durur; satırın başına düşen nokta kabın solundaki taşma alanında kalıp
                   gizlenir. Satır kırılınca "• Sıralamaya işlenir" gibi noktayla başlayan satır olmaz. */}
               <p className="mt-0.5 overflow-hidden text-xs text-slate-500 lg:mt-1 lg:text-sm">
@@ -71,20 +89,37 @@ export function SetupShell({
             </div>
           </div>
 
-          {/* Önizleme bu seçime göre değiştiği için Türkiye / Dünya haritanın hemen üstündedir. */}
-          <MapSelector onChange={onMapChange} value={map} />
+          <TabSelector
+            label="Oyun"
+            onChange={onGameChange}
+            options={group.games.map((id) => ({ id, label: gameInfo(id).title, icon: <GameIcon className="h-4 w-4 lg:h-5 lg:w-5" game={id} /> }))}
+            selectedClass={game.theme.selected}
+            size="lg"
+            value={game.id}
+          />
+
+          {/* Alçak (yatay telefon) ekranda harita ve soru tipi yan yana; önizlemeye yer kalsın. */}
+          <div className="flex shrink-0 flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5">
+            <TabSelector
+              label="Harita"
+              onChange={onMapChange}
+              options={MAP_OPTIONS.map((option) => ({ ...option, icon: <MapIcon map={option.id} /> }))}
+              value={map}
+            />
+            <TabSelector label="Soru tipi" onChange={onModeChange} options={modes} size="sm" value={mode} />
+          </div>
 
           {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. */}
-          <div className="relative flex min-h-[8rem] flex-1 items-center justify-center overflow-hidden md:min-h-0">
-            <ScopePreviewMap mode={map} scope={previewScope} />
+          <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] md:min-h-0">
+            <SetupPreviewMap mode={map} prompt={previewPrompt} scope={previewScope} />
           </div>
         </div>
 
-        {/* Harita yalnızca önizleme; yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar.
-            Eylem tuşu giriş kartlarındaki gibi panelin sağ üst köşesinden içeri kıvrılan sekmedir. */}
-        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[58%] lg:w-[30rem] xl:w-[34rem]">
+        {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Eylem tuşu giriş kartlarındaki gibi
+            panelin sağ üst köşesinden içeri kıvrılan sekmedir; panelin başlığı seçili oyundur. */}
+        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[50%] lg:w-[30rem] xl:w-[34rem]">
           <div className="flex shrink-0 items-start justify-between gap-3">
-            <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">Ayarlar</p>
+            <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{game.title}</p>
             <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />
           </div>
 
@@ -101,12 +136,12 @@ export function SetupShell({
   );
 }
 
-/** Oyun seçimine dönüş: oyunun adının solunda yalnızca okun durduğu yuvarlak tuş. */
+/** Oyun seçimine dönüş: grubun adının solunda yalnızca okun durduğu yuvarlak tuş. */
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       aria-label="Oyun seçimine dön"
-      className="hit-area flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-11 lg:w-11"
+      className="hit-area flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:h-8 short:w-8 lg:h-11 lg:w-11"
       onClick={onClick}
       title="Oyun seçimine dön"
       type="button"
@@ -135,23 +170,52 @@ function MapIcon({ map }: { map: GameMode }) {
   );
 }
 
-/** Türkiye / Dünya: önizleme haritasının üstünde, iki eşit parça. */
-function MapSelector({ value, onChange }: { value: GameMode; onChange: (map: GameMode) => void }) {
+const TAB_SIZES = {
+  lg: "py-2 font-display text-lg short:py-1 short:text-base lg:py-2.5 lg:text-xl",
+  md: "py-1.5 font-display text-base short:py-1 short:text-sm lg:py-2 lg:text-lg",
+  sm: "py-1.5 text-sm short:py-1 short:text-xs lg:py-2 lg:text-base",
+};
+
+/**
+ * Eşit parçalı seçici: oyun, harita ve soru tipi. Seçili parça beyaz kartla öne çıkar; `selectedClass` verilirse
+ * (oyun seçicisi) oyunun rengiyle dolar, en üstteki asıl karar olduğu görünür.
+ */
+function TabSelector<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  size = "md",
+  selectedClass = "bg-white text-slate-900 shadow-sm",
+}: {
+  label: string;
+  options: { id: T; label: string; icon?: React.ReactNode }[];
+  value: T;
+  onChange: (value: T) => void;
+  size?: keyof typeof TAB_SIZES;
+  selectedClass?: string;
+}) {
   return (
-    <div aria-label="Harita" className="grid shrink-0 grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1" role="radiogroup">
-      {MAP_OPTIONS.map((option) => (
+    <div
+      aria-label={label}
+      className="grid shrink-0 gap-1 rounded-2xl bg-slate-100 p-1"
+      role="radiogroup"
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+    >
+      {options.map((option) => (
         <button
           aria-checked={value === option.id}
-          className={`flex items-center justify-center gap-2 rounded-xl py-2 font-display text-lg font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:py-1 short:text-base lg:py-2.5 lg:text-xl ${
-            value === option.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+          className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-1 font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${TAB_SIZES[size]} ${
+            value === option.id ? selectedClass : "text-slate-500 hover:text-slate-800"
           }`}
           key={option.id}
           onClick={() => onChange(option.id)}
           role="radio"
           type="button"
         >
-          <MapIcon map={option.id} />
-          {option.label}
+          {/* Alçak ekranda seçiciler yan yana daralır; simge yazıya yer bırakır. */}
+          {option.icon && <span className="flex shrink-0 short:hidden">{option.icon}</span>}
+          <span className="truncate">{option.label}</span>
         </button>
       ))}
     </div>

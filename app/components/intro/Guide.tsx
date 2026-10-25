@@ -1,17 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
-import { PlateBadge } from "../GameTopBar";
+import { DemoPill, useDemoCycle, type DemoQuestion } from "../MapDemo";
 import { PinchDemo, RotateDemo } from "../PlayTips";
 import { Logo } from "../Logo";
-import { flagUrl, GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
+import { GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
-import { provinces } from "@/lib/turkish-plates";
-import { capitalOf } from "@/lib/world-capitals";
-import { countries } from "@/lib/world-countries";
-import { GameIcon, GAMES } from "./games";
+import { gameInfo, GameIcon, GAMES, GROUPS } from "./games";
 
 type GuideProps = {
   /** Giriş yapılmamışsa (ve Supabase kuruluysa) son ekranda giriş seçenekleri çıkar. */
@@ -27,7 +23,8 @@ type GuideProps = {
 const SWIPE_THRESHOLD_PX = 50;
 
 /**
- * İlk açılışta gösterilen tanıtım: nasıl oynanır, (dokunmatik cihazda) telefonda yan çevir ve yakınlaştır, dört oyun,
+ * İlk açılışta gösterilen tanıtım: nasıl oynanır, (dokunmatik cihazda) telefonda yan çevir ve yakınlaştır, tek başına ve
+ * arkadaşlarla oynanan oyunlar,
  * arkadaşlarla oynamak. Kaydırarak, oklarla ya
  * da alttaki tuşlarla gezilir; "Geç" her ekranda durur. Son ekranın asıl tuşu ana ekrandaki oyun seçimine götürür,
  * giriş yalnızca bir seçenek olarak sunulur. Bilgi menüsündeki "Nasıl oynanır?" ile yeniden açılır.
@@ -55,9 +52,9 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
         ]
       : []),
     {
-      eyebrow: "Dört oyun",
+      eyebrow: "Tek başına ya da arkadaşlarla",
       title: "Nasıl istersen öyle oyna",
-      body: `Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama var. Antrenmanda süre yok, istediğin kıtayı çalışırsın. Düello ve Oda ise arkadaşlarınla.`,
+      body: `Tek başına: Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarla: Düello ya da Oda.`,
       visual: <GamesDemo />,
     },
     {
@@ -198,11 +195,9 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
   );
 }
 
-type DemoQuestion = { mode: GameMode; id: string; prompt: "name" | "plate" | "flag" | "capital" };
-
 /**
- * Tanıtım haritasında sırayla sorulanlar: Türkiye ve dünya, isim, plaka, bayrak ve başkent soruları karışık. Önce soru çıkar,
- * bir an sonra doğru yer yeşil yanar.
+ * Tanıtım haritasında sırayla sorulanlar: Türkiye ve dünya, isim, plaka, bayrak ve başkent soruları karışık. Önce soru
+ * çıkar, bir an sonra doğru yer yeşil yanar.
  */
 const DEMO_QUESTIONS: DemoQuestion[] = [
   { mode: "turkey", id: "6", prompt: "name" },
@@ -213,12 +208,7 @@ const DEMO_QUESTIONS: DemoQuestion[] = [
   { mode: "turkey", id: "61", prompt: "name" },
   { mode: "world", id: "au", prompt: "capital" },
 ];
-const DEMO_STEP_MS = 1300;
-
-function demoName({ mode, id }: DemoQuestion) {
-  if (mode === "turkey") return provinces.find((province) => province.plate === Number(id))?.city ?? "";
-  return countries.find((country) => country.code === id)?.name ?? "";
-}
+const GUIDE_STEP_MS = 1300;
 
 /** Gerçek haritada oyunun soruları: soru çıkar, ardından yer yeşil yanar; sonraki soruya (gerekirse haritaya) geçilir. */
 function MapDemo() {
@@ -226,18 +216,9 @@ function MapDemo() {
   const turkey = useMapMarkup("turkey");
   const world = useMapMarkup("world");
   const containerRef = useRef<HTMLDivElement>(null);
-  // Her soru iki adımdır: çift adımda soru, tek adımda cevap.
-  const [step, setStep] = useState(1);
-  const question = DEMO_QUESTIONS[Math.floor(step / 2) % DEMO_QUESTIONS.length];
-  const isRevealed = step % 2 === 1;
-  const name = demoName(question);
+  const { index, isRevealed } = useDemoCycle(DEMO_QUESTIONS.length, "guide", GUIDE_STEP_MS);
+  const question = DEMO_QUESTIONS[index];
   const mapMarkup = question.mode === "turkey" ? turkey.mapMarkup : world.mapMarkup;
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => setStep((current) => current + 1), DEMO_STEP_MS);
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     containerRef.current?.querySelectorAll<SVGElement>(LOCATION_SELECTOR[question.mode]).forEach((location) => {
@@ -247,32 +228,7 @@ function MapDemo() {
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-3 lg:p-6">
-      <div
-        className={`absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-1.5 font-display text-lg font-bold whitespace-nowrap shadow-sm transition-colors lg:top-5 lg:text-2xl ${
-          isRevealed ? "bg-emerald-500 text-white" : "bg-cyan-50 text-cyan-800"
-        }`}
-      >
-        {isRevealed ? (
-          `✓ ${name}`
-        ) : question.prompt === "plate" ? (
-          <>
-            <PlateBadge plate={Number(question.id)} size="sm" />
-            hangi il?
-          </>
-        ) : question.prompt === "flag" ? (
-          <>
-            <Image alt="" className="h-6 w-auto rounded-[3px] border border-slate-200 lg:h-8" height={24} src={flagUrl(question.id)} unoptimized width={32} />
-            hangi ülke?
-          </>
-        ) : question.prompt === "capital" ? (
-          <>
-            <span aria-hidden="true">🏛️</span>
-            {capitalOf(question.id)} hangi ülke?
-          </>
-        ) : (
-          `${name} nerede?`
-        )}
-      </div>
+      <DemoPill className="top-3 text-lg lg:top-5 lg:text-2xl" isRevealed={isRevealed} question={question} />
       {mapMarkup && (
         <div
           aria-hidden="true"
@@ -286,7 +242,7 @@ function MapDemo() {
   );
 }
 
-/** Dört oyun, giriş ekranındaki renkleri ve simgeleriyle. */
+/** İki grup ve içlerindeki oyunlar, giriş ekranındaki renkleri ve simgeleriyle. */
 /** Yan çevrilen telefon ve iki parmakla yakınlaştırma, dikeyde ilk oyundan önceki ipuçlarıyla (PlayTips) aynı. */
 function TouchDemo() {
   return (
@@ -306,13 +262,23 @@ function TouchDemo() {
 function GamesDemo() {
   return (
     <div className="grid h-full w-full grid-cols-2 gap-2 lg:gap-4">
-      {GAMES.map((game) => (
-        <div className={`flex min-w-0 flex-col justify-center rounded-2xl border-2 border-slate-200 p-3 short:p-2 lg:p-5 ${game.theme.surface}`} key={game.id}>
-          <span className={`flex h-9 w-9 items-center justify-center rounded-xl short:h-7 short:w-7 short:rounded-lg lg:h-12 lg:w-12 ${game.theme.tile}`}>
-            <GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game={game.id} />
-          </span>
-          <p className="mt-2 font-display text-xl leading-none font-bold text-slate-900 short:mt-1.5 short:text-lg lg:mt-3 lg:text-3xl">{game.title}</p>
-          <p className="mt-1 truncate text-xs text-slate-500 lg:text-sm">{game.facts.slice(0, 2).join(" · ")}</p>
+      {GROUPS.map((group) => (
+        <div className={`flex min-w-0 flex-col justify-center gap-2 rounded-2xl border-2 border-slate-200 p-3 short:gap-1 short:p-2 lg:gap-3 lg:p-5 ${group.theme.surface}`} key={group.id}>
+          <p className="font-display text-xl leading-none font-bold text-slate-900 short:text-lg lg:text-3xl">{group.title}</p>
+          {group.games.map((id) => {
+            const game = gameInfo(id);
+            return (
+              <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white/80 p-1.5 shadow-sm lg:p-2.5" key={id}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg short:h-6 short:w-6 lg:h-10 lg:w-10 ${game.theme.tile}`}>
+                  <GameIcon className="h-4 w-4 short:h-3.5 short:w-3.5 lg:h-6 lg:w-6" game={id} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-bold text-slate-900 lg:text-lg">{game.title}</span>
+                  <span className="block truncate text-xs text-slate-500 short:hidden lg:text-sm">{game.facts.slice(0, 2).join(" · ")}</span>
+                </span>
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
