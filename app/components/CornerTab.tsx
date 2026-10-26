@@ -1,6 +1,10 @@
 /** Sekmenin ve (giriş kartlarında) onun yer tutucusunun ortak ölçüleri; ikisi aynı boyda olsun diye tek yerde. */
 export const CORNER_TAB_SIZE = "gap-1.5 py-2 pr-4 pl-4 text-sm short:py-1.5 short:pr-3 short:pl-3.5 lg:py-3 lg:pr-6 lg:pl-6 lg:text-base";
 
+/** Büyük sekme: giriş kartlarındaki oyun sekmeleri (Yarış, Antrenman...); simge, oyun yazı tipiyle ad ve ok. */
+const CORNER_TAB_SIZE_LG =
+  "gap-2 py-2.5 pr-5 pl-4 font-display text-lg short:py-1.5 short:pr-4 short:pl-3 short:text-base max-[25rem]:gap-1.5 max-[25rem]:pr-3.5 max-[25rem]:pl-3 max-[25rem]:text-base lg:gap-2.5 lg:py-3.5 lg:pr-7 lg:pl-6 lg:text-2xl";
+
 /** Küçük sekme: kartın ikincil işi (Sıralamayı gör, Kodla katıl). Dokunmatikte dokunma alanı dikeyde 44 piksele genişler. */
 const CORNER_TAB_SIZE_SM = "hit-area-y gap-1 py-1.5 pr-3.5 pl-3 text-xs lg:gap-1.5 lg:py-2 lg:pr-5 lg:pl-4 lg:text-sm";
 
@@ -12,18 +16,21 @@ const CORNER_TAB_SIZE_SM = "hit-area-y gap-1 py-1.5 pr-3.5 pl-3 text-xs lg:gap-1
 const CORNERS = {
   "top-right": {
     md: "rounded-bl-2xl lg:rounded-bl-3xl",
+    lg: "rounded-bl-2xl lg:rounded-bl-3xl",
     sm: "rounded-bl-xl lg:rounded-bl-2xl",
     fillets: ["top-0 right-full", "top-full right-0"],
     filletClass: "",
   },
   "bottom-left": {
     md: "rounded-tr-2xl lg:rounded-tr-3xl",
+    lg: "rounded-tr-2xl lg:rounded-tr-3xl",
     sm: "rounded-tr-xl lg:rounded-tr-2xl",
     fillets: ["bottom-full left-0", "bottom-0 left-full"],
     filletClass: "corner-fillet-bl",
   },
   "bottom-right": {
     md: "rounded-tl-2xl lg:rounded-tl-3xl",
+    lg: "rounded-tl-2xl lg:rounded-tl-3xl",
     sm: "rounded-tl-xl lg:rounded-tl-2xl",
     fillets: ["bottom-full right-0", "bottom-0 right-full"],
     filletClass: "corner-fillet-br",
@@ -39,8 +46,8 @@ type CornerTabProps = {
   onClick: () => void;
   /** Sekmenin oturduğu köşe; asıl iş sağ üstte, ikincil iş sol altta. Giriş kartlarında iki oyun alt köşelerdedir. */
   corner?: keyof typeof CORNERS;
-  size?: "md" | "sm";
-  /** Yazının solundaki simge; verilmezse yazının sağında ileri oku durur. */
+  size?: "md" | "sm" | "lg";
+  /** Yazının solundaki simge; verilmezse yazının sağında ileri oku durur (büyük sekmede ikisi birlikte). */
   icon?: React.ReactNode;
   disabled?: boolean;
   /**
@@ -48,6 +55,11 @@ type CornerTabProps = {
    * gizlenir.
    */
   isDecorative?: boolean;
+  /**
+   * Sekme kabın kenarı boyunca uzar (giriş kartlarında iki oyun sekmesi kartın ortasında buluşur): yazı dış köşede durur,
+   * kabın içine bakan kenardaki kıvrım çizilmez.
+   */
+  stretch?: boolean;
 };
 
 /**
@@ -55,16 +67,18 @@ type CornerTabProps = {
  * kabın köşesine konur; kabın yuvarlaklığı sekmenin dış köşesini kırpar, iki yanındaki içbükey kıvrımlar
  * (globals.css, .corner-fillet) sekmeyi kabın iki kenarına bağlar.
  */
-export function CornerTab({ label, colorClass, fillClass, onClick, corner = "top-right", size = "md", icon, disabled = false, isDecorative = false }: CornerTabProps) {
+export function CornerTab({ label, colorClass, fillClass, onClick, corner = "top-right", size = "md", icon, disabled = false, isDecorative = false, stretch = false }: CornerTabProps) {
   const shape = CORNERS[corner];
   const filletClass = `corner-fillet ${size === "sm" ? "corner-fillet-sm" : ""} ${shape.filletClass} ${fillClass}`;
   return (
-    <div className={`relative z-10 shrink-0 transition-opacity ${disabled ? "opacity-50" : ""}`}>
+    <div className={`relative z-10 shrink-0 transition-opacity ${disabled ? "opacity-50" : ""} ${stretch ? "w-full" : ""}`}>
       <button
         aria-hidden={isDecorative || undefined}
-        className={`group/action pill-shine relative flex cursor-pointer items-center font-bold transition duration-200 hover:brightness-110 focus-visible:ring-4 focus-visible:ring-white/60 focus-visible:outline-none focus-visible:ring-inset active:brightness-95 disabled:cursor-wait disabled:hover:brightness-100 ${
+        className={`group/action pill-shine relative flex cursor-pointer items-center font-bold whitespace-nowrap transition duration-200 hover:brightness-110 focus-visible:ring-4 focus-visible:ring-white/60 focus-visible:outline-none focus-visible:ring-inset active:brightness-95 disabled:cursor-wait disabled:hover:brightness-100 ${
           icon ? "" : "group-hover:gap-2.5 hover:gap-2.5 disabled:hover:gap-1.5"
-        } ${shape[size]} ${size === "sm" ? CORNER_TAB_SIZE_SM : CORNER_TAB_SIZE} ${colorClass}`}
+        } ${shape[size]} ${size === "sm" ? CORNER_TAB_SIZE_SM : size === "lg" ? CORNER_TAB_SIZE_LG : CORNER_TAB_SIZE} ${
+          stretch ? `w-full ${corner.endsWith("right") ? "justify-end" : "justify-start"}` : ""
+        } ${colorClass}`}
         disabled={disabled}
         onClick={onClick}
         tabIndex={isDecorative ? -1 : undefined}
@@ -72,10 +86,10 @@ export function CornerTab({ label, colorClass, fillClass, onClick, corner = "top
       >
         {icon}
         {label}
-        {!icon && !disabled && (
+        {(!icon || size === "lg") && !disabled && (
           <svg
             aria-hidden="true"
-            className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5"
+            className={`h-4 w-4 shrink-0 transition-transform duration-200 group-hover/action:translate-x-1 lg:h-5 lg:w-5 ${size === "lg" ? "max-[22.5rem]:hidden" : ""}`}
             fill="none"
             stroke="currentColor"
             strokeWidth={2.5}
@@ -86,7 +100,7 @@ export function CornerTab({ label, colorClass, fillClass, onClick, corner = "top
         )}
       </button>
       <Fillet className={`${filletClass} ${shape.fillets[0]}`} />
-      <Fillet className={`${filletClass} ${shape.fillets[1]}`} />
+      {!stretch && <Fillet className={`${filletClass} ${shape.fillets[1]}`} />}
     </div>
   );
 }

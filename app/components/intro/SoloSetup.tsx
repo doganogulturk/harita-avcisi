@@ -3,12 +3,12 @@
 import { type GameMode, type PlayKind, type TurkeyPrompt, type WorldPrompt } from "@/lib/game";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { messages } from "@/lib/i18n";
-import { setQuestionPrompt, setTurkeyPrompt, setWorldScope, type IntroGame } from "@/lib/intro-preferences";
+import { setQuestionPrompt, setTurkeyPrompt, setWorldScope } from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
 import { capitalOf } from "@/lib/world-capitals";
 import { CONTINENTS, continentInfo, countries, isContinentScope, scopeCountryCount, scopeLocationIds, type WorldScope } from "@/lib/world-countries";
 import { type CardLeader } from "./ModeGrid";
-import { gameInfo, groupInfo } from "./games";
+import { gameInfo } from "./games";
 import { Field, ScopeChip, SetupShell } from "./SetupParts";
 
 const WORLD_PROMPTS: WorldPrompt[] = ["name", "flag", "capital"];
@@ -38,14 +38,13 @@ type SoloSetupProps = {
   isReady: boolean;
   /** Yarışta giriş yapılmamışsa tuş bunu önceden söyler; giriş adımı sürpriz olmasın. */
   needsSignIn: boolean;
-  onGameChange: (game: IntroGame) => void;
   onMapChange: (map: GameMode) => void;
   onBack: () => void;
   onStart: () => void;
 };
 
 /** Adım 2, Tek başıma: Yarış ya da Antrenman, harita, soru tipi; antrenmanda (dünyada) kapsam. */
-export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isReady, needsSignIn, onGameChange, onMapChange, onBack, onStart }: SoloSetupProps) {
+export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isReady, needsSignIn, onMapChange, onBack, onStart }: SoloSetupProps) {
   // Yarış turu sunucuda açılır; bağlantı yokken başlatılırsa skoru kaydedilemez. Antrenman bağlantısız da oynanır.
   const isOnline = useIsOnline();
   const isBlockedOffline = kind === "ranked" && !isOnline;
@@ -61,14 +60,12 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isRe
     <SetupShell
       actionLabel={isBlockedOffline ? setup.offline : !isReady ? setup.preparing : needsSignIn ? setup.signInAndStart : messages().common.start}
       game={gameInfo(kind)}
-      group={groupInfo("solo")}
       isActionDisabled={!isReady || isBlockedOffline}
       map={map}
       mode={isWorld ? prompt : turkeyPrompt}
       modes={isWorld ? promptOptions(WORLD_PROMPTS) : promptOptions(TURKEY_PROMPTS)}
       onAction={onStart}
       onBack={onBack}
-      onGameChange={onGameChange}
       onMapChange={onMapChange}
       onModeChange={(next) => (isWorld ? setQuestionPrompt(next as WorldPrompt) : setTurkeyPrompt(next as TurkeyPrompt))}
       previewPrompt={isWorld ? prompt : turkeyPrompt}

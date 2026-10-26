@@ -8,8 +8,8 @@ import { type BoardVariant, type GameMode, type Player, type QuestionPrompt } fr
 import { createDuel } from "@/lib/hooks/useDuel";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { messages } from "@/lib/i18n";
-import { setDuelSettingsKey, useDuelSettingsKey, type IntroGame } from "@/lib/intro-preferences";
-import { gameInfo, groupInfo } from "./games";
+import { setDuelSettingsKey, useDuelSettingsKey } from "@/lib/intro-preferences";
+import { gameInfo } from "./games";
 import { Field, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
@@ -30,13 +30,12 @@ type DuelSetupProps = {
   map: GameMode;
   player: Player | null;
   supabaseConfigured: boolean;
-  onGameChange: (game: IntroGame) => void;
   onMapChange: (map: GameMode) => void;
   onBack: () => void;
 };
 
 /** Adım 2, Düello: mod ve kural. Giriş yoksa önce giriş adımı gelir, giriş biter bitmez düello kurulur. */
-export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMapChange, onBack }: DuelSetupProps) {
+export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack }: DuelSetupProps) {
   // Düello sunucuda kurulur; bağlantı yokken tuş kapalıdır.
   const isOnline = useIsOnline();
   const router = useRouter();
@@ -84,7 +83,6 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
       actionLabel={!isOnline ? messages().setup.offline : isBusy ? messages().setup.creating : player ? gameInfo("duel").action : messages().setup.signInAndCreate}
       error={error}
       game={gameInfo("duel")}
-      group={groupInfo("friends")}
       isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
       map={map}
       mode={variant}
@@ -92,7 +90,6 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
       note={messages().setup.duel.note}
       onAction={() => (player ? void create() : setIsAuthStep(true))}
       onBack={onBack}
-      onGameChange={onGameChange}
       onMapChange={onMapChange}
       onModeChange={(next) => save(next as BoardVariant, rule)}
       previewPrompt={previewPromptFor(variant)}

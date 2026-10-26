@@ -33,6 +33,12 @@ export type GameTheme = {
   watermark: string;
   /** Kartın üzerinden süzülen ışığın rengi (globals.css, .card-sweep). */
   glow: string;
+  /** Giriş kartının çerçevesi ve altındaki renkli kalın gölge: kart basılabilir bir oyun kartı gibi durur. */
+  depth: string;
+  /** Kart zeminindeki silik nokta deseninin rengi. */
+  dots: string;
+  /** Giriş kartındaki oyun sekmesinin zemini: dış köşede dolu renk, kartın ortasına doğru şeffaflaşır (yön ayrıca verilir). */
+  fade: string;
 };
 
 export type GameInfo = {
@@ -66,6 +72,9 @@ export const GAMES: GameInfo[] = [
       outline: "border-cyan-300 text-cyan-700 hover:border-cyan-500 hover:bg-cyan-50 focus-visible:ring-cyan-200 focus:border-cyan-500 focus:ring-cyan-100",
       watermark: "text-cyan-600",
       glow: "rgb(6 182 212 / 0.14)",
+      depth: "border-cyan-200 shadow-[0_6px_0_0_#a5f3fc]",
+      dots: "#06b6d4",
+      fade: "from-cyan-600 via-cyan-600/90 to-cyan-600/0 text-white",
     },
   },
   {
@@ -87,6 +96,9 @@ export const GAMES: GameInfo[] = [
       outline: "border-amber-300 text-amber-800 hover:border-amber-500 hover:bg-amber-50 focus-visible:ring-amber-200 focus:border-amber-500 focus:ring-amber-100",
       watermark: "text-amber-500",
       glow: "rgb(245 158 11 / 0.16)",
+      depth: "border-amber-200 shadow-[0_6px_0_0_#fde68a]",
+      dots: "#f59e0b",
+      fade: "from-amber-400 via-amber-400/90 to-amber-400/0 text-amber-950",
     },
   },
   {
@@ -108,6 +120,9 @@ export const GAMES: GameInfo[] = [
       outline: "border-orange-300 text-orange-600 hover:border-orange-500 hover:bg-orange-50 focus-visible:ring-orange-200 focus:border-orange-500 focus:ring-orange-100",
       watermark: "text-orange-500",
       glow: "rgb(249 115 22 / 0.14)",
+      depth: "border-orange-200 shadow-[0_6px_0_0_#fed7aa]",
+      dots: "#f97316",
+      fade: "from-orange-500 via-orange-500/90 to-orange-500/0 text-white",
     },
   },
   {
@@ -136,6 +151,9 @@ export const GAMES: GameInfo[] = [
       outline: "border-violet-300 text-violet-700 hover:border-violet-500 hover:bg-violet-50 focus-visible:ring-violet-200 focus:border-violet-500 focus:ring-violet-100",
       watermark: "text-violet-600",
       glow: "rgb(139 92 246 / 0.14)",
+      depth: "border-violet-200 shadow-[0_6px_0_0_#ddd6fe]",
+      dots: "#8b5cf6",
+      fade: "from-violet-600 via-violet-600/90 to-violet-600/0 text-white",
     },
   },
 ];
@@ -146,7 +164,7 @@ export type GroupInfo = {
   id: IntroGroup;
   readonly title: string;
   readonly description: string;
-  /** İkinci adımın en üstündeki seçicide, bu sırayla. */
+  /** Kartın alt köşelerindeki sekmeler, bu sırayla (soldaki, sağdaki). */
   games: [IntroGame, IntroGame];
   /** Kart, grubun ilk oyununun rengini taşır (Yarış camgöbeği, Düello turuncu). */
   theme: GameTheme;

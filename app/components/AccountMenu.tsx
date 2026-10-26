@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LEGAL_PAGES } from "./legal/LegalPage";
 import { PlayerAvatar } from "./PlayerBadge";
-import { type Player } from "@/lib/game";
+import { flagUrl, type Player } from "@/lib/game";
 import { messages, setLocale, useLocale } from "@/lib/i18n";
 
 type AccountMenuProps = {
@@ -13,6 +14,12 @@ type AccountMenuProps = {
   /** Verilirse menünün başında "Nasıl oynanır?" durur (giriş ekranı; tanıtımı yeniden açar). */
   onShowGuide?: () => void;
 };
+
+/** Dil seçenekleri: yuvarlak bayrak ve kısa ad. İngilizce için Birleşik Krallık bayrağı. */
+const LANGUAGES = [
+  { id: "tr", flag: "tr", short: "TR" },
+  { id: "en", flag: "gb", short: "EN" },
+] as const;
 
 const ITEM_CLASS = "block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold transition focus-visible:outline-none";
 
@@ -97,24 +104,34 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
               {t.menu.guide}
             </button>
           )}
-          {/* Dil: Türkçe / English; seçim hatırlanır, sayfa o dilde yeniden çizilir. */}
-          <div aria-label={t.language.title} className="mx-1.5 my-1 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-0.5" role="radiogroup">
-            {(["tr", "en"] as const).map((option) => (
+          {/* Dil: yuvarlak bayrak ve kısa ad (TR / EN); seçim hatırlanır, sayfa o dilde yeniden çizilir. */}
+          <div aria-label={t.language.title} className="mx-1.5 my-1.5 grid grid-cols-2 gap-1 rounded-full bg-slate-100 p-1" role="radiogroup">
+            {LANGUAGES.map(({ id, flag, short }) => (
               <button
-                aria-checked={locale === option}
-                className={`rounded-md py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
-                  locale === option ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                aria-checked={locale === id}
+                aria-label={t.language[id]}
+                className={`flex items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold tracking-wide transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
+                  locale === id ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-800"
                 }`}
-                key={option}
-                lang={option}
+                key={id}
+                lang={id}
                 onClick={() => {
                   setIsOpen(false);
-                  setLocale(option);
+                  setLocale(id);
                 }}
                 role="radio"
+                title={t.language[id]}
                 type="button"
               >
-                {t.language[option]}
+                <Image
+                  alt=""
+                  className={`h-5 w-5 rounded-full object-cover ring-1 ring-slate-200 ${locale === id ? "" : "opacity-70 grayscale-[40%]"}`}
+                  height={20}
+                  src={flagUrl(flag)}
+                  unoptimized
+                  width={20}
+                />
+                {short}
               </button>
             ))}
           </div>

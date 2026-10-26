@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { type FormEvent, useState } from "react";
+import { flagUrl, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { CornerTab } from "../CornerTab";
@@ -19,7 +21,7 @@ type ModeGridProps = {
   rankedLeaders?: CardLeader[];
 };
 
-export type CardLeader = { place: string; name: string; score: string; time: string };
+export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
 
 /**
  * Adım 1: iki büyük kart, Tek başıma ve Arkadaşlarımla (dikey telefonda alt alta). Kartın sol ve sağ alt köşesinden grubun
@@ -58,9 +60,15 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
   return (
     <section
       aria-label={group.title}
-      className={`intro-focus relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 p-(--card-pad) [--card-pad:1rem] short:[--card-pad:0.75rem] sm:[--card-pad:1.5rem] lg:[--card-pad:2.25rem] ${theme.surface}`}
+      className={`intro-focus relative mb-1.5 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border-2 p-(--card-pad) [--card-pad:1rem] short:[--card-pad:0.75rem] sm:[--card-pad:1.5rem] lg:[--card-pad:2.25rem] ${theme.surface} ${theme.depth}`}
       style={{ "--intro-delay": `${delayMs}ms` } as React.CSSProperties}
     >
+      {/* Zeminde silik nokta deseni (harita ızgarası gibi); kart düz bir kutu değil, bir oyun kartı gibi durur. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
+      />
       {/* Grubun simgesi kartın sağ üst köşesinde büyük ve silik durur; kartı uzaktan tanınır kılar. */}
       <GameIcon
         className={`pointer-events-none absolute -top-6 -right-6 h-36 w-36 opacity-[0.08] short:h-24 short:w-24 sm:h-48 sm:w-48 lg:h-64 lg:w-64 ${theme.watermark}`}
@@ -68,53 +76,118 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
       />
 
       <div className="relative min-w-0">
-        <h2 className="font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl sm:text-4xl lg:text-6xl">{group.title}</h2>
+        <div className="flex items-center gap-3 lg:gap-4">
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm short:h-9 short:w-9 short:rounded-xl lg:h-16 lg:w-16 ${theme.badge}`}>
+            <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-9 lg:w-9" game={group.id} />
+          </span>
+          <h2 className="min-w-0 font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl sm:text-4xl lg:text-6xl">{group.title}</h2>
+        </div>
         <p className="mt-2 line-clamp-2 text-sm text-slate-500 short:mt-1 short:text-xs max-[25rem]:text-xs lg:mt-4 lg:max-w-lg lg:text-lg">{group.description}</p>
+      </div>
 
-        {/* Ortada kartın canlı kısmı: birinciler ve sıralama bağlantısı ya da davet kodu. */}
-        {onShowLeaderboard && (
-          <div className="mt-3 flex flex-col items-start gap-1 short:mt-1.5 lg:mt-5 lg:gap-1.5">
-            {leaders.map((leader) => (
-              <p
-                className="flex max-w-full items-center gap-1 rounded-full bg-white/80 px-2.5 py-0.5 text-xs text-slate-700 shadow-sm lg:px-3 lg:py-1 lg:text-sm"
-                key={leader.place}
-              >
-                <span aria-hidden="true">🏆</span>
-                <span className="shrink-0 font-semibold text-slate-500">{leader.place}</span>
-                <span className="min-w-0 truncate font-bold">{leader.name}</span>
-                <span className="shrink-0 font-semibold tabular-nums">
-                  · {leader.score} · {leader.time}
-                </span>
-              </p>
-            ))}
-            <button
-              className={`hit-area mt-0.5 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition hover:brightness-95 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:px-4 lg:py-1.5 lg:text-sm ${theme.soft}`}
-              onClick={onShowLeaderboard}
-              type="button"
-            >
-              <TrophyIcon />
-              {messages().home.showLeaderboard}
-              <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        )}
+      {/* Kartın canlı kısmı (liderler panosu ya da davet kodu) başlıkla sekmeler arasında kalan yerde dikeyde ortalanır. */}
+      <div className="relative flex min-h-0 flex-1 flex-col justify-center py-3 short:py-1.5 lg:py-5">
+        {onShowLeaderboard && <LeadersBoard leaders={leaders} onShowLeaderboard={onShowLeaderboard} />}
         {onJoin && <JoinForm onJoin={onJoin} outlineClass={theme.outline} submitClass={theme.badge} />}
       </div>
 
-      <div className="min-h-3 flex-1" />
-
-      {/* Grubun iki oyunu kartın alt köşelerinden içeri kıvrılan sekmelerdir (soldaki ve sağdaki), her biri kendi oyununun
-          renginde; dokununca o oyunun ayar ekranı açılır. Bu boşluk sekmelerin yeridir, içerik altlarına girmez. */}
-      <div aria-hidden="true" className="h-9 shrink-0 short:h-8 lg:h-12" />
+      {/* Grubun iki oyunu kartın alt köşelerinden içeri kıvrılan büyük sekmelerdir; ikisi kartın ortasında buluşur. Her biri
+          kendi oyununun renginde, dış köşede dolu ve ortaya doğru şeffaflaşarak; dokununca o oyunun ayar ekranı açılır. Bu
+          boşluk sekmelerin yeridir. */}
+      <div aria-hidden="true" className="h-11 shrink-0 short:h-8 lg:h-16" />
       {group.games.map((id, index) => {
         const game = gameInfo(id);
         return (
-          <div className={`absolute bottom-0 z-10 ${index === 0 ? "left-0" : "right-0"}`} key={id}>
-            <CornerTab colorClass={game.theme.badge} corner={index === 0 ? "bottom-left" : "bottom-right"} fillClass={game.theme.badgeFill} label={game.title} onClick={() => onSelect(id)} />
+          <div className={`absolute bottom-0 z-10 w-1/2 ${index === 0 ? "left-0" : "right-0"}`} key={id}>
+            <CornerTab
+              colorClass={`${index === 0 ? "bg-gradient-to-r" : "bg-gradient-to-l"} ${game.theme.fade}`}
+              corner={index === 0 ? "bottom-left" : "bottom-right"}
+              fillClass={game.theme.badgeFill}
+              icon={<GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game={id} />}
+              label={messages().home.tabs[id]}
+              onClick={() => onSelect(id)}
+              size="lg"
+              stretch
+            />
           </div>
         );
       })}
     </section>
+  );
+}
+
+/** Liderin haritası: Türkiye bayrağı ya da dünya simgesi, yuvarlak. */
+function MapBadge({ map }: { map: GameMode }) {
+  if (map === "turkey") {
+    return <Image alt="" className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-slate-200 lg:h-6 lg:w-6" height={24} src={flagUrl("tr")} unoptimized width={24} />;
+  }
+  return (
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 ring-1 ring-sky-200 lg:h-6 lg:w-6">
+      <svg aria-hidden="true" className="h-3.5 w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * Tek başıma kartındaki liderler panosu: Türkiye'nin ve Dünya'nın birincisi, taçlı ve altın halkalı profil resmiyle;
+ * skor altın renkli bir rozette. Oyuncuya "zirve burada" der; panonun altından sıralama açılır.
+ */
+function LeadersBoard({ leaders, onShowLeaderboard }: { leaders: CardLeader[]; onShowLeaderboard: () => void }) {
+  const { home, boards } = messages();
+  return (
+    <div className="max-w-md rounded-2xl bg-white/85 p-2.5 shadow-sm ring-1 ring-amber-200 short:p-2 lg:p-4">
+      <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-amber-700 uppercase lg:text-xs">
+        <span aria-hidden="true">👑</span>
+        {home.leaders}
+      </p>
+      {leaders.length > 0 && (
+        <ol className="mt-1.5 flex flex-col gap-1 lg:mt-2.5 lg:gap-2">
+          {leaders.map((leader) => (
+            <li className="flex min-w-0 items-center gap-2 lg:gap-3" key={leader.map}>
+              <MapBadge map={leader.map} />
+              <span className="sr-only">{leader.map === "turkey" ? boards.turkey : boards.world}</span>
+              <span className="relative shrink-0">
+                {leader.avatarUrl ? (
+                  <Image
+                    alt=""
+                    className="h-7 w-7 rounded-full object-cover ring-2 ring-amber-400 lg:h-9 lg:w-9"
+                    height={36}
+                    referrerPolicy="no-referrer"
+                    src={leader.avatarUrl}
+                    unoptimized
+                    width={36}
+                  />
+                ) : (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-800 ring-2 ring-amber-400 lg:h-9 lg:w-9 lg:text-sm">
+                    {leader.name.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <span aria-hidden="true" className="absolute -top-2 -right-1.5 rotate-12 text-xs lg:text-sm">
+                  👑
+                </span>
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900 lg:text-base">{leader.name}</span>
+              <span className="shrink-0 rounded-full bg-gradient-to-b from-amber-300 to-amber-400 px-2 py-0.5 font-display text-xs font-bold text-amber-950 tabular-nums shadow-sm lg:px-2.5 lg:text-sm">
+                {leader.score}
+              </span>
+              <span className="w-10 shrink-0 text-right text-xs font-semibold text-slate-500 tabular-nums lg:w-12 lg:text-sm">{leader.time}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <button
+        className="hit-area mt-1.5 flex items-center gap-1 text-xs font-bold text-amber-800 underline-offset-4 transition hover:underline focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none lg:mt-2.5 lg:text-sm"
+        onClick={onShowLeaderboard}
+        type="button"
+      >
+        <TrophyIcon />
+        {home.showLeaderboard}
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
   );
 }
 
@@ -135,8 +208,13 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
   };
 
   return (
-    <form className="mt-3 flex min-w-0 flex-wrap items-center gap-1.5 short:mt-1.5 lg:mt-5 lg:gap-2" onSubmit={(event) => void join(event)}>
-      <label className="w-full text-xs font-semibold text-slate-500 lg:text-sm" htmlFor="join-code">
+    // Liderler panosuyla aynı ince çerçeveli kutu; başlığı da onunki gibi.
+    <form
+      className="flex max-w-md min-w-0 flex-wrap items-center gap-1.5 rounded-2xl bg-white/85 p-2.5 shadow-sm ring-1 ring-orange-200 short:p-2 lg:gap-2 lg:p-4"
+      onSubmit={(event) => void join(event)}
+    >
+      <label className="flex w-full items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-orange-700 uppercase lg:text-xs" htmlFor="join-code">
+        <span aria-hidden="true">🔑</span>
         {messages().home.haveCode}
       </label>
       <input
@@ -152,7 +230,7 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
           setCode(event.target.value);
           setError(null);
         }}
-        placeholder="KX7P2M"
+        placeholder="KOD123"
         spellCheck={false}
         value={code}
       />

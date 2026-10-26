@@ -18,7 +18,7 @@ import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
 import { messages } from "@/lib/i18n";
 import { joinPathFor } from "@/lib/join-code";
-import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
+import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type LeaderboardEntry, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
   setGuideSeen,
   setIntroMap,
@@ -32,10 +32,21 @@ import {
 import { type WorldScope } from "@/lib/world-countries";
 
 /** Tek başıma kartında birincisi gösterilen sıralamalar. */
-const HIGHLIGHT_BOARDS: { id: BoardId; readonly place: string }[] = [
-  { id: "turkey", get place() { return messages().home.leaderIn.turkey; } },
-  { id: "world-hard", get place() { return messages().home.leaderIn.world; } },
+const HIGHLIGHT_BOARDS: { id: BoardId; map: GameMode }[] = [
+  { id: "turkey", map: "turkey" },
+  { id: "world-hard", map: "world" },
 ];
+
+/** Sıralamanın birincisi, giriş ekranındaki liderler panosu ve yarış paneli için. */
+function cardLeader(map: GameMode, entry: LeaderboardEntry): CardLeader {
+  return {
+    map,
+    name: entry.display_name,
+    avatarUrl: entry.avatar_url,
+    score: `${entry.score}/${QUESTIONS_PER_ROUND}`,
+    time: formatTime(Math.round(entry.duration_ms / 1000)),
+  };
+}
 
 type IntroScreenProps = {
   player: Player | null;
@@ -183,11 +194,6 @@ export function IntroScreen({
     window.history.pushState({ [INTRO_STEP_KEY]: game }, "");
   };
 
-  /** Adım 2'nin en üstündeki seçici (Yarış | Antrenman, Düello | Oda): adım aynı kalır, geçmişe yeni kayıt eklenmez. */
-  const changeGame = (game: IntroGame) => {
-    setSelectedGame(game);
-    if (window.history.state?.[INTRO_STEP_KEY]) window.history.replaceState({ [INTRO_STEP_KEY]: game }, "");
-  };
 
   const start = () => {
     onPlay(choiceFor(map, kind));
@@ -206,10 +212,10 @@ export function IntroScreen({
   // yüklenmeyen satır gösterilmez.
   const leaders = useLeaders(supabaseConfigured);
   const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
-  const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, place }) => {
+  const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, map: boardMap }) => {
     const leader = leaders[id];
     return leader
-      ? [{ place, name: leader.display_name, score: `${leader.score}/${QUESTIONS_PER_ROUND}`, time: formatTime(Math.round(leader.duration_ms / 1000)) }]
+      ? [cardLeader(boardMap, leader)]
       : [];
   });
   const boardLeader = leaders[rankedBoardId];
@@ -255,7 +261,7 @@ export function IntroScreen({
 
     if (selectedGame === "duel" || selectedGame === "room") {
       const Setup = selectedGame === "duel" ? DuelSetup : RoomSetup;
-      return <Setup map={map} onBack={goBack} onGameChange={changeGame} onMapChange={setIntroMap} player={player} supabaseConfigured={supabaseConfigured} />;
+      return <Setup map={map} onBack={goBack} onMapChange={setIntroMap} player={player} supabaseConfigured={supabaseConfigured} />;
     }
 
     if (selectedGame) {
@@ -266,12 +272,12 @@ export function IntroScreen({
           kind={kind}
           leader={
             boardLeader
-              ? { place: "", name: boardLeader.display_name, score: `${boardLeader.score}/${QUESTIONS_PER_ROUND}`, time: formatTime(Math.round(boardLeader.duration_ms / 1000)) }
+              ? cardLeader(map, boardLeader)
               : undefined
           }
           map={map}
           onBack={goBack}
-          onGameChange={changeGame}
+         
           onMapChange={setIntroMap}
           onStart={start}
           prompt={prompt}

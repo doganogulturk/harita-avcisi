@@ -6,18 +6,15 @@ import { CornerTab } from "../CornerTab";
 import { SetupPreviewMap } from "../MapDemo";
 import { flagUrl, type GameMode, type QuestionPrompt } from "@/lib/game";
 import { messages } from "@/lib/i18n";
-import { type IntroGame } from "@/lib/intro-preferences";
 import { type WorldScope } from "@/lib/world-countries";
-import { gameInfo, GameIcon, type GameInfo, type GroupInfo } from "./games";
+import { GameIcon, type GameInfo } from "./games";
 
 /** Seçili seçeneğin rengi oyunun rengini izler; SetupShell içindeki seçiciler buradan okur. */
 const SelectedClass = createContext("border-cyan-600 bg-cyan-600 text-white");
 
 type SetupShellProps = {
-  group: GroupInfo;
-  /** Grubun içinde seçili oyun (Yarış, Antrenman, Düello, Oda); renkleri ve künyesi ondan gelir. */
+  /** Oyun (Yarış, Antrenman, Düello, Oda); başlık, simge, renkler ve künye ondan gelir. */
   game: GameInfo;
-  onGameChange: (game: IntroGame) => void;
   map: GameMode;
   onMapChange: (map: GameMode) => void;
   /** Soru tipi ya da mod (İsim / Bayrak / Başkent, İsim / Plaka). */
@@ -38,15 +35,12 @@ type SetupShellProps = {
 };
 
 /**
- * Adım 2, iki grupta da aynı düzen. Solda üstte geri tuşu ve grubun adı; altında sırayla oyun (Yarış | Antrenman ya da
- * Düello | Oda), harita (Türkiye | Dünya) ve soru tipi; en altta bu seçimlerle dönen canlı önizleme. Sağda oyunun kendi
- * ayarları ve panelin sağ üst köşesinde eylem sekmesi. Oyunu ne oynayacağını belirleyen üç seçim yan yana durur;
- * önizleme her seçimin sonucunu hemen gösterir.
+ * Adım 2, dört oyunda aynı düzen. Solda üstte geri tuşu ve oyunun adı (ana ekranda seçilen Yarış, Antrenman, Düello ya da
+ * Oda); altında harita (Türkiye | Dünya) ve soru tipi; en altta bu seçimlerle dönen canlı önizleme. Sağda oyunun kendi
+ * ayarları ve panelin sağ üst köşesinde eylem sekmesi. Önizleme her seçimin sonucunu hemen gösterir.
  */
 export function SetupShell({
-  group,
   game,
-  onGameChange,
   map,
   onMapChange,
   modes,
@@ -71,10 +65,10 @@ export function SetupShell({
           <div className="flex shrink-0 items-center gap-2.5 lg:gap-3">
             <BackButton onClick={onBack} />
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl short:h-8 short:w-8 lg:h-12 lg:w-12 lg:rounded-2xl ${game.theme.tile}`}>
-              <GameIcon className="h-5 w-5 lg:h-7 lg:w-7" game={group.id} />
+              <GameIcon className="h-5 w-5 lg:h-7 lg:w-7" game={game.id} />
             </span>
             <div className="min-w-0">
-              <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl lg:text-4xl">{group.title}</p>
+              <p className="font-display text-2xl leading-none font-bold text-slate-900 short:text-xl lg:text-4xl">{game.title}</p>
               {/* Her künyenin önünde bir nokta durur; satırın başına düşen nokta kabın solundaki taşma alanında kalıp
                   gizlenir. Satır kırılınca "• Sıralamaya işlenir" gibi noktayla başlayan satır olmaz. */}
               <p className="mt-0.5 overflow-hidden text-xs text-slate-500 lg:mt-1 lg:text-sm">
@@ -89,15 +83,6 @@ export function SetupShell({
               </p>
             </div>
           </div>
-
-          <TabSelector
-            label={messages().setup.game}
-            onChange={onGameChange}
-            options={group.games.map((id) => ({ id, label: gameInfo(id).title, icon: <GameIcon className="h-4 w-4 lg:h-5 lg:w-5" game={id} /> }))}
-            selectedClass={game.theme.selected}
-            size="lg"
-            value={game.id}
-          />
 
           {/* Alçak (yatay telefon) ekranda harita ve soru tipi yan yana; önizlemeye yer kalsın. */}
           <div className="flex shrink-0 flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5">
@@ -121,10 +106,10 @@ export function SetupShell({
         </div>
 
         {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Eylem tuşu giriş kartlarındaki gibi
-            panelin sağ üst köşesinden içeri kıvrılan sekmedir; panelin başlığı seçili oyundur. */}
+            panelin sağ üst köşesinden içeri kıvrılan sekmedir. */}
         <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[44%] lg:w-[24rem] xl:w-[26rem]">
           <div className="flex shrink-0 items-start justify-between gap-3">
-            <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{game.title}</p>
+            <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{messages().setup.settings}</p>
             <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />
           </div>
 
@@ -173,29 +158,23 @@ function MapIcon({ map }: { map: GameMode }) {
 }
 
 const TAB_SIZES = {
-  lg: "py-2 font-display text-lg short:py-1 short:text-base lg:py-2.5 lg:text-xl",
   md: "py-1.5 font-display text-base short:py-1 short:text-sm lg:py-2 lg:text-lg",
   sm: "py-1.5 text-sm short:py-1 short:text-xs lg:py-2 lg:text-base",
 };
 
-/**
- * Eşit parçalı seçici: oyun, harita ve soru tipi. Seçili parça beyaz kartla öne çıkar; `selectedClass` verilirse
- * (oyun seçicisi) oyunun rengiyle dolar, en üstteki asıl karar olduğu görünür.
- */
+/** Eşit parçalı seçici: harita ve soru tipi. Seçili parça beyaz kartla öne çıkar. */
 function TabSelector<T extends string>({
   label,
   options,
   value,
   onChange,
   size = "md",
-  selectedClass = "bg-white text-slate-900 shadow-sm",
 }: {
   label: string;
   options: { id: T; label: string; icon?: React.ReactNode }[];
   value: T;
   onChange: (value: T) => void;
   size?: keyof typeof TAB_SIZES;
-  selectedClass?: string;
 }) {
   return (
     <div
@@ -208,7 +187,7 @@ function TabSelector<T extends string>({
         <button
           aria-checked={value === option.id}
           className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-1 font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${TAB_SIZES[size]} ${
-            value === option.id ? selectedClass : "text-slate-500 hover:text-slate-800"
+            value === option.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
           }`}
           key={option.id}
           onClick={() => onChange(option.id)}

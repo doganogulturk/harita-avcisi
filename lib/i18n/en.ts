@@ -96,7 +96,8 @@ export const en: Messages = {
     },
   },
   home: {
-    leaderIn: { turkey: "#1 in Türkiye", world: "#1 worldwide" },
+    leaders: "Leaders",
+    tabs: { ranked: "Race", practice: "Practice", duel: "Create duel", room: "Create room" },
     showLeaderboard: "Leaderboard",
     haveCode: "Got a code?",
     codeLabel: "Duel or room code",
@@ -111,7 +112,7 @@ export const en: Messages = {
   },
   setup: {
     backToGames: "Back to games",
-    game: "Game",
+    settings: "Settings",
     map: "Map",
     promptType: "Question type",
     maps: { turkey: "Türkiye", world: "World" },

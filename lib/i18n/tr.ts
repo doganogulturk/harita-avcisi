@@ -100,7 +100,9 @@ export const tr = {
     },
   },
   home: {
-    leaderIn: { turkey: "Türkiye'de 1.", world: "Dünya'da 1." },
+    leaders: "Liderler",
+    /** Ana ekran kartlarının alt köşelerindeki oyun sekmeleri. */
+    tabs: { ranked: "Yarış", practice: "Antrenman", duel: "Düello kur", room: "Oda kur" },
     showLeaderboard: "Sıralamayı gör",
     haveCode: "Kodun var mı?",
     codeLabel: "Düello ya da oda kodu",
@@ -115,7 +117,7 @@ export const tr = {
   },
   setup: {
     backToGames: "Oyun seçimine dön",
-    game: "Oyun",
+    settings: "Ayarlar",
     map: "Harita",
     promptType: "Soru tipi",
     maps: { turkey: "Türkiye", world: "Dünya" },

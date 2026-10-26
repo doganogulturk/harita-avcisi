@@ -299,7 +299,7 @@ function DuelDemo() {
           </span>
           {duel.title}
         </span>
-        <span className="rounded-xl border border-orange-200 bg-white px-3 py-1 font-mono text-sm font-bold tracking-[0.25em] text-slate-800 lg:text-lg">KX7P2M</span>
+        <span className="rounded-xl border border-orange-200 bg-white px-3 py-1 font-mono text-sm font-bold tracking-[0.25em] text-slate-800 lg:text-lg">KOD123</span>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white p-3 shadow-sm lg:p-5">
         <DemoPlayer initial={messages().guide.youInitial} name={messages().guide.you} score={7} tone="bg-cyan-100 text-cyan-700" />

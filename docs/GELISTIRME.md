@@ -6,12 +6,14 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 ## Oyun
 
 Giriş ekranı iki adımlıdır. İlk adımda iki büyük kart durur: **Tek başıma** (Yarış ve Antrenman) ve **Arkadaşlarımla**
-(Düello ve Oda). Kartın kendisine dokunmak bir şey yapmaz; grubun iki oyunu kartın sol ve sağ alt köşesinden içeri
-kıvrılan sekmelerdir (`CornerTab`), her biri kendi oyununun renginde (Yarış camgöbeği, Antrenman sarı, Düello turuncu, Oda
-mor). Sekme doğrudan o oyunun ayar ekranını açar; ara adım yoktur. Grubun simgesi kartın sağ üst köşesinde büyük ve
-silik durur. Kartın ortasında canlı kısmı vardır: Tek başıma kartında Türkiye'nin ve Dünya'nın birincisi ("Türkiye'de 1.
-Murat · 10/10 · 00:42"; dar ekranda yalnızca ad kısalır) ve **Sıralamayı gör** bağlantısı; Arkadaşlarımla kartında hep
-açık duran kod alanı. Davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için
+(Düello ve Oda). Kartlar renkli çerçeveli, altında kalın renkli gölgeli, zemininde silik nokta deseni olan oyun kartlarıdır;
+başlığın yanında grubun simgesi renkli bir karoda durur. Kartın kendisine dokunmak bir şey yapmaz; grubun iki oyunu kartın
+sol ve sağ alt köşesinden içeri kıvrılan ve kartın ortasında buluşan büyük sekmelerdir (`CornerTab`, `stretch`). Her biri
+kendi oyununun renginde (Yarış camgöbeği, Antrenman sarı, Düello turuncu, Oda mor), dış köşede dolu ve ortaya doğru
+şeffaflaşan bir gradyenle, oyunun simgesi ve adıyla durur. Sekme doğrudan o oyunun ayar ekranını açar; ara adım yoktur.
+Kartın canlı kısmı başlıkla sekmeler arasındaki boşlukta dikeyde ortalanır: Tek başıma kartında **👑 Liderler** panosu
+(Türkiye'nin ve Dünya'nın birincisi; harita simgesi, altın halkalı ve taçlı profil resmi, altın rozette skor ve süre) ve
+**Sıralamayı gör** bağlantısı; Arkadaşlarımla kartında hep açık duran kod alanı. Davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için
 kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa kartta yazar.
 Dikey telefonda kartlar alt alta durur ve ekranı doldurur ama içeriklerinden kısa olamaz; ekran yetmezse liste kayar.
 400 pikselden dar ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Zeminde
@@ -21,17 +23,16 @@ kaplamaz; başlığın sağındaki hesap menüsündedir (`AccountMenu`): profil 
 açılır, içinde oyuncunun adı, tanıtımı yeniden açan **Nasıl oynanır?**, yasal sayfalar ve **Çıkış yap** durur. Aynı menü
 sonuç, düello ve oda ekranlarının başlığında da vardır; dikey telefonda da çıkış yapılabilir.
 
-İkinci adım iki grupta da aynı düzendedir (`intro/SetupParts.tsx`). Solda üstte yuvarlak **←** tuşu ve grubun adı,
-altında sırayla üç seçici: oyun (**Yarış | Antrenman** ya da **Düello | Oda**; seçili olan oyunun rengiyle dolar), harita
-(**Türkiye | Dünya**) ve soru tipi (Türkiye'de İsim / Plaka, dünyada İsim / Bayrak / Başkent). En altta bu seçimlerle
+İkinci adım dört oyunda da aynı düzendedir (`intro/SetupParts.tsx`). Solda üstte yuvarlak **←** tuşu ve ana ekranda
+seçilen oyunun adı ve simgesi (Yarış, Antrenman, Düello ya da Oda), altında iki seçici: harita (**Türkiye | Dünya**) ve
+soru tipi (Türkiye'de İsim / Plaka, dünyada İsim / Bayrak / Başkent). En altta bu seçimlerle
 dönen canlı önizleme durur: haritada soru çıkar ("🏛️ Kanberra hangi ülke?"), bir saniye sonra doğru yer yeşil yanar,
 sonraki soruya geçilir. Seçim değişince döngü o seçimin sorusuyla baştan başlar; antrenmanda seçilen kıta vurgulanır ve
 yalnızca o kıtadan sorulur. Önizleme, küçük haritada da görünsün diye büyük ve tanınır yerlerden sorar; hareket azaltma
 açıksa durur. "Nasıl oynanır?" demosuyla aynı bileşendir (`MapDemo.tsx`). Soru tipinin ne demek olduğu ("Başkent gelir,
-ülkesini bul") haritanın sol alt köşesinde kısa bir not olarak durur. Oyun seçicisi, ana ekrana dönmeden diğer oyuna
-geçmek içindir.
+ülkesini bul") haritanın sol alt köşesinde kısa bir not olarak durur.
 
-Sağdaki panelin başlığı seçili oyundur, eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**) panelin sağ üst köşesinden
+Sağdaki panelin başlığı **Ayarlar**dır, eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**) panelin sağ üst köşesinden
 içeri kıvrılan sekmedir (`CornerTab`). Yarışta seçilecek ayar yoktur: panel soru tipinin ne olduğunu, kaç yerden
 sorulduğunu ve o sıralamanın birincisini söyler. Antrenmanda (dünyada) kapsam, düelloda kural, odada ad, tur sayısı, süre
 ve kişi sınırı vardır. Alçak (yatay telefon) ekranda harita ve soru tipi seçicileri yan yana durur, simgeleri gizlenir;
