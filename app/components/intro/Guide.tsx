@@ -52,9 +52,9 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
         ]
       : []),
     {
-      eyebrow: "Tek başına ya da arkadaşlarla",
+      eyebrow: "Tek başıma ya da arkadaşlarımla",
       title: "Nasıl istersen öyle oyna",
-      body: `Tek başına: Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarla: Düello ya da Oda.`,
+      body: `Tek başıma: Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarımla: Düello ya da Oda.`,
       visual: <GamesDemo />,
     },
     {

@@ -21,17 +21,6 @@ const TURKEY_PROMPT_OPTIONS: { id: TurkeyPrompt; label: string }[] = [
   { id: "plate", label: "Plaka" },
 ];
 
-const WORLD_PROMPT_NOTES: Record<WorldPrompt, string> = {
-  name: "Soru olarak ülkenin adı gelir, sen haritada yerini bulursun.",
-  flag: "Soru olarak bayrak gelir, sen o ülkeyi bulursun.",
-  capital: "Soru olarak başkent gelir, sen ülkesini bulursun.",
-};
-
-const TURKEY_PROMPT_NOTES: Record<TurkeyPrompt, string> = {
-  name: "Soru olarak ilin adı gelir, sen haritada yerini bulursun.",
-  plate: "Soru olarak plaka kodu gelir, sen o ilin yerini bulursun.",
-};
-
 /** Kapsamda sorulacak ülke sayısı; başkent turunda başkenti listede olmayanlar (tartışmalılar, bağlı topraklar) sayılmaz. */
 function questionCount(scope: WorldScope, prompt: WorldPrompt): number {
   return prompt === "capital" ? [...scopeLocationIds(scope)].filter((code) => capitalOf(code)).length : scopeCountryCount(scope);
@@ -60,13 +49,12 @@ type SoloSetupProps = {
   onStart: () => void;
 };
 
-/** Adım 2, Tek başına: Yarış ya da Antrenman, harita, soru tipi; antrenmanda (dünyada) kapsam. */
+/** Adım 2, Tek başıma: Yarış ya da Antrenman, harita, soru tipi; antrenmanda (dünyada) kapsam. */
 export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isReady, needsSignIn, onGameChange, onMapChange, onBack, onStart }: SoloSetupProps) {
   // Yarış turu sunucuda açılır; bağlantı yokken başlatılırsa skoru kaydedilemez. Antrenman bağlantısız da oynanır.
   const isOnline = useIsOnline();
   const isBlockedOffline = kind === "ranked" && !isOnline;
   const isWorld = map === "world";
-  const promptNote = isWorld ? WORLD_PROMPT_NOTES[prompt] : TURKEY_PROMPT_NOTES[turkeyPrompt];
   const poolNote = isWorld
     ? prompt === "capital"
       ? `Başkenti listede olan ${questionCount("all", prompt)} ülkeden sorulur.`
@@ -91,12 +79,9 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isRe
       previewScope={isWorld && kind === "practice" ? scope : "all"}
     >
       {kind === "ranked" ? (
-        // Yarışta seçilecek ayar yok: panel turun ne olduğunu ve bu sıralamanın birincisini söyler.
-        <div className="flex flex-col gap-3 short:gap-1.5">
-          <p className="text-sm text-slate-700 short:text-xs lg:text-base">
-            {promptNote} {poolNote}
-          </p>
-          <p className="text-sm text-slate-500 short:hidden lg:text-base">Eşit puanda hızlı olan önde. Her harita ve soru tipinin kendi sıralaması var.</p>
+        // Yarışta seçilecek ayar yok: panel kısa tutulur (soru tipinin notu haritadadır); havuz ve bu sıralamanın birincisi.
+        <div className="flex flex-col gap-2 short:gap-1.5">
+          <p className="text-sm text-slate-600 short:text-xs">{poolNote} Eşit puanda hızlı olan önde; her harita ve soru tipinin kendi sıralaması var.</p>
           {leader && (
             <p className="flex max-w-full items-center gap-1.5 self-start rounded-full bg-cyan-50 px-3 py-1 text-xs text-slate-700 lg:text-sm">
               <span aria-hidden="true">🏆</span>
@@ -131,9 +116,7 @@ export function SoloSetup({ kind, map, scope, prompt, turkeyPrompt, leader, isRe
           </div>
         </Field>
       ) : (
-        <p className="text-sm text-slate-700 short:text-xs lg:text-base">
-          {promptNote} {poolNote} Süre yok; istediğin kadar oyna, bitirince sonucunu gör.
-        </p>
+        <p className="text-sm text-slate-600 short:text-xs">{poolNote} Süre yok; istediğin kadar oyna, bitirince sonucunu gör.</p>
       )}
     </SetupShell>
   );

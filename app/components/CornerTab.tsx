@@ -6,7 +6,8 @@ const CORNER_TAB_SIZE_SM = "hit-area-y gap-1 py-1.5 pr-3.5 pl-3 text-xs lg:gap-1
 
 /**
  * Köşeye göre sekmenin içe bakan köşesinin yuvarlaklığı ve iki içbükey kıvrımın yeri. Sağ üstte kıvrımlar sekmenin
- * solunda (üst kenarda) ve altında (sağ kenarda); sol altta üstünde (sol kenarda) ve sağında (alt kenarda) durur.
+ * solunda (üst kenarda) ve altında (sağ kenarda); sol altta üstünde (sol kenarda) ve sağında (alt kenarda); sağ altta
+ * üstünde (sağ kenarda) ve solunda (alt kenarda) durur.
  */
 const CORNERS = {
   "top-right": {
@@ -21,6 +22,12 @@ const CORNERS = {
     fillets: ["bottom-full left-0", "bottom-0 left-full"],
     filletClass: "corner-fillet-bl",
   },
+  "bottom-right": {
+    md: "rounded-tl-2xl lg:rounded-tl-3xl",
+    sm: "rounded-tl-xl lg:rounded-tl-2xl",
+    fillets: ["bottom-full right-0", "bottom-0 right-full"],
+    filletClass: "corner-fillet-br",
+  },
 };
 
 type CornerTabProps = {
@@ -30,7 +37,7 @@ type CornerTabProps = {
   /** İçbükey kıvrımların dolgusu, zeminle aynı renk (`theme.badgeFill` / `theme.softFill`). */
   fillClass: string;
   onClick: () => void;
-  /** Sekmenin oturduğu köşe; asıl iş sağ üstte, ikincil iş sol altta. */
+  /** Sekmenin oturduğu köşe; asıl iş sağ üstte, ikincil iş sol altta. Giriş kartlarında iki oyun alt köşelerdedir. */
   corner?: keyof typeof CORNERS;
   size?: "md" | "sm";
   /** Yazının solundaki simge; verilmezse yazının sağında ileri oku durur. */

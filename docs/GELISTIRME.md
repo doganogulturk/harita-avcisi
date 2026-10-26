@@ -5,14 +5,14 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 ## Oyun
 
-Giriş ekranı iki adımlıdır. İlk adımda iki büyük kart durur: **Tek başına** (Yarış ve Antrenman) ve **Arkadaşlarla**
-(Düello ve Oda). Oyuncunun ilk kararı kiminle oynayacağıdır; Yarış / Antrenman ve Düello / Oda seçimi ikinci adımdadır.
-Her kartın rengi (Tek başına camgöbeği, Arkadaşlarla turuncu), bir cümlelik açıklaması ve içindeki iki oyunun etiketi
-vardır. Grubun simgesi kartın sağ alt köşesinde büyük ve silik durur. Kartın eylem tuşu (**Başla**, **Kur**) sağ üst
-köşeden içeri kıvrılan bir sekmedir. Tek başına kartında Türkiye'nin ve Dünya'nın birincisi yazar ("Türkiye'de 1. Murat ·
-10/10 · 00:42"; dar ekranda yalnızca ad kısalır) ve sol alt köşede **Sıralamayı gör** sekmesi durur. Arkadaşlarla
-kartında kod alanı hep açıktır: davetle gelen oyuncu kodu yazıp **Katıl**'a basar. Düello ve oda kodları aynı biçimde
-olduğu için kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`); kod bulunamazsa kartta yazar.
+Giriş ekranı iki adımlıdır. İlk adımda iki büyük kart durur: **Tek başıma** (Yarış ve Antrenman) ve **Arkadaşlarımla**
+(Düello ve Oda). Kartın kendisine dokunmak bir şey yapmaz; grubun iki oyunu kartın sol ve sağ alt köşesinden içeri
+kıvrılan sekmelerdir (`CornerTab`), her biri kendi oyununun renginde (Yarış camgöbeği, Antrenman sarı, Düello turuncu, Oda
+mor). Sekme doğrudan o oyunun ayar ekranını açar; ara adım yoktur. Grubun simgesi kartın sağ üst köşesinde büyük ve
+silik durur. Kartın ortasında canlı kısmı vardır: Tek başıma kartında Türkiye'nin ve Dünya'nın birincisi ("Türkiye'de 1.
+Murat · 10/10 · 00:42"; dar ekranda yalnızca ad kısalır) ve **Sıralamayı gör** bağlantısı; Arkadaşlarımla kartında hep
+açık duran kod alanı. Davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için
+kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa kartta yazar.
 Dikey telefonda kartlar alt alta durur ve ekranı doldurur ama içeriklerinden kısa olamaz; ekran yetmezse liste kayar.
 400 pikselden dar ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Zeminde
 silik enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur,
@@ -27,8 +27,9 @@ altında sırayla üç seçici: oyun (**Yarış | Antrenman** ya da **Düello | 
 dönen canlı önizleme durur: haritada soru çıkar ("🏛️ Kanberra hangi ülke?"), bir saniye sonra doğru yer yeşil yanar,
 sonraki soruya geçilir. Seçim değişince döngü o seçimin sorusuyla baştan başlar; antrenmanda seçilen kıta vurgulanır ve
 yalnızca o kıtadan sorulur. Önizleme, küçük haritada da görünsün diye büyük ve tanınır yerlerden sorar; hareket azaltma
-açıksa durur. "Nasıl oynanır?" demosuyla aynı bileşendir (`MapDemo.tsx`). Grup en son seçilen oyunuyla açılır;
-"Tek başına → Başla" iki dokunuştur.
+açıksa durur. "Nasıl oynanır?" demosuyla aynı bileşendir (`MapDemo.tsx`). Soru tipinin ne demek olduğu ("Başkent gelir,
+ülkesini bul") haritanın sol alt köşesinde kısa bir not olarak durur. Oyun seçicisi, ana ekrana dönmeden diğer oyuna
+geçmek içindir.
 
 Sağdaki panelin başlığı seçili oyundur, eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**) panelin sağ üst köşesinden
 içeri kıvrılan sekmedir (`CornerTab`). Yarışta seçilecek ayar yoktur: panel soru tipinin ne olduğunu, kaç yerden
@@ -84,7 +85,7 @@ yanlış bilinen yer (1/1, %100), yedi kez sorulup altısında yanlış bilinen 
 sorulan yerleri geri iter. Sıralama tarayıcıda yapılır (`useMostMissed.ts`). Her yerin altında en çok neyle
 karıştırıldığı yazar ("Tunceli sanılıyor"); oyuncunun o turda kendisinin de yanlış
 yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada isim, Bayrak ve Başkent ayrı değerlendirilir.
-Giriş ekranındaki Tek başına kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
+Giriş ekranındaki Tek başıma kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
 Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
 
 ### Antrenman
@@ -104,9 +105,9 @@ sürenin dolmasını beklemek gerekmez. Bırakılan turun skoru kaydedilmez.
 
 ### Düello
 
-İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Arkadaşlarla** kartında **Düello** seçilince ikinci adımda
+İki oyuncu aynı sorularla aynı anda yarışır. Giriş ekranında **Arkadaşlarımla** kartında **Düello** seçilince ikinci adımda
 harita ve mod (Türkiye: Şehir, Plaka · Dünya: Ülke, Bayrak, Başkent) ile kural seçilir, düello kurulunca
-`/duello?kod=<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Arkadaşlarla kartındaki
+`/duello?kod=<kod>` sayfasına geçilir. Kod ya da bağlantı rakibe gönderilir; rakip bağlantıyı açar (ya da Arkadaşlarımla kartındaki
 kod alanına kodu yazar), giriş yapar (misafir de olur) ve lobiye katılır. İkisi de **Hazırım** deyince 3 saniyelik geri
 sayımla başlar.
 
@@ -128,9 +129,9 @@ sayımla başlar.
 
 ### Oda
 
-Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranında **Arkadaşlarla** kartında **Oda** seçilince ikinci adımda
+Bir grup aynı sorularla kendi içinde yarışır. Giriş ekranında **Arkadaşlarımla** kartında **Oda** seçilince ikinci adımda
 oda adı, harita ve mod, tur sayısı (1 / 3 / 5), süre (15 dk / 30 dk / 1 saat) ve kişi sınırı (5 / 10 / 20 / 50) seçilir.
-Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Arkadaşlarla kartındaki kod alanından da girer.
+Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, kodu olan Arkadaşlarımla kartındaki kod alanından da girer.
 
 - **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an
   işlemeye başlar. Başlatılmayan oda 24 saat sonra kapanır. Oda başladıktan sonra bağlantıyı açan katılamaz ama

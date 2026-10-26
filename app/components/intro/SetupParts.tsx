@@ -109,15 +109,19 @@ export function SetupShell({
             <TabSelector label="Soru tipi" onChange={onModeChange} options={modes} size="sm" value={mode} />
           </div>
 
-          {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. */}
+          {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. Soru tipinin ne demek olduğu
+              haritanın sol alt köşesinde (denizde) kısa bir not olarak durur. */}
           <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] md:min-h-0">
             <SetupPreviewMap mode={map} prompt={previewPrompt} scope={previewScope} />
+            <p className="pointer-events-none absolute bottom-0 left-0 max-w-[85%] rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-sm lg:px-3 lg:py-1 lg:text-sm">
+              {PROMPT_NOTES[map === "turkey" ? "turkey" : "world"][previewPrompt] ?? ""}
+            </p>
           </div>
         </div>
 
         {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Eylem tuşu giriş kartlarındaki gibi
             panelin sağ üst köşesinden içeri kıvrılan sekmedir; panelin başlığı seçili oyundur. */}
-        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[50%] lg:w-[30rem] xl:w-[34rem]">
+        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[44%] lg:w-[24rem] xl:w-[26rem]">
           <div className="flex shrink-0 items-start justify-between gap-3">
             <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{game.title}</p>
             <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />
@@ -152,6 +156,12 @@ function BackButton({ onClick }: { onClick: () => void }) {
     </button>
   );
 }
+
+/** Önizlemenin altındaki kısa not: soru tipinde ne gelir, oyuncu ne bulur. */
+const PROMPT_NOTES: Record<GameMode, Partial<Record<QuestionPrompt, string>>> = {
+  turkey: { name: "İlin adı gelir, haritada yerini bul", plate: "Plaka gelir, o ili bul" },
+  world: { name: "Ülkenin adı gelir, haritada yerini bul", flag: "Bayrak gelir, o ülkeyi bul", capital: "Başkent gelir, ülkesini bul" },
+};
 
 const MAP_OPTIONS: { id: GameMode; label: string }[] = [
   { id: "turkey", label: "Türkiye" },

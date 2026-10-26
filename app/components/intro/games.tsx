@@ -40,8 +40,6 @@ export type GameInfo = {
   description: string;
   facts: string[];
   action: string;
-  /** Kartın sağ üst köşesindeki eylem sekmesi. */
-  cardAction: string;
   theme: GameTheme;
 };
 
@@ -54,7 +52,6 @@ export const GAMES: GameInfo[] = [
     description: `${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye. Eşit puanda hızlı olan önde; sonucun sıralamaya işlenir.`,
     facts: [`${QUESTIONS_PER_ROUND} soru`, `${GAME_DURATION_SECONDS} sn`, "Sıralamaya işlenir"],
     action: "Başla",
-    cardAction: "Başla",
     theme: {
       surface: "bg-gradient-to-br from-cyan-50 via-white to-white",
       selected: "border-cyan-600 bg-cyan-600 text-white",
@@ -76,7 +73,6 @@ export const GAMES: GameInfo[] = [
     description: "Giriş yok, süre yok. İstediğin kadar oyna, kıtaları tek tek çalış; hiçbir yere kaydedilmez.",
     facts: ["Sınırsız soru", "Süre yok", "Kaydedilmez"],
     action: "Başla",
-    cardAction: "Başla",
     theme: {
       surface: "bg-gradient-to-br from-amber-50 via-white to-white",
       selected: "border-amber-400 bg-amber-400 text-amber-950",
@@ -98,7 +94,6 @@ export const GAMES: GameInfo[] = [
     description: "Bir arkadaşınla aynı sorulara aynı anda cevap verin. Kodu gönder, kim daha hızlı görün.",
     facts: ["2 kişi", `${DUEL_QUESTIONS} soru · ${DUEL_QUESTION_MS / 1000} sn`, "Sıralamaya işlenmez"],
     action: "Düelloyu kur",
-    cardAction: "Oluştur",
     theme: {
       surface: "bg-gradient-to-br from-orange-50 via-white to-white",
       selected: "border-orange-500 bg-orange-500 text-white",
@@ -124,7 +119,6 @@ export const GAMES: GameInfo[] = [
       `${formatMinutes(ROOM_DURATIONS[0])} – ${formatMinutes(ROOM_DURATIONS.at(-1) ?? 60)}`,
     ],
     action: "Odayı kur",
-    cardAction: "Oluştur",
     theme: {
       surface: "bg-gradient-to-br from-violet-50 via-white to-white",
       selected: "border-violet-600 bg-violet-600 text-white",
@@ -150,27 +144,24 @@ export type GroupInfo = {
   description: string;
   /** İkinci adımın en üstündeki seçicide, bu sırayla. */
   games: [IntroGame, IntroGame];
-  cardAction: string;
   /** Kart, grubun ilk oyununun rengini taşır (Yarış camgöbeği, Düello turuncu). */
   theme: GameTheme;
 };
 
-/** Giriş ekranının ilk adımındaki iki kart: oyuncunun ilk kararı tek başına mı, arkadaşlarla mı oynayacağı. */
+/** Giriş ekranının ilk adımındaki iki kart; her kartın altında grubun iki oyununun tuşu durur. */
 export const GROUPS: GroupInfo[] = [
   {
     id: "solo",
-    title: "Tek başına",
+    title: "Tek başıma",
     description: `Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama; antrenmanda süre yok, istediğin kıtayı çalış.`,
     games: ["ranked", "practice"],
-    cardAction: "Başla",
     theme: gameInfo("ranked").theme,
   },
   {
     id: "friends",
-    title: "Arkadaşlarla",
+    title: "Arkadaşlarımla",
     description: "Düelloda bir arkadaşınla aynı anda, odada bir grupla birkaç tur. Kodu gönder, kim daha iyi görün.",
     games: ["duel", "room"],
-    cardAction: "Kur",
     theme: gameInfo("duel").theme,
   },
 ];

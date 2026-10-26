@@ -19,24 +19,18 @@ import { SoloSetup } from "./intro/SoloSetup";
 import { joinPathFor } from "@/lib/join-code";
 import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
-  groupOf,
-  setFriendsGame,
   setGuideSeen,
   setIntroMap,
-  setSoloGame,
-  useFriendsGame,
   useGuideSeen,
   useIntroMap,
   useQuestionPrompt,
-  useSoloGame,
   useTurkeyPrompt,
   useWorldScope,
   type IntroGame,
-  type IntroGroup,
 } from "@/lib/intro-preferences";
 import { type WorldScope } from "@/lib/world-countries";
 
-/** Tek başına kartında birincisi gösterilen sıralamalar. */
+/** Tek başıma kartında birincisi gösterilen sıralamalar. */
 const HIGHLIGHT_BOARDS: { id: BoardId; place: string }[] = [
   { id: "turkey", place: "Türkiye'de" },
   { id: "world-hard", place: "Dünya'da" },
@@ -112,8 +106,6 @@ export function IntroScreen({
   const storedScope = useWorldScope();
   const prompt = useQuestionPrompt();
   const turkeyPrompt = useTurkeyPrompt();
-  const soloGame = useSoloGame();
-  const friendsGame = useFriendsGame();
   // Menünün açıldığı adım ilk çizimde donar; sonradan gelen prop değişikliği adımı değiştirmez.
   const [openedAtGame] = useState(startGame);
   const [selectedGame, setSelectedGame] = useState<IntroGame | null>(openedAtGame);
@@ -183,9 +175,8 @@ export function IntroScreen({
     if (pendingChoice) onCancelPendingChoice();
   };
 
-  // Oyuncu kartların netleşmesini beklemeden bir grup seçtiyse animasyon da biter. Grup en son seçilen oyunuyla açılır.
-  const selectGroup = (group: IntroGroup) => {
-    const game = group === "solo" ? soloGame : friendsGame;
+  // Oyuncu kartların netleşmesini beklemeden bir oyun seçtiyse animasyon da biter.
+  const selectGame = (game: IntroGame) => {
     setIsIntroDone(true);
     setSelectedGame(game);
     window.history.pushState({ [INTRO_STEP_KEY]: game }, "");
@@ -193,8 +184,6 @@ export function IntroScreen({
 
   /** Adım 2'nin en üstündeki seçici (Yarış | Antrenman, Düello | Oda): adım aynı kalır, geçmişe yeni kayıt eklenmez. */
   const changeGame = (game: IntroGame) => {
-    if (groupOf(game) === "solo") setSoloGame(game as typeof soloGame);
-    else setFriendsGame(game as typeof friendsGame);
     setSelectedGame(game);
     if (window.history.state?.[INTRO_STEP_KEY]) window.history.replaceState({ [INTRO_STEP_KEY]: game }, "");
   };
@@ -212,7 +201,7 @@ export function IntroScreen({
     if (dailyNotice) setDailySheet((current) => current ?? { board: null });
   }, [dailyNotice]);
 
-  // Tek başına kartında Türkiye'nin ve Dünya'nın (isimle) birincisi, yarış panelinde seçili sıralamanın birincisi;
+  // Tek başıma kartında Türkiye'nin ve Dünya'nın (isimle) birincisi, yarış panelinde seçili sıralamanın birincisi;
   // yüklenmeyen satır gösterilmez.
   const leaders = useLeaders(supabaseConfigured);
   const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
@@ -302,7 +291,7 @@ export function IntroScreen({
           router.push(path);
           return null;
         }}
-        onSelect={selectGroup}
+        onSelect={selectGame}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />
     );
