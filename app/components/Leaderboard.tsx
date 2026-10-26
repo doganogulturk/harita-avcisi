@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { BOARDS, formatTime, GAME_DURATION_MS, type BoardId, type LeaderboardEntry } from "@/lib/game";
 import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
+import { messages } from "@/lib/i18n";
 
 type LeaderboardProps = {
   leaderboards: Leaderboards;
@@ -39,7 +40,7 @@ const UNKNOWN_DURATION_MS = 2147483647;
  * baktığı için çubuklar yukarıdan aşağı düzenli uzamaz. Süre, dolan kısmın sağ ucunda yazar.
  */
 function DurationBar({ durationMs, isCurrentPlayer }: { durationMs: number; isCurrentPlayer: boolean }) {
-  if (durationMs >= UNKNOWN_DURATION_MS) return <span className="text-xs text-slate-400">süre yok</span>;
+  if (durationMs >= UNKNOWN_DURATION_MS) return <span className="text-xs text-slate-400">{messages().leaderboard.noDuration}</span>;
 
   const ratio = Math.min(1, Math.max(0, durationMs / GAME_DURATION_MS));
   return (
@@ -90,15 +91,15 @@ function LeaderboardRow({ entry, rank, isCurrentPlayer }: { entry: LeaderboardEn
         <span className={`truncate ${isTop ? "font-bold text-slate-900" : "font-medium text-slate-700"}`}>{entry.display_name}</span>
         {isCurrentPlayer && (
           // Dar ekranda satırın mavi zemini yeter; etiket ismin yerini yemesin.
-          <span className="hidden shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase min-[25rem]:inline">Sen</span>
+          <span className="hidden shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase min-[25rem]:inline">{messages().leaderboard.you}</span>
         )}
       </span>
       {/* Çubuğun içindeki süre yazısı kadar yer her zaman ayrılır; isim kısalır, çubuk puanın üstüne taşmaz. */}
-      <span className="hidden min-w-[3.25rem] shrink grow-[9] basis-0 sm:block" title="Süre (0-120 sn)">
+      <span className="hidden min-w-[3.25rem] shrink grow-[9] basis-0 sm:block" title={messages().leaderboard.durationTitle}>
         <DurationBar durationMs={entry.duration_ms} isCurrentPlayer={isCurrentPlayer} />
       </span>
       {/* Puan tek başına yazar ("10"); her tur 10 soru olduğu için birim yazısı gerekmez. */}
-      <span className="flex w-10 shrink-0 flex-col items-end" title="Puan">
+      <span className="flex w-10 shrink-0 flex-col items-end" title={messages().leaderboard.score}>
         <span className="font-display text-lg leading-tight font-bold tabular-nums text-slate-900">{entry.score}</span>
         {entry.duration_ms < UNKNOWN_DURATION_MS && (
           <span className="text-[11px] leading-tight text-slate-500 tabular-nums sm:hidden">{formatTime(Math.round(entry.duration_ms / 1000))}</span>
@@ -117,8 +118,8 @@ export function Leaderboard({
   isLoading,
   tall = false,
   fillHeight = false,
-  title = "Sıralama",
-  emptyText = "Bu haritada henüz sonuç yok.",
+  title = messages().leaderboard.title,
+  emptyText = messages().leaderboard.empty,
   hideTabs = false,
   onBoardChange,
 }: LeaderboardProps) {
@@ -159,7 +160,7 @@ export function Leaderboard({
           <p className="py-8 text-center text-sm font-medium text-rose-600">{leaderboardError}</p>
         ) : entries.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">
-            {isStillLoading ? "Sıralama yükleniyor..." : emptyText}
+            {isStillLoading ? messages().leaderboard.loading : emptyText}
           </p>
         ) : (
           <ol className="space-y-1.5">

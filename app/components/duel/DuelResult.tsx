@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useState } from "react";
 import {
   DUEL_RULES,
@@ -30,7 +31,7 @@ function AnswerCell({ state, answer, tone }: { state: DuelState; answer: DuelAns
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       {answer.correct ? (
-        <span className="font-semibold text-emerald-600">✓ {((answer.response_ms ?? 0) / 1000).toFixed(1).replace(".", ",")} sn</span>
+        <span className="font-semibold text-emerald-600">✓ {messages().duel.seconds(answer.response_ms ?? 0)}</span>
       ) : (
         <span className="font-semibold text-rose-500">✗ {locationLabel(state.game_mode, state.variant, answer.selected)}</span>
       )}
@@ -51,25 +52,26 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
   const currentSettings: DuelSettings = { mode: state.game_mode, variant: variantFor(state.game_mode, state.variant), rule: state.rule };
   const [settings, setSettings] = useState<DuelSettings>(currentSettings);
   const rematch = state.rematch;
-  const opponentName = opponent?.name ?? "Rakibin";
+  const text = messages().duel;
+  const opponentName = opponent?.name ?? text.yourOpponent;
 
   if (rematch && !rematch.declined && rematch.by !== me?.id) {
     return (
       <div className="rounded-2xl border-2 border-orange-300 bg-orange-50 p-4 text-center">
-        <p className="font-display text-xl font-bold text-slate-900">{opponentName} rövanş istiyor!</p>
+        <p className="font-display text-xl font-bold text-slate-900">{text.rematchRequest(opponentName)}</p>
         <p className="mt-1 text-sm text-slate-600">
           {duelModeLabel(rematch.game_mode, rematch.variant)} · {DUEL_RULES[rematch.rule].icon} {DUEL_RULES[rematch.rule].label}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button className={`${SHIMMER_BUTTON} !py-2.5 !text-lg`} onClick={() => onAcceptRematch(rematch.code)} type="button">
-            Kabul et
+            {text.accept}
           </button>
           <button
             className="rounded-2xl border-2 border-slate-200 bg-white font-display text-lg font-bold text-slate-600 transition hover:border-rose-300 hover:text-rose-600"
             onClick={onDeclineRematch}
             type="button"
           >
-            Reddet
+            {text.decline}
           </button>
         </div>
       </div>
@@ -79,16 +81,16 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
   return (
     <div className="flex flex-col gap-3">
       {rematch?.declined && rematch.by === me?.id && (
-        <p className="rounded-xl bg-slate-100 px-3 py-2 text-center text-sm text-slate-600">{opponentName} rövanşı reddetti.</p>
+        <p className="rounded-xl bg-slate-100 px-3 py-2 text-center text-sm text-slate-600">{text.rematchDeclined(opponentName)}</p>
       )}
       {isChoosing ? (
         <>
           <DuelSettingsPicker onChange={setSettings} value={settings} />
           <button className={SHIMMER_BUTTON} disabled={isRequestingRematch} onClick={() => onRematch(settings)} type="button">
-            Rövanş iste
+            {text.requestRematch}
           </button>
           <button className="text-sm font-semibold text-slate-500 hover:text-cyan-700" onClick={() => setIsChoosing(false)} type="button">
-            Vazgeç
+            {text.cancel}
           </button>
         </>
       ) : (
@@ -101,14 +103,15 @@ function RematchPanel({ state, onRematch, onAcceptRematch, onDeclineRematch, isR
               onClick={() => onRematch(currentSettings)}
               type="button"
             >
-              ↻ Rövanş
+              {text.rematch}
             </button>
             <button
               className="sweep sweep-cyan rounded-2xl px-3 py-3 font-display text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:text-cyan-700"
               onClick={() => setIsChoosing(true)}
               type="button"
             >
-              Başka modla<span className="hidden @sm:inline"> rövanş</span>
+              {text.otherMode}
+              <span className="hidden @sm:inline">{text.otherModeSuffix}</span>
             </button>
           </div>
         </div>
@@ -124,9 +127,9 @@ export function DuelResult(props: DuelResultProps) {
 
   const isDraw = state.winner_id === null;
   const iWon = state.winner_id === me.id;
-  const title = isDraw ? "Berabere! 🤝" : iWon ? "Kazandın! 🏆" : `${opponent.name} kazandı`;
-  const forfeitNote =
-    state.finish_reason === "forfeit" ? (iWon ? `${opponent.name} düellodan ayrıldı; hükmen kazandın.` : "Bağlantın koptuğu için hükmen kaybettin.") : null;
+  const text = messages().duel;
+  const title = isDraw ? text.draw : iWon ? text.youWon : text.theyWon(opponent.name);
+  const forfeitNote = state.finish_reason === "forfeit" ? (iWon ? text.forfeitWin(opponent.name) : text.forfeitLoss) : null;
 
   return (
     <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[26rem_minmax(0,1fr)] lg:gap-5">
@@ -151,13 +154,13 @@ export function DuelResult(props: DuelResultProps) {
         </div>
         {myWins + opponentWins > 1 && (
           <span className="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">
-            Seri: Sen {myWins} – {opponentWins} {opponent.name}
+            {text.series(myWins, opponentWins, opponent.name)}
           </span>
         )}
         <div className="flex w-full flex-col gap-3 pt-2 lg:mt-auto">
           <RematchPanel {...props} />
           <button className="text-sm font-semibold text-slate-500 underline-offset-4 hover:text-cyan-700 hover:underline" onClick={onHome} type="button">
-            Ana menü
+            {text.home}
           </button>
         </div>
       </aside>
@@ -167,8 +170,8 @@ export function DuelResult(props: DuelResultProps) {
           <thead>
             <tr className="text-left text-xs text-slate-500">
               <th className="w-8 pb-2 font-semibold">#</th>
-              <th className="pb-2 font-semibold">Soru</th>
-              <th className={`pb-2 font-semibold ${TONE_TEXT.me}`}>Sen</th>
+              <th className="pb-2 font-semibold">{text.tableQuestion}</th>
+              <th className={`pb-2 font-semibold ${TONE_TEXT.me}`}>{text.tableYou}</th>
               <th className={`pb-2 font-semibold ${TONE_TEXT.opponent}`}>{opponent.name}</th>
             </tr>
           </thead>
@@ -187,7 +190,7 @@ export function DuelResult(props: DuelResultProps) {
             ))}
           </tbody>
         </table>
-        <p className="mt-4 text-xs text-slate-500">✓ doğru ve cevap süresi · ✗ yanlış tıkladığı yer · — cevaplamadı</p>
+        <p className="mt-4 text-xs text-slate-500">{text.tableLegend}</p>
       </section>
     </div>
   );

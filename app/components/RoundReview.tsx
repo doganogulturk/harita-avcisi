@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { PlateBadge } from "./GameTopBar";
 import { flagUrl, formatPlate, isCapitalChoice, isFlagChoice, isPlateChoice, locationName, type AnswerRecord, type PlayChoice } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { capitalOf } from "@/lib/world-capitals";
 
 /** Antrenmanda cevap sayısı sınırsız; liste açılınca bu yüksekliği aşarsa kendi içinde kayar. */
@@ -54,7 +55,7 @@ export function RoundReview({ choice, answers }: { choice: PlayChoice; answers: 
         onClick={() => setIsOpen(!isOpen)}
         type="button"
       >
-        {isOpen ? "Soruları gizle" : "Soruları gör"}
+        {isOpen ? messages().review.hide : messages().review.show}
         <svg aria-hidden="true" className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
           <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -74,7 +75,7 @@ export function RoundReview({ choice, answers }: { choice: PlayChoice; answers: 
                 {isCorrect ? (
                   <span className="shrink-0 font-bold text-emerald-600">✓</span>
                 ) : (
-                  <span className="min-w-0 max-w-[45%] truncate text-xs font-semibold text-rose-600" title={`Tıkladığın: ${picked}`}>
+                  <span className="min-w-0 max-w-[45%] truncate text-xs font-semibold text-rose-600" title={messages().review.picked(picked)}>
                     ✗ {isPlateChoice(choice) ? `${formatPlate(Number(answer.selected))} ` : ""}
                     {picked}
                   </span>

@@ -6,6 +6,7 @@ import { SignInPanel } from "../SignInPanel";
 import { variantFor } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
+import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
@@ -48,7 +49,8 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
   };
   const variant = variantFor(map, options.variant);
 
-  const validationError = options.name.trim() ? null : "Odaya bir ad ver.";
+  const { setup } = messages();
+  const validationError = options.name.trim() ? null : setup.room.nameRequired;
 
   const create = async () => {
     if (validationError) return setError(validationError);
@@ -73,11 +75,11 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
     return (
       <div className="mx-auto w-full max-w-2xl">
         <SignInPanel
-          description="Odada ve sıralamada görünmek için giriş yap; misafir girişi de olur. Giriş yapar yapmaz oda kurulur."
+          description={setup.room.signInDescription}
           onCancel={() => setIsAuthStep(false)}
           onSignedIn={() => void create()}
           redirectTo={window.location.origin}
-          title={<>👥 Oda kurmak için giriş yap</>}
+          title={setup.room.signInTitle}
         />
       </div>
     );
@@ -85,7 +87,7 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
 
   return (
     <SetupShell
-      actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("room").action : "Giriş yap ve kur"}
+      actionLabel={!isOnline ? setup.offline : isBusy ? setup.creating : player ? gameInfo("room").action : setup.signInAndCreate}
       error={error}
       game={gameInfo("room")}
       group={groupInfo("friends")}
@@ -96,12 +98,12 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
       onGameChange={onGameChange}
       onModeChange={(next) => update({ variant: next as BoardVariant })}
       previewPrompt={previewPromptFor(variant)}
-      note="Her tur 10 soru ve 120 saniye, soruları herkese aynı. Süre sen başlatınca işler; turlar genel sıralamaya da işlenir."
+      note={setup.room.note}
       onAction={() => (player ? void create() : validationError ? setError(validationError) : setIsAuthStep(true))}
       onBack={onBack}
       onMapChange={onMapChange}
     >
-      <Field htmlFor="room-name" label="Oda adı">
+      <Field htmlFor="room-name" label={setup.room.name}>
         <input
           className="w-full rounded-xl border border-slate-300 px-4 py-2 outline-none short:px-3 short:py-1.5 short:text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
           autoComplete="off"
@@ -109,14 +111,14 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
           id="room-name"
           maxLength={ROOM_NAME_MAX}
           onChange={(event) => update({ name: event.target.value })}
-          placeholder="ör. Cuma akşamı"
+          placeholder={setup.room.namePlaceholder}
           value={options.name}
         />
       </Field>
 
-      <Field label="Tur sayısı">
+      <Field label={setup.room.rounds}>
         <Segmented
-          label="Tur sayısı"
+          label={setup.room.rounds}
           onChange={(roundCount) => update({ roundCount })}
           options={ROOM_ROUND_COUNTS.map((count) => ({
             id: count,
@@ -125,9 +127,9 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
           value={options.roundCount}
         />
       </Field>
-      <Field label="Süre">
+      <Field label={setup.room.duration}>
         <Segmented
-          label="Oda süresi"
+          label={setup.room.duration}
           onChange={(durationMinutes) => update({ durationMinutes })}
           options={ROOM_DURATIONS.map((minutes) => ({
             id: minutes,
@@ -137,9 +139,9 @@ export function RoomSetup({ map, player, supabaseConfigured, onGameChange, onMap
         />
       </Field>
 
-      <Field label="Kişi sınırı">
+      <Field label={setup.room.maxPlayers}>
         <Segmented
-          label="Kişi sınırı"
+          label={setup.room.maxPlayers}
           onChange={(maxPlayers) => update({ maxPlayers })}
           options={ROOM_PLAYER_PRESETS.map((preset) => ({ id: preset, label: String(preset) }))}
           value={options.maxPlayers as (typeof ROOM_PLAYER_PRESETS)[number]}

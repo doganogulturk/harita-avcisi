@@ -1,5 +1,7 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
+import { serverMessage } from "@/lib/i18n/server-messages";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { type Player } from "@/lib/game";
@@ -54,7 +56,7 @@ export function useRoom(code: string, player: Player | null) {
       isPolling = false;
       if (!isActive) return;
       if (error) {
-        if (!hasJoined) return setFatalError(error.message || "Odaya bağlanılamadı.");
+        if (!hasJoined) return setFatalError(serverMessage(error.message) || messages().errors.roomConnectFailed);
       } else {
         hasJoined = true;
         apply(data as RoomState);
@@ -86,7 +88,7 @@ export function useRoom(code: string, player: Player | null) {
     if (!supabase) return;
     setActionError(null);
     const { data, error } = await supabase.rpc("start_room", { p_code: code });
-    if (error) return setActionError(error.message);
+    if (error) return setActionError(serverMessage(error.message));
     apply(data as RoomState);
   }, [apply, code]);
 
@@ -98,7 +100,7 @@ export function useRoom(code: string, player: Player | null) {
       setActionError(null);
       const { data, error } = await supabase.rpc("start_room_round", { p_code: code, p_round: round });
       if (error) {
-        setActionError(error.message);
+        setActionError(serverMessage(error.message));
         return null;
       }
       const { round_id: roundId, questions } = data as { round_id: string; questions: string[] };
@@ -115,7 +117,7 @@ export function useRoom(code: string, player: Player | null) {
 /** Yeni oda kurar ve kodunu döndürür. */
 export async function createRoom(settings: RoomSettings): Promise<{ code: string } | { error: string }> {
   const supabase = getSupabaseClient();
-  if (!supabase) return { error: "Supabase bağlantısı yapılandırılmalıdır." };
+  if (!supabase) return { error: messages().errors.notConfigured };
   const { data, error } = await supabase.rpc("create_room", {
     p_name: settings.name,
     p_game_mode: settings.mode,
@@ -124,6 +126,6 @@ export async function createRoom(settings: RoomSettings): Promise<{ code: string
     p_duration_minutes: settings.durationMinutes,
     p_max_players: settings.maxPlayers,
   });
-  if (error || typeof data !== "string") return { error: error?.message ?? "Oda kurulamadı." };
+  if (error || typeof data !== "string") return { error: error ? serverMessage(error.message) : messages().errors.roomCreateFailed };
   return { code: data };
 }

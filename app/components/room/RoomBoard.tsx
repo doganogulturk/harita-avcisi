@@ -1,5 +1,7 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
+import { serverMessage } from "@/lib/i18n/server-messages";
 import { useEffect, useState } from "react";
 import { duelModeLabel } from "@/lib/duel";
 import { formatTime } from "@/lib/game";
@@ -29,8 +31,12 @@ function useCountdown(endsAt: string | null, serverNow: () => number): number {
 
 function RoundCell({ result }: { result: RoomRoundResult | undefined }) {
   if (!result) return <span className="text-slate-300">—</span>;
-  if (result.status === "playing") return <span className="text-xs font-semibold text-cyan-600">oynuyor…</span>;
-  if (result.status === "abandoned") return <span className="text-xs font-semibold text-slate-400" title="Başlatıldı, bitirilmedi">yarım</span>;
+  if (result.status === "playing") return <span className="text-xs font-semibold text-cyan-600">{messages().room.playing}</span>;
+  if (result.status === "abandoned") return (
+      <span className="text-xs font-semibold text-slate-400" title={messages().room.abandonedTitle}>
+        {messages().room.abandoned}
+      </span>
+    );
   return (
     <span className="font-semibold text-slate-800 tabular-nums" title={formatTime(Math.round(result.duration_ms / 1000))}>
       {result.score}
@@ -41,6 +47,7 @@ function RoundCell({ result }: { result: RoomRoundResult | undefined }) {
 /** Oyuncunun kendi turları: bitti, yarım, oynanıyor, sıradaki ya da kilitli. */
 function MyRounds({ state, me }: { state: RoomState; me: RoomPlayer | undefined }) {
   const next = nextRoundOf(state, me?.id);
+  const room = messages().room;
   return (
     <ol className="flex flex-col gap-1.5">
       {Array.from({ length: state.round_count }, (_, index) => {
@@ -48,16 +55,16 @@ function MyRounds({ state, me }: { state: RoomState; me: RoomPlayer | undefined 
         const result = me?.rounds.find((item) => item.round === round);
         const text = !result
           ? round === next && state.status === "playing"
-            ? "Sıradaki"
+            ? room.next
             : "—"
           : result.status === "done"
             ? `✓ ${result.score}/10 · ${formatTime(Math.round(result.duration_ms / 1000))}`
             : result.status === "abandoned"
-              ? "Yarım · 0 puan"
-              : "Oynanıyor…";
+              ? room.abandonedRound
+              : room.inProgress;
         return (
           <li className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2 text-sm" key={round}>
-            <span className="font-bold text-slate-500">Tur {round}</span>
+            <span className="font-bold text-slate-500">{room.round(round)}</span>
             <span className={`font-semibold tabular-nums ${result?.status === "done" ? "text-emerald-700" : "text-slate-500"}`}>{text}</span>
           </li>
         );
@@ -83,7 +90,7 @@ function Podium({ players, playerId }: { players: RoomPlayer[]; playerId: string
             <span className="text-2xl">{medal}</span>
             <DuelAvatar avatar={player.avatar} name={player.name} size="md" tone={player.id === playerId ? "me" : "opponent"} />
             <span className="w-full truncate text-sm font-bold text-slate-900">{player.name}</span>
-            <span className="text-xs font-semibold text-slate-500 tabular-nums">{player.total_score} puan</span>
+            <span className="text-xs font-semibold text-slate-500 tabular-nums">{messages().room.points(player.total_score)}</span>
             <div className={`w-full rounded-t-xl bg-gradient-to-b from-cyan-400 to-cyan-600 ${height}`} />
           </div>
         );
@@ -102,22 +109,23 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
   const me = state.players.find((player) => player.id === playerId);
   const next = nextRoundOf(state, playerId);
   const isFinished = state.status === "finished";
+  const room = messages().room;
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[24rem_minmax(0,1fr)] lg:gap-5">
       <aside className="flex flex-col gap-5 rounded-3xl border-2 border-slate-200 bg-white p-5 lg:min-h-0 lg:overflow-y-auto lg:p-7">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">
-            👥 {duelModeLabel(state.game_mode, state.variant)} · {state.round_count} tur
+            👥 {duelModeLabel(state.game_mode, state.variant)} · {room.rounds(state.round_count)}
           </p>
           <h1 className="mt-2 font-display text-3xl leading-none font-bold break-words text-slate-900 sm:text-4xl">{state.name}</h1>
         </div>
 
         {isFinished ? (
-          <p className="rounded-2xl bg-slate-100 px-4 py-3 text-center font-display text-2xl font-bold text-slate-700">🏁 Oda kapandı</p>
+          <p className="rounded-2xl bg-slate-100 px-4 py-3 text-center font-display text-2xl font-bold text-slate-700">{room.closed}</p>
         ) : (
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-center">
-            <p className="text-xs text-slate-500">Kalan süre</p>
+            <p className="text-xs text-slate-500">{room.timeLeft}</p>
             <p className={`font-display text-5xl font-bold tabular-nums ${remainingSeconds <= 60 ? "text-rose-600" : "text-slate-900"}`}>
               {formatTime(remainingSeconds)}
             </p>
@@ -127,57 +135,58 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
         {lastOutcome && (
           <p className={`rounded-xl px-4 py-2 text-center text-sm font-semibold ${lastOutcome.saved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
             {lastOutcome.saved
-              ? `Tur ${lastOutcome.round} kaydedildi: ${lastOutcome.score}/10 · ${formatTime(Math.round(lastOutcome.durationMs / 1000))}`
+              ? room.saved(lastOutcome.round, lastOutcome.score, formatTime(Math.round(lastOutcome.durationMs / 1000)))
               : lastOutcome.abandoned
-                ? `Tur ${lastOutcome.round} bırakıldı; 0 puan sayılır.`
-                : `Tur ${lastOutcome.round} kaydedilemedi; 0 puan sayılır.`}
+                ? room.abandonedNote(lastOutcome.round)
+                : room.notSaved(lastOutcome.round)}
           </p>
         )}
 
         {state.is_member ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-bold text-slate-900">Turların</p>
+            <p className="text-sm font-bold text-slate-900">{room.yourRounds}</p>
             <MyRounds me={me} state={state} />
           </div>
         ) : (
           <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-            {state.join_error ?? "Bu odanın oyuncusu değilsin."} Sıralamayı izleyebilirsin.
+            {state.join_error ? serverMessage(state.join_error) : room.notMember}
+            {room.canWatch}
           </p>
         )}
 
         <div className="flex flex-col gap-3 pt-2 lg:mt-auto">
           {state.is_member && !isFinished && next !== null && (
             <button className={SHIMMER_BUTTON} disabled={isStartingRound} onClick={() => onPlayRound(next)} type="button">
-              ▶ {next}. turu oyna
+              {room.playRound(next)}
             </button>
           )}
           {state.is_member && !isFinished && next === null && (
             <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700">
-              🎉 Tüm turları oynadın. Sıralama oda kapanınca kesinleşir.
+              {room.allDone}
             </p>
           )}
           {actionError && <p className="text-center text-sm font-semibold text-rose-600">{actionError}</p>}
           <button className="text-sm font-semibold text-slate-500 underline-offset-4 hover:text-cyan-700 hover:underline" onClick={onHome} type="button">
-            Ana menü
+            {room.home}
           </button>
         </div>
       </aside>
 
       <section className="rounded-3xl border-2 border-slate-200 bg-white p-5 lg:min-h-0 lg:overflow-y-auto lg:p-7">
-        <p className="mb-4 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">{isFinished ? "Sonuçlar" : "Oda sıralaması · canlı"}</p>
+        <p className="mb-4 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">{isFinished ? room.results : room.live}</p>
         {isFinished && <Podium playerId={playerId} players={state.players} />}
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-slate-500">
               <th className="w-8 pb-2 font-semibold">#</th>
-              <th className="pb-2 font-semibold">Oyuncu</th>
+              <th className="pb-2 font-semibold">{room.player}</th>
               {Array.from({ length: state.round_count }, (_, index) => (
                 <th className="hidden w-12 pb-2 text-center font-semibold sm:table-cell" key={index}>
-                  T{index + 1}
+                  {room.roundShort(index + 1)}
                 </th>
               ))}
-              <th className="w-16 pb-2 text-right font-semibold">Puan</th>
-              <th className="hidden w-16 pb-2 text-right font-semibold sm:table-cell">Süre</th>
+              <th className="w-16 pb-2 text-right font-semibold">{room.score}</th>
+              <th className="hidden w-16 pb-2 text-right font-semibold sm:table-cell">{room.time}</th>
             </tr>
           </thead>
           <tbody>
@@ -190,12 +199,12 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
                   <span className="flex min-w-0 items-center gap-2">
                     <DuelAvatar avatar={player.avatar} name={player.name} tone={player.id === playerId ? "me" : "opponent"} />
                     <span className="truncate font-bold text-slate-900">
-                      {player.id === state.host_id && <span title="Oda sahibi">👑 </span>}
+                      {player.id === state.host_id && <span title={room.host}>👑 </span>}
                       {player.name}
                     </span>
                     {player.id === playerId && (
                       <span className="hidden shrink-0 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase min-[25rem]:inline">
-                        Sen
+                        {room.you}
                       </span>
                     )}
                   </span>
@@ -219,8 +228,8 @@ export function RoomBoard({ state, playerId, serverNow, lastOutcome, actionError
           </tbody>
         </table>
         <p className="mt-4 text-xs text-slate-500">
-          <span className="hidden sm:inline">T: tur puanı (10 üzerinden) · yarım: başlatılıp bitirilmedi, 0 sayılır · </span>
-          Eşit puanda toplam süre kısa olan önde.
+          <span className="hidden sm:inline">{room.legend}</span>
+          {room.tieRule}
         </p>
       </section>
     </div>

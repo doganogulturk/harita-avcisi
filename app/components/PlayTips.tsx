@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useState } from "react";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { lockLandscape, useIsPortraitPhone } from "@/lib/orientation";
@@ -33,13 +34,13 @@ export function PinchDemo() {
 
 const STEPS = [
   {
-    title: "Yan çevir, harita büyüsün",
-    body: "Yatayda harita iki kat büyük olur; küçük ülkeleri ve illeri daha kolay bulursun.",
+    get title() { return messages().playTips.rotateTitle; },
+    get body() { return messages().playTips.rotateBody; },
     visual: <RotateDemo />,
   },
   {
-    title: "İki parmakla yakınlaştır",
-    body: "Malta, Singapur gibi küçük yerler için parmaklarını haritanın üstünde aç; sonraki soruda harita eski haline döner.",
+    get title() { return messages().playTips.pinchTitle; },
+    get body() { return messages().playTips.pinchBody; },
     visual: <PinchDemo />,
   },
 ];
@@ -102,15 +103,15 @@ export function PlayTips({ canLockLandscape, onDone, onCancel }: PlayTipsProps) 
                 }}
                 type="button"
               >
-                Yatay moda geç
+                {messages().playTips.toLandscape}
               </button>
               <button className="rounded-2xl px-5 py-2.5 text-sm font-semibold text-slate-500 transition hover:text-cyan-700" onClick={next} type="button">
-                Dikeyde devam et
+                {messages().playTips.stayPortrait}
               </button>
             </>
           ) : (
             <button className="rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-cyan-700" onClick={next} type="button">
-              {isLast ? "Başla" : "Devam et"}
+              {isLast ? messages().common.start : messages().common.continue}
             </button>
           )}
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { messages } from "@/lib/i18n";
 import { getSupabaseClient, SUPABASE_SCHEMA } from "@/lib/supabase";
 import {
   BOARDS,
@@ -107,7 +108,7 @@ export function useLeaderboards(isOpen: boolean) {
     const load = async () => {
       const loaded = await fetchLeaderboards(supabase);
       if (!isActive) return;
-      if (!loaded) return setLeaderboardError("Sıralama yüklenemedi. Lütfen tekrar deneyin.");
+      if (!loaded) return setLeaderboardError(messages().leaderboard.loadFailed);
       setLeaderboardError(null);
       setLeaderboards(loaded);
     };
@@ -181,7 +182,7 @@ export function useLeaderboard({ player, roundId, serverRound, isFinished, choic
     const loadLeaderboards = async () => {
       const loaded = await fetchLeaderboards(supabase);
       if (!isActive) return;
-      if (!loaded) return setLeaderboardError("Sıralama yüklenemedi. Lütfen tekrar deneyin.");
+      if (!loaded) return setLeaderboardError(messages().leaderboard.loadFailed);
       setLeaderboardError(null);
       setLeaderboards(loaded);
     };

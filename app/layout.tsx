@@ -3,6 +3,7 @@ import { Stack_Sans_Notch } from "next/font/google";
 import "./globals.css";
 import { ConnectionBanner } from "./components/ConnectionBanner";
 import { KeyboardFocus } from "./components/KeyboardFocus";
+import { LocaleRoot } from "./components/LocaleRoot";
 import { NativeBackButton } from "./components/NativeBackButton";
 import { NativeSystemBars } from "./components/NativeSystemBars";
 import { WebAnalytics } from "./components/WebAnalytics";
@@ -44,8 +45,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html className={displayFont.variable} lang="tr">
       <body>
-        {children}
-        <ConnectionBanner />
+        <LocaleRoot>
+          {children}
+          <ConnectionBanner />
+        </LocaleRoot>
         <KeyboardFocus />
         <NativeBackButton />
         <NativeSystemBars />

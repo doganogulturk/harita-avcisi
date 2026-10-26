@@ -1,3 +1,5 @@
+import { messages } from "@/lib/i18n";
+
 const LOGO_SIZES = {
   header: {
     // Dar telefonda (400 pikselden dar) başlıkta giriş ve bilgi tuşlarına yer kalsın diye küçülür; en dar telefonlarda
@@ -7,12 +9,14 @@ const LOGO_SIZES = {
       "h-10 w-10 rounded-2xl short:h-9 short:w-9 short:rounded-xl max-[25rem]:h-9 max-[25rem]:w-9 max-[25rem]:rounded-xl max-[22.5rem]:hidden lg:h-12 lg:w-12",
     icon: "h-6 w-6 max-[25rem]:h-5 max-[25rem]:w-5 lg:h-7 lg:w-7",
     text: "text-3xl short:text-2xl max-[25rem]:text-2xl lg:text-4xl",
+    subtitle: "mt-0.5 text-[9px] short:text-[8px] lg:text-[11px]",
   },
   curtain: {
     row: "gap-4 lg:gap-6",
     badge: "h-16 w-16 rounded-3xl short:h-12 short:w-12 short:rounded-2xl lg:h-24 lg:w-24",
     icon: "h-10 w-10 short:h-8 short:w-8 lg:h-14 lg:w-14",
     text: "text-5xl short:text-3xl lg:text-7xl",
+    subtitle: "mt-1.5 text-sm short:text-xs lg:text-xl",
   },
 };
 
@@ -23,6 +27,7 @@ const LOGO_SIZES = {
 export function Logo({ size = "header", isHeading = true }: { size?: keyof typeof LOGO_SIZES; isHeading?: boolean }) {
   const style = LOGO_SIZES[size];
   const Tag = isHeading ? "h1" : "span";
+  const subtitle = messages().brand.subtitle;
   return (
     <Tag className={`flex items-center ${style.row}`}>
       <span
@@ -36,8 +41,12 @@ export function Logo({ size = "header", isHeading = true }: { size?: keyof typeo
           <circle cx="12" cy="12" fill="currentColor" r="1.5" stroke="none" />
         </svg>
       </span>
-      <span className={`intro-reveal font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap text-slate-900 ${style.text}`}>
-        harita <span className="text-cyan-700">avcısı</span>
+      <span className="intro-reveal flex flex-col">
+        <span className={`font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap text-slate-900 ${style.text}`}>
+          harita <span className="text-cyan-700">avcısı</span>
+        </span>
+        {/* İngilizce arayüzde adın altında küçük İngilizce karşılığı; marka Türkçe kalır. */}
+        {subtitle && <span className={`font-bold tracking-[0.2em] whitespace-nowrap text-slate-400 uppercase ${style.subtitle}`}>{subtitle}</span>}
       </span>
     </Tag>
   );

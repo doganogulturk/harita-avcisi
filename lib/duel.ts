@@ -1,7 +1,8 @@
+import { messages } from "@/lib/i18n";
 import { choiceForBoard, formatPlate, type BoardVariant, type GameMode, type PlayChoice, type Question } from "@/lib/game";
 import { provinces } from "@/lib/turkish-plates";
 import { capitalOf } from "@/lib/world-capitals";
-import { countries } from "@/lib/world-countries";
+import { countries, countryName } from "@/lib/world-countries";
 
 /**
  * Düello: iki oyuncu aynı sorularla aynı anda yarışır. Hakem sunucudur (supabase/schema.sql, duel_*):
@@ -16,28 +17,28 @@ export const DUEL_QUESTIONS = 10;
 export const DUEL_QUESTION_MS = 15000;
 export const DUEL_REVEAL_MS = 3000;
 
-export const DUEL_RULES: Record<DuelRule, { icon: string; label: string; summary: string }> = {
-  snatch: { icon: "⚡", label: "Kapan kazanır", summary: "İlk doğru bilen puanı alır. Yanlış tıklarsan soru rakibe kalır." },
-  shared: { icon: "🎯", label: "Herkes puan alır", summary: "Doğru bilen puan alır, ikiniz de bilirseniz hızlı olana +1." },
+export const DUEL_RULES: Record<DuelRule, { icon: string; readonly label: string; readonly summary: string }> = {
+  snatch: { icon: "⚡", get label() { return messages().duelRules.snatch.label; }, get summary() { return messages().duelRules.snatch.summary; } },
+  shared: { icon: "🎯", get label() { return messages().duelRules.shared.label; }, get summary() { return messages().duelRules.shared.summary; } },
 };
 
-/** Düelloda seçilebilen modlar; her biri genel sıralamadaki bir tura karşılık gelir. */
-export const DUEL_MODES: { mode: GameMode; title: string; options: { variant: BoardVariant; label: string }[] }[] = [
+/** Düelloda seçilebilen modlar; her biri genel sıralamadaki bir tura karşılık gelir. Adları arayüz dilindedir. */
+export const DUEL_MODES: { mode: GameMode; readonly title: string; options: { variant: BoardVariant; readonly label: string }[] }[] = [
   {
     mode: "turkey",
-    title: "Türkiye",
+    get title() { return messages().boards.turkey; },
     options: [
-      { variant: "normal", label: "Şehir" },
-      { variant: "plates", label: "Plaka" },
+      { variant: "normal", get label() { return messages().duelModes.city; } },
+      { variant: "plates", get label() { return messages().boards.plates; } },
     ],
   },
   {
     mode: "world",
-    title: "Dünya",
+    get title() { return messages().boards.world; },
     options: [
-      { variant: "hard", label: "Ülke" },
-      { variant: "flags", label: "Bayrak" },
-      { variant: "capitals", label: "Başkent" },
+      { variant: "hard", get label() { return messages().duelModes.country; } },
+      { variant: "flags", get label() { return messages().boards.flags; } },
+      { variant: "capitals", get label() { return messages().boards.capitals; } },
     ],
   },
 ];
@@ -48,12 +49,12 @@ export type DuelSettings = { mode: GameMode; variant: BoardVariant; rule: DuelRu
  * Kaldırılan dünya "normal" modunda (58 tanınmış ülke) kurulmuş eski düello ve odaların etiketi. Sunucu bu modu
  * güncellenmemiş uygulamalar için hâlâ kabul eder; seçeneklerde yoktur.
  */
-const LEGACY_MODE_LABELS: Partial<Record<`${GameMode}|${BoardVariant}`, string>> = { "world|normal": "Tanınmış ülkeler" };
+const legacyModeLabel = (mode: GameMode, variant: BoardVariant) => (mode === "world" && variant === "normal" ? messages().boards.legacyWorldShort : undefined);
 
 export function duelModeLabel(mode: GameMode, variant: BoardVariant): string {
   const group = DUEL_MODES.find((candidate) => candidate.mode === mode);
   const option = group?.options.find((candidate) => candidate.variant === variant);
-  return `${group?.title ?? mode} · ${option?.label ?? LEGACY_MODE_LABELS[`${mode}|${variant}`] ?? variant}`;
+  return `${group?.title ?? mode} · ${option?.label ?? legacyModeLabel(mode, variant) ?? variant}`;
 }
 
 /**
@@ -83,7 +84,7 @@ export function locationLabel(mode: GameMode, variant: BoardVariant, locationId:
   if (!question) return locationId.toUpperCase();
   if ("city" in question) return variant === "plates" ? `${formatPlate(question.plate)} ${question.city}` : question.city;
   const capital = variant === "capitals" ? capitalOf(question.code) : undefined;
-  return capital ? `${capital} · ${question.name}` : question.name;
+  return capital ? `${capital} · ${countryName(question)}` : countryName(question);
 }
 
 export type DuelPlayer = { id: string; name: string; avatar: string | null; ready: boolean; score: number; online: boolean };

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { LEGAL_PAGES } from "./legal/LegalPage";
 import { PlayerAvatar } from "./PlayerBadge";
 import { type Player } from "@/lib/game";
+import { messages, setLocale, useLocale } from "@/lib/i18n";
 
 type AccountMenuProps = {
   player: Player | null;
@@ -22,6 +23,8 @@ const ITEM_CLASS = "block w-full rounded-lg px-3 py-2 text-left text-sm font-sem
  */
 export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const t = messages();
+  const locale = useLocale();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
       <button
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        aria-label={player ? `Hesap menüsü · ${player.name}` : "Menü"}
+        aria-label={player ? t.menu.accountOf(player.name) : t.menu.menu}
         className="hit-area flex items-center gap-2 rounded-full transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:gap-3"
         onClick={() => setIsOpen((open) => !open)}
         type="button"
@@ -68,7 +71,7 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
 
       {isOpen && (
         <nav
-          aria-label="Hesap menüsü"
+          aria-label={t.menu.account}
           className="absolute top-full right-0 z-30 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10"
         >
           {player && (
@@ -77,7 +80,7 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
                 {player.name}
               </p>
               <Link className={`${ITEM_CLASS} font-bold text-slate-900 hover:bg-slate-100 focus-visible:bg-slate-100`} href="/profil">
-                Profilim
+                {t.menu.profile}
               </Link>
               <div className="mx-3 my-1 border-t border-slate-100" />
             </>
@@ -91,9 +94,30 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
               }}
               type="button"
             >
-              Nasıl oynanır?
+              {t.menu.guide}
             </button>
           )}
+          {/* Dil: Türkçe / English; seçim hatırlanır, sayfa o dilde yeniden çizilir. */}
+          <div aria-label={t.language.title} className="mx-1.5 my-1 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-0.5" role="radiogroup">
+            {(["tr", "en"] as const).map((option) => (
+              <button
+                aria-checked={locale === option}
+                className={`rounded-md py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${
+                  locale === option ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+                key={option}
+                lang={option}
+                onClick={() => {
+                  setIsOpen(false);
+                  setLocale(option);
+                }}
+                role="radio"
+                type="button"
+              >
+                {t.language[option]}
+              </button>
+            ))}
+          </div>
           {LEGAL_PAGES.map((page) => (
             <Link className={`${ITEM_CLASS} text-slate-700 hover:bg-slate-100 focus-visible:bg-slate-100`} href={page.href} key={page.href}>
               {page.label}
@@ -110,7 +134,7 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
                 }}
                 type="button"
               >
-                Çıkış yap
+                {t.menu.signOut}
               </button>
             </>
           )}

@@ -24,6 +24,7 @@ import {
   type Player,
 } from "@/lib/game";
 import { type Leaderboards, type SaveResult } from "@/lib/hooks/useLeaderboard";
+import { messages } from "@/lib/i18n";
 
 type ResultScreenProps = {
   player: Player | null;
@@ -91,7 +92,7 @@ function ResultShell({
   return (
     <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 short:gap-2 short:py-2 md:overflow-hidden lg:gap-5 lg:px-8 lg:py-5">
       <header className="flex shrink-0 items-center justify-between gap-3">
-        <button aria-label="Ana menü" className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
+        <button aria-label={messages().menu.home} className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
           <Logo isHeading={false} />
         </button>
         <AccountMenu onSignOut={onSignOut} player={player} />
@@ -146,16 +147,16 @@ function SaveNotice({ result, onRetry }: { result: SaveResult | null; onRetry: (
     <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 short:py-2" role="alert">
       {result === "failed" ? (
         <>
-          <p className="font-semibold">Skorun kaydedilemedi.</p>
-          <p className="mt-0.5 text-xs text-rose-700">Bağlantı gelince kendiliğinden yeniden denenir.</p>
+          <p className="font-semibold">{messages().result.saveFailed}</p>
+          <p className="mt-0.5 text-xs text-rose-700">{messages().result.saveFailedNote}</p>
           <button className="mt-2 font-bold text-rose-700 underline underline-offset-4 hover:text-rose-900" onClick={onRetry} type="button">
-            Tekrar dene
+            {messages().result.retry}
           </button>
         </>
       ) : (
         <>
-          <p className="font-semibold">Bu tur kaydedilemedi.</p>
-          <p className="mt-0.5 text-xs text-rose-700">Tur başlarken bağlantı kurulamadı; sıralamaya girmek için yeni bir tur oyna.</p>
+          <p className="font-semibold">{messages().result.noRound}</p>
+          <p className="mt-0.5 text-xs text-rose-700">{messages().result.noRoundNote}</p>
         </>
       )}
     </div>
@@ -173,7 +174,7 @@ function ResultLinks({ chooseLabel, onChooseAnother, onHome }: { chooseLabel: st
       </button>
       <span aria-hidden="true" className="h-1 w-1 rounded-full bg-slate-300" />
       <button className={`${RESULT_LINK_CLASS} text-slate-500 hover:text-cyan-700`} onClick={onHome} type="button">
-        Ana menü
+        {messages().result.home}
       </button>
     </div>
   );
@@ -245,16 +246,15 @@ export function ResultScreen({
   const personalBest = leaderboards[playedBoardId].find((entry) => entry.user_id === player?.id);
   const rank = personalBest ? leaderboards[playedBoardId].indexOf(personalBest) + 1 : 0;
   const duration = formatTime(Math.round(durationMs / 1000));
-  const shareText = `Harita Avcısı'nda ${choiceLabel(choice)} yarışında ${score}/${questionCount} yaptım, süre ${duration}.${
-    rank > 0 ? ` Sıralamada ${rank}. sıradayım.` : ""
-  } Sen kaç yaparsın?`;
+  const text = messages().result;
+  const shareText = text.shareRanked(choiceLabel(choice), score, questionCount, duration, rank);
 
   return (
     <ResultShell
       onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
-            <SummaryHeading eyebrow={choiceLabel(choice)} title="Tur tamamlandı" />
+            <SummaryHeading eyebrow={choiceLabel(choice)} title={text.roundDone} />
 
             {/* Skor solda, en uzun seri ve süre sağında alt alta. */}
             <div className={SCORE_ROW}>
@@ -265,14 +265,14 @@ export function ResultScreen({
                 </p>
                 {personalBest && (
                   <p className="mt-1.5 text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums lg:text-sm">
-                    En iyin {personalBest.score}/{questionCount} · {formatTime(Math.round(personalBest.duration_ms / 1000))}
+                    {text.personalBest(personalBest.score, questionCount, formatTime(Math.round(personalBest.duration_ms / 1000)))}
                   </p>
                 )}
               </div>
 
               <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <StatTile label="En uzun seri" value={String(bestStreak)} />
-                <StatTile label="Süre" value={duration} />
+                <StatTile label={text.bestStreak} value={String(bestStreak)} />
+                <StatTile label={text.duration} value={duration} />
               </dl>
             </div>
 
@@ -286,10 +286,10 @@ export function ResultScreen({
             <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
               {/* Aynı turu tekrar oynamak ve skoru paylaşmak yan yana; ikisi de tur biter bitmez yapılan işler. */}
               <div className="grid grid-cols-2 gap-2">
-                <PrimaryButton isCompact label="Tekrar oyna" onClick={() => onPlay(choice)} />
+                <PrimaryButton isCompact label={text.playAgain} onClick={() => onPlay(choice)} />
                 <ShareScoreButton isCompact text={shareText} />
               </div>
-              <ResultLinks chooseLabel="Başka tur seç" onChooseAnother={onChooseAnother} onHome={onHome} />
+              <ResultLinks chooseLabel={text.chooseRound} onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
           </aside>
       }
@@ -356,13 +356,14 @@ function PracticeResult({
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
   // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın 179 ülkelik sıralamasına düşer).
   const rankedBoard = BOARDS.find((board) => board.id === boardIdFor(choice)) ?? BOARDS[0];
+  const text = messages().result;
 
   return (
     <ResultShell
       onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
-            <SummaryHeading eyebrow={choiceLabel(choice)} title="Antrenman bitti" />
+            <SummaryHeading eyebrow={choiceLabel(choice)} title={text.practiceDone} />
 
             <div className={SCORE_ROW}>
               <div className="shrink-0">
@@ -373,32 +374,32 @@ function PracticeResult({
               </div>
 
               <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <StatTile label="Başarı" value={`%${accuracy}`} />
-                <StatTile label="En uzun seri" value={String(bestStreak)} />
-                <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
+                <StatTile label={text.accuracy} value={text.percent(accuracy)} />
+                <StatTile label={text.bestStreak} value={String(bestStreak)} />
+                <StatTile label={text.duration} value={formatTime(Math.round(durationMs / 1000))} />
               </dl>
             </div>
 
             <RoundReview answers={answerRecords} choice={choice} />
 
             <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
-              <PrimaryButton label="Tekrar antrenman" onClick={() => onPlay(choice)} />
-              <ResultLinks chooseLabel="Başka antrenman seç" onChooseAnother={onChooseAnother} onHome={onHome} />
+              <PrimaryButton label={text.practiceAgain} onClick={() => onPlay(choice)} />
+              <ResultLinks chooseLabel={text.choosePractice} onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
 
             {/* Antrenmandan yarışa davet. Giriş yapılmamışsa yarış tuşu giriş adımını açar; bu yüzden önceden söylenir. */}
             <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4">
-              <p className="text-sm font-bold text-slate-900">Skorun sıralamaya girsin mi?</p>
+              <p className="text-sm font-bold text-slate-900">{text.inviteTitle}</p>
               <p className="mt-1 text-xs text-slate-600">
-                Yarışta {QUESTIONS_PER_ROUND} soru, {GAME_DURATION_SECONDS} saniye; sonucun {rankedBoard.label} sıralamasına işlenir.
-                {!player && " Google ya da misafir adıyla giriş yeter."}
+                {text.inviteBody(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS, rankedBoard.label)}
+                {!player && text.inviteSignIn}
               </p>
               <button
                 className="mt-2 text-sm font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-800 hover:decoration-cyan-600"
                 onClick={() => onPlay(choiceForBoard(rankedBoard))}
                 type="button"
               >
-                {player ? `${rankedBoard.label} yarışına başla →` : `Giriş yap, ${rankedBoard.label} yarışına başla →`}
+                {player ? text.inviteStart(rankedBoard.label) : text.inviteSignInStart(rankedBoard.label)}
               </button>
             </div>
           </aside>
@@ -437,13 +438,14 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
   const leaderboards = useDailyLeaderboards(saveResult !== null, saveResult);
   const mine = status?.results.find((result) => boardOf(result) === boardId);
   const answers = answerRecords.map((answer) => answer.location === answer.selected);
+  const text = messages().result;
 
   return (
     <ResultShell
       onHome={onHome}
       aside={
         <aside className={SUMMARY_CARD}>
-          <SummaryHeading eyebrow={choiceLabel(choice)} title="Meydan okuma tamam" />
+          <SummaryHeading eyebrow={choiceLabel(choice)} title={text.dailyDone} />
 
           <div className={SCORE_ROW}>
             <p className="shrink-0 font-display leading-none font-bold text-slate-900 tabular-nums">
@@ -451,9 +453,9 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
               <span className="text-3xl text-slate-400 short:text-2xl">/{questionCount}</span>
             </p>
             <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <StatTile label="Süre" value={formatTime(Math.round(durationMs / 1000))} />
-              <StatTile label="Günün sırası" value={mine ? `${mine.rank}. / ${mine.players}` : "—"} />
-              <StatTile label="Gün serisi" value={status ? `🔥 ${status.streak}` : "—"} />
+              <StatTile label={text.duration} value={formatTime(Math.round(durationMs / 1000))} />
+              <StatTile label={text.dailyRank} value={mine ? `${messages().common.rank(mine.rank)} / ${mine.players}` : "—"} />
+              <StatTile label={text.dailyStreak} value={status ? `🔥 ${status.streak}` : "—"} />
             </dl>
           </div>
 
@@ -464,9 +466,9 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
           <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
             <ShareScoreButton text={dailyShareText(boardId, answers, score, durationMs)} />
             <button className={`${RESULT_LINK_CLASS} text-cyan-700 hover:text-cyan-800`} onClick={onHome} type="button">
-              Diğer meydan okumalar
+              {text.otherChallenges}
             </button>
-            {bestStreak >= 3 && <p className="text-center text-xs text-slate-500">En uzun doğru serin: {bestStreak}</p>}
+            {bestStreak >= 3 && <p className="text-center text-xs text-slate-500">{text.longestStreak(bestStreak)}</p>}
           </div>
         </aside>
       }
@@ -477,13 +479,13 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
         <Leaderboard
           boardId={shownBoard}
           currentPlayerId={player?.id}
-          emptyText="Bugün bu meydan okumayı henüz kimse bitirmedi."
+          emptyText={text.dailyEmpty}
           isLoading={leaderboards === null}
           leaderboardError={null}
           leaderboards={leaderboards ?? emptyLeaderboards()}
           onBoardChange={setShownBoard}
           tall
-          title="Günün sıralaması"
+          title={text.dailyLeaderboard}
         />
       </section>
     </ResultShell>

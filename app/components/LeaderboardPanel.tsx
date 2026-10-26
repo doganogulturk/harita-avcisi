@@ -5,6 +5,7 @@ import { BottomSheet } from "./BottomSheet";
 import { Leaderboard } from "./Leaderboard";
 import { useLeaderboards } from "@/lib/hooks/useLeaderboard";
 import { type BoardId } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 
 type LeaderboardPanelProps = {
   /** Panel açılırken öne gelen sekme; oyuncunun o an seçtiği tur. */
@@ -24,7 +25,7 @@ export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConf
   const { leaderboards, leaderboardError, isLoading } = useLeaderboards(supabaseConfigured);
 
   return (
-    <BottomSheet description="Her turun kendi sıralaması var. Eşit puanda hızlı olan önde." onClose={onClose} title="Sıralama">
+    <BottomSheet description={messages().leaderboard.panelDescription} onClose={onClose} title={messages().leaderboard.title}>
       {supabaseConfigured ? (
         <Leaderboard
           boardId={boardId}
@@ -37,7 +38,7 @@ export function LeaderboardPanel({ initialBoardId, currentPlayerId, supabaseConf
           showTitle={false}
         />
       ) : (
-        <p className="py-8 text-center text-sm font-medium text-rose-600">Sıralamayı görmek için Supabase bağlantısı yapılandırılmalıdır.</p>
+        <p className="py-8 text-center text-sm font-medium text-rose-600">{messages().leaderboard.notConfigured}</p>
       )}
     </BottomSheet>
   );

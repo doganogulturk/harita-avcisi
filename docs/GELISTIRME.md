@@ -238,6 +238,26 @@ Hareket azaltma açıksa animasyonların son karesi durağan gösterilir.
 - **Klavye:** Dokunmatik cihazda bir yazı alanına odaklanılınca klavye açıldıktan sonra alan ekranın ortasına kaydırılır
   (`KeyboardFocus`); yatay telefonda alt kartlardaki kod alanı klavyenin altında kalmaz.
 
+### Dil (Türkçe / İngilizce)
+
+Arayüz Türkçe ve İngilizcedir (`lib/i18n`). İlk açılışta cihazın / tarayıcının dili seçilir (Türkçeyse Türkçe, değilse
+İngilizce); hesap menüsündeki Türkçe / English seçimi tarayıcıda hatırlanır. Dil değişince bütün sayfa o dilde yeniden
+kurulur (`LocaleRoot`); bu yüzden bileşenler ve saf fonksiyonlar metni doğrudan `messages()`tan okur. Sunucuda ve ilk
+çizimde Türkçe çizilir.
+
+- **Sözlükler:** `tr.ts` şablondur; `en.ts` aynı yapıda olmak zorundadır, eksik çeviri derlemede ve testte yakalanır.
+  Değişken içeren metinler fonksiyondur.
+- **Yer adları:** ülkelerin ve başkentlerin İngilizce adları `places-en.ts`'te; `countryName` ve `capitalOf` arayüz
+  dilindeki adı döndürür. İl adları özel isim olduğu için çevrilmez.
+- **Sunucu mesajları:** `supabase/schema.sql`'in hata mesajları Türkçedir; İngilizce arayüzde `server-messages.ts`
+  karşılığını gösterir. Sunucuya yeni bir mesaj eklenince buraya da eklenmeli; test bütün mesajları denetler.
+- **Yasal sayfalar:** Gizlilik Politikası, Kullanım Koşulları, Hesap Silme ve KVKK Aydınlatma Metni iki dildedir
+  (`LegalPage` dile göre birini gösterir). KVKK metninin İngilizcesi bilgi amaçlı çeviridir: aydınlatma yükümlülüğü
+  Türkçe metinle yerine getirilir; İngilizce sayfanın üstünde esas metnin Türkçe olduğunu söyleyen not ve Türkçeye
+  geçiş bağlantısı durur.
+- **Logo ve başlık:** marka "Harita Avcısı" kalır; İngilizcede logonun altında küçük "Map Hunter" yazar. Sekmedeki sayfa
+  başlığı da dile uyar.
+
 ### Paylaşım
 
 Site bağlantısı LinkedIn, WhatsApp ya da X'te paylaşılınca logolu, Türkiye haritalı bir önizleme kartı çıkar

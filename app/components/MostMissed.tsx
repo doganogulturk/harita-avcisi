@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { flagUrl, formatPlate, isCapitalChoice, isFlagChoice, isPlateChoice, locationName, type LocationStat, type PlayChoice } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { capitalOf } from "@/lib/world-capitals";
 
 type MostMissedProps = {
@@ -31,17 +32,17 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
   return (
     <section className={`flex flex-col ${className}`}>
       <p className="flex flex-wrap items-center gap-2 text-xs font-semibold tracking-[0.2em] text-cyan-700 uppercase">
-        En çok yanlış yapılanlar
+        {messages().mostMissed.title}
         {modeLabel && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 tracking-normal normal-case">{modeLabel}</span>}
       </p>
       <p className="mt-1.5 text-sm text-slate-500">
-        Tüm oyuncuların yarış turlarından (yanlış / sorulma). Az sorulmuş yerler, oranları yüksek olsa da geride kalır.
+        {messages().mostMissed.description}
       </p>
 
       {stats === undefined ? (
-        <p className="py-10 text-center text-sm text-slate-500">Yükleniyor...</p>
+        <p className="py-10 text-center text-sm text-slate-500">{messages().mostMissed.loading}</p>
       ) : stats.length === 0 ? (
-        <p className="py-10 text-center text-sm text-slate-500">Bu modda henüz yanlış cevap yok.</p>
+        <p className="py-10 text-center text-sm text-slate-500">{messages().mostMissed.empty}</p>
       ) : (
         <ol className="mt-4 space-y-1.5">
           {stats.map((stat, index) => (
@@ -63,15 +64,17 @@ export function MostMissed({ choice, stats, missedLocationIds, className = "", m
                   {showPlate && <span className="font-mono text-cyan-700 tabular-nums">{formatPlate(Number(stat.location_id))}</span>}
                   <span className="truncate">{askedName(stat.location_id)}</span>
                   {missedLocationIds.includes(stat.location_id) && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">Sen de</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">{messages().mostMissed.you}</span>
                   )}
                 </p>
                 <p className="truncate text-xs text-slate-500">
-                  <span className="font-semibold text-slate-700">{locationName(mode, stat.most_confused_with)}</span> sanılıyor
+                  {messages().mostMissed.confusedBefore}
+                  <span className="font-semibold text-slate-700">{locationName(mode, stat.most_confused_with)}</span>
+                  {messages().mostMissed.confusedAfter}
                 </p>
               </div>
               <span className="shrink-0 text-right tabular-nums">
-                <span className="text-base font-bold text-rose-600">%{Math.round(Number(stat.wrong_rate) * 100)}</span>
+                <span className="text-base font-bold text-rose-600">{messages().result.percent(Math.round(Number(stat.wrong_rate) * 100))}</span>
                 <span className="ml-1.5 text-xs text-slate-500">
                   {stat.wrong}/{stat.asked}
                 </span>

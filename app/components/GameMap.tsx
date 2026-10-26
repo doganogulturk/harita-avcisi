@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { vibrate } from "@/lib/haptics";
 import { canLockLandscape, keepLandscapeLock, lockLandscape, releaseLandscapeLock } from "@/lib/orientation";
@@ -71,7 +72,8 @@ const STREAK_CELEBRATION_FROM = 3;
 
 /** Cevaptan sonraki geri sayım; son soruda sonuç ekranına geçişi söyler. Cevap yokken gösterilmez. */
 export function nextQuestionCountdown(answerState: AnswerState, seconds: number, isLastQuestion: boolean): string | null {
-  return answerState ? `${isLastQuestion ? "Sonuçlar" : "Sonraki soru"} · ${seconds} sn` : null;
+  const { game, common } = messages();
+  return answerState ? `${isLastQuestion ? game.results : game.nextQuestion} · ${common.seconds(seconds)}` : null;
 }
 
 /**
@@ -87,7 +89,7 @@ export function wrongPickNotice(choice: PlayChoice, answerState: AnswerState, se
 
 /** Doğru cevaptan sonra gösterilecek seri kutlaması; seri kısaysa ya da cevap yanlışsa yok. */
 export function streakCelebration(answerState: AnswerState, streak: number): string | null {
-  return answerState === "correct" && streak >= STREAK_CELEBRATION_FROM ? `🔥 ${streak} seri` : null;
+  return answerState === "correct" && streak >= STREAK_CELEBRATION_FROM ? messages().game.streak(streak) : null;
 }
 
 /** Dikey ipucu bir kez kapatılınca sayfa açık kaldıkça bir daha gösterilmez (turlar arasında da). */
@@ -112,16 +114,16 @@ function RotateHint() {
       {canLockLandscape() ? (
         <button className="flex items-center gap-1 text-cyan-700" onClick={() => void lockLandscape()} type="button">
           {icon}
-          Yatay moda geç
+          {messages().game.toLandscape}
         </button>
       ) : (
         <>
           {icon}
-          Yan çevirirsen harita büyür
+          {messages().game.rotateHint}
         </>
       )}
       <button
-        aria-label="İpucunu kapat"
+        aria-label={messages().game.closeHint}
         className="hit-area flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
         onClick={() => {
           isRotateHintDismissed = true;
@@ -221,7 +223,7 @@ export function GameMap({
   if (!mapMarkup) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50 text-center text-sm text-slate-400">
-        {mapError ?? "Harita yükleniyor..."}
+        {mapError ?? messages().game.mapLoading}
       </div>
     );
   }
@@ -294,11 +296,11 @@ export function GameMap({
             onClick={reset}
             type="button"
           >
-            Sıfırla · {zoom.toFixed(1)}x
+            {messages().game.resetZoom} · {zoom.toFixed(1)}x
           </button>
         )}
-        <button aria-label="Yakınlaştır" className={ZOOM_BUTTON_CLASS} disabled={!canZoomIn} onClick={zoomIn} type="button">+</button>
-        <button aria-label="Uzaklaştır" className={ZOOM_BUTTON_CLASS} disabled={!canZoomOut} onClick={zoomOut} type="button">−</button>
+        <button aria-label={messages().game.zoomIn} className={ZOOM_BUTTON_CLASS} disabled={!canZoomIn} onClick={zoomIn} type="button">+</button>
+        <button aria-label={messages().game.zoomOut} className={ZOOM_BUTTON_CLASS} disabled={!canZoomOut} onClick={zoomOut} type="button">−</button>
       </div>
     </div>
   );

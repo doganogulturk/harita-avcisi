@@ -7,6 +7,7 @@ import { DUEL_MODES, DUEL_RULES, duelChoice, duelPath, variantFor, type DuelRule
 import { type BoardVariant, type GameMode, type Player, type QuestionPrompt } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
+import { messages } from "@/lib/i18n";
 import { setDuelSettingsKey, useDuelSettingsKey, type IntroGame } from "@/lib/intro-preferences";
 import { gameInfo, groupInfo } from "./games";
 import { Field, SetupShell } from "./SetupParts";
@@ -16,7 +17,7 @@ import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 export function modeOptions(map: GameMode): { id: BoardVariant; label: string }[] {
   return (DUEL_MODES.find((group) => group.mode === map)?.options ?? []).map((option) => ({
     id: option.variant,
-    label: option.variant === "normal" || option.variant === "hard" ? "İsim" : option.label,
+    label: option.variant === "normal" || option.variant === "hard" ? messages().setup.prompts.name : option.label,
   }));
 }
 
@@ -67,12 +68,12 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
     return (
       <div className="mx-auto w-full max-w-2xl">
         <SignInPanel
-          description="Rakibin seni görebilsin diye giriş yap; misafir girişi de olur. Giriş yapar yapmaz düello kurulur."
+          description={messages().setup.duel.signInDescription}
           onCancel={() => setIsAuthStep(false)}
           onSignedIn={() => void create()}
           // Google girişinden dönüşte ana sayfaya gelinir; ayarlar hatırlandığı için tek tıkla kurulur.
           redirectTo={window.location.origin}
-          title={<>⚔️ Düello kurmak için giriş yap</>}
+          title={messages().setup.duel.signInTitle}
         />
       </div>
     );
@@ -80,7 +81,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
 
   return (
     <SetupShell
-      actionLabel={!isOnline ? "Bağlantı yok" : isBusy ? "Kuruluyor…" : player ? gameInfo("duel").action : "Giriş yap ve kur"}
+      actionLabel={!isOnline ? messages().setup.offline : isBusy ? messages().setup.creating : player ? gameInfo("duel").action : messages().setup.signInAndCreate}
       error={error}
       game={gameInfo("duel")}
       group={groupInfo("friends")}
@@ -88,7 +89,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
       map={map}
       mode={variant}
       modes={modeOptions(map)}
-      note="Kurunca bir kod ve bağlantı alırsın; rakibin açınca ikiniz de hazır deyip başlarsınız."
+      note={messages().setup.duel.note}
       onAction={() => (player ? void create() : setIsAuthStep(true))}
       onBack={onBack}
       onGameChange={onGameChange}
@@ -97,7 +98,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onGameChange, onMap
       previewPrompt={previewPromptFor(variant)}
     >
       {/* Alçak ekranda kurallar yan yana, açıklamaları gizli; seçili kuralın açıklaması altta not olarak kalır. */}
-      <Field noteOn="short" label="Kural" note={DUEL_RULES[rule].summary}>
+      <Field noteOn="short" label={messages().setup.duel.rule} note={DUEL_RULES[rule].summary}>
         <div className="flex flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5" role="radiogroup">
           {(Object.keys(DUEL_RULES) as DuelRule[]).map((option) => {
             const isSelected = rule === option;

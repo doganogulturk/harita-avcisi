@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import Link from "next/link";
 import { useState } from "react";
 import { DeleteAccountDialog } from "../DeleteAccountDialog";
@@ -14,13 +15,15 @@ export function AccountDeletionPanel() {
   const [player, , isLoaded] = usePlayer();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const text = messages().deletion;
 
   if (isDeleted) {
     return (
       <div className="mt-6 rounded-2xl border-2 border-emerald-200 bg-emerald-50/70 p-4 sm:p-5">
-        <p className="!mt-0 font-bold text-slate-900">Hesabın ve bütün verilerin silindi.</p>
+        <p className="!mt-0 font-bold text-slate-900">{text.deleted}</p>
         <p>
-          Bu cihazdaki oturumun da kapandı. <Link href="/">Oyuna dön</Link>
+          {text.sessionClosed}
+          <Link href="/">{text.backToGame}</Link>
         </p>
       </div>
     );
@@ -30,14 +33,14 @@ export function AccountDeletionPanel() {
 
   return (
     <div className="mt-6 rounded-2xl border-2 border-rose-200 bg-rose-50/60 p-4 sm:p-5">
-      <p className="!mt-0 font-bold text-slate-900">{player.name} olarak giriş yaptın</p>
-      <p>Hesabını ve yukarıda sayılan bütün verilerini buradan hemen silebilirsin.</p>
+      <p className="!mt-0 font-bold text-slate-900">{text.signedInAs(player.name)}</p>
+      <p>{text.canDelete}</p>
       <button
         className="mt-3 rounded-full bg-rose-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:outline-none"
         onClick={() => setIsDialogOpen(true)}
         type="button"
       >
-        Hesabımı sil
+        {text.deleteButton}
       </button>
 
       {isDialogOpen && (

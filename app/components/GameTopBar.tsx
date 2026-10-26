@@ -16,6 +16,7 @@ import {
   type Player,
   type Question,
 } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { capitalOf } from "@/lib/world-capitals";
 
 type GameTopBarProps = {
@@ -56,7 +57,7 @@ export function PlateBadge({ plate, size = "md" }: { plate: number; size?: keyof
   const style = PLATE_SIZES[size];
   return (
     <span
-      aria-label={`Plaka ${formatPlate(plate)}`}
+      aria-label={messages().game.plate(formatPlate(plate))}
       className={`flex shrink-0 items-stretch overflow-hidden rounded-md border-2 border-slate-900 bg-white shadow-sm ${style.plate}`}
       role="img"
     >
@@ -74,10 +75,10 @@ export function PlateBadge({ plate, size = "md" }: { plate: number; size?: keyof
  * Turu bırakıp ana menüye döner. Yanlışlıkla başlatılan bir tur için tek çıkış yolunun
  * süreyi beklemek ya da 10 soruyu oynamak olmaması gerekiyor; onay sorulmaz.
  */
-function ExitButton({ onClick, title = "Ana menü · Bu turun skoru kaydedilmez" }: { onClick: () => void; title?: string }) {
+function ExitButton({ onClick, title = messages().game.exitTitle }: { onClick: () => void; title?: string }) {
   return (
     <button
-      aria-label="Turu bırak ve ana menüye dön"
+      aria-label={messages().game.exitAria}
       className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
       onClick={onClick}
       title={title}
@@ -111,10 +112,10 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
   if (question && isFlagChoice(choice) && "code" in question) {
     return (
       <>
-        <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
+        <h1 className="sr-only">{messages().game.flagQuestion}</h1>
         {/* Yeni soruda eski bayrak bir an bile görünmesin diye her ülke için ayrı öğe. */}
         <Image
-          alt="Sorulan ülkenin bayrağı"
+          alt={messages().game.flagAlt}
           className={`w-auto shrink-0 rounded-sm border border-slate-200 shadow-sm ${isNarrow ? "h-12" : "h-9 lg:h-11"}`}
           height={44}
           key={question.code}
@@ -123,7 +124,7 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
           width={59}
         />
         {/* Adı cevaptan sonra göster; oyuncu yanlış bildiği bayrağı da öğrensin. */}
-        {answerState && <span className={answerName}>{question.name}</span>}
+        {answerState && <span className={answerName}>{questionName(question)}</span>}
       </>
     );
   }
@@ -135,9 +136,9 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
           🏛️
         </span>
         <h1 className={`min-w-0 truncate leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "text-xl" : "text-xl lg:text-3xl"}`}>
-          <span className="sr-only">Başkenti </span>
+          <span className="sr-only">{messages().game.capitalBefore}</span>
           {capital}
-          <span className="sr-only"> olan ülke hangisi?</span>
+          <span className="sr-only">{messages().game.capitalAfter}</span>
         </h1>
         {/* Ülkenin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği başkenti de öğrensin. */}
         {answerState && <span className={`shrink-0 ${answerName} text-slate-500`}>· {questionName(question)}</span>}
@@ -147,7 +148,7 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
   if (question && isPlateChoice(choice) && "plate" in question) {
     return (
       <>
-        <h1 className="sr-only">Bu plaka hangi ilin?</h1>
+        <h1 className="sr-only">{messages().game.plateQuestion}</h1>
         <PlateBadge key={question.plate} plate={question.plate} />
         {/* İlin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği plakayı da öğrensin. */}
         {answerState && <span className={answerName}>{question.city}</span>}
@@ -207,20 +208,20 @@ export function GameTopBar({
                 <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Bitir
+                {messages().game.finish}
               </button>
             ) : (
-              <button aria-label="Turu bırak ve ana menüye dön" className={NARROW_BUTTON} onClick={onExit} title={exitTitle} type="button">
+              <button aria-label={messages().game.exitAria} className={NARROW_BUTTON} onClick={onExit} title={exitTitle} type="button">
                 <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
                   <path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Çık
+                {messages().game.quit}
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title="Doğru">
+            <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title={messages().game.correct}>
               <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                 <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -243,7 +244,7 @@ export function GameTopBar({
           <div className="flex min-w-0 justify-end">
             {onPlay ? (
               isPractice ? (
-                <button aria-label="Antrenmanı yeniden başlat" className={`${NARROW_BUTTON} px-2.5`} onClick={() => onPlay(choice)} title="Yeniden başlat" type="button">
+                <button aria-label={messages().game.restartPractice} className={`${NARROW_BUTTON} px-2.5`} onClick={() => onPlay(choice)} title={messages().game.restart} type="button">
                   <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4.5h4.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -292,7 +293,7 @@ export function GameTopBar({
             <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase lg:inline lg:text-xs">
               {choiceLabel(choice)}
             </span>
-            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title="Doğru / cevaplanan">
+            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title={messages().game.correctOfAnswered}>
               <ScoreValue score={score} />
               <span className="text-slate-400">/{answers.length}</span>
             </p>
@@ -301,13 +302,13 @@ export function GameTopBar({
               onClick={onFinishPractice}
               type="button"
             >
-              Bitir
+              {messages().game.finish}
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-end gap-3 lg:gap-5">
             {/* Yalnızca geniş ekranda: yatay telefonda uzun soru adlarıyla çakışır, puan zaten "2/10" diye yazıyor. */}
-            <div aria-label="Soru ilerlemesi" className="hidden shrink-0 items-center gap-1 lg:flex">
+            <div aria-label={messages().game.progress} className="hidden shrink-0 items-center gap-1 lg:flex">
               {Array.from({ length: questionCount }, (_, index) => (
                 <span
                   className={`h-2 w-3 rounded-full lg:w-4 ${answers[index] === "correct" ? "bg-emerald-500" : answers[index] === "incorrect" ? "bg-rose-500" : "bg-slate-200"}`}
@@ -336,7 +337,7 @@ export function GameTopBar({
 
       {!isPractice && (
         <div
-          aria-label="Kalan süre"
+          aria-label={messages().game.timeLeft}
           aria-valuemax={GAME_DURATION_SECONDS}
           aria-valuemin={0}
           aria-valuenow={remainingGameSeconds}

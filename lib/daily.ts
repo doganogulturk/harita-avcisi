@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BOARDS, boardVariantFor, choiceForBoard, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
 import { type Leaderboards, type RankedRound } from "@/lib/hooks/useLeaderboard";
+import { localeTag } from "@/lib/i18n";
 import { getSupabaseClient } from "@/lib/supabase";
 
 /**
@@ -22,7 +23,7 @@ export function msUntilNextDaily(now = Date.now()): number {
 
 /** Bugünün tarihi, Türkiye saatiyle ("25 Ekim"). */
 export function dailyDateLabel(now = Date.now()): string {
-  return new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }).format(now);
+  return new Intl.DateTimeFormat(localeTag(), { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }).format(now);
 }
 
 /** Bir sıralamanın günlük meydan okuması olarak oynanacak tur. */

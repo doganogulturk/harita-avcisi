@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import Image from "next/image";
 import { useState } from "react";
 import { DUEL_MODES, DUEL_RULES, type DuelRule, type DuelSettings } from "@/lib/duel";
@@ -65,7 +66,7 @@ function GroupIcon({ mode }: { mode: "turkey" | "world" }) {
 export function ModePicker({ mode, variant, onChange }: { mode: GameMode; variant: BoardVariant; onChange: (mode: GameMode, variant: BoardVariant) => void }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-bold text-slate-900">Harita ve mod</p>
+      <p className="mb-2 text-sm font-bold text-slate-900">{messages().duel.mapAndMode}</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {DUEL_MODES.map((group) => {
           const isGroupSelected = mode === group.mode;
@@ -108,7 +109,7 @@ export function ModePicker({ mode, variant, onChange }: { mode: GameMode; varian
 export function RulePicker({ rule, onChange }: { rule: DuelRule; onChange: (rule: DuelRule) => void }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-bold text-slate-900">Kural</p>
+      <p className="mb-2 text-sm font-bold text-slate-900">{messages().duel.rule}</p>
       <div className="grid gap-3 sm:grid-cols-2" role="radiogroup">
         {(Object.keys(DUEL_RULES) as DuelRule[]).map((option) => {
           const isSelected = rule === option;
@@ -166,7 +167,7 @@ export function ShareCode({ code, path, label, shareText }: { code: string; path
       {label}
       <span className="rounded-lg bg-slate-100 px-3 py-1 font-mono text-lg font-bold tracking-[0.3em] text-slate-900">{code}</span>
       <button className="font-semibold text-cyan-700 underline-offset-4 hover:underline" onClick={copy} type="button">
-        {isCopied ? "✓ Kopyalandı" : "Bağlantıyı kopyala"}
+        {isCopied ? messages().duel.copied : messages().duel.copyLink}
       </button>
       {canShare && (
         <button
@@ -174,7 +175,7 @@ export function ShareCode({ code, path, label, shareText }: { code: string; path
           onClick={() => void shareLink({ text: shareText, url })}
           type="button"
         >
-          Paylaş
+          {messages().duel.share}
         </button>
       )}
     </div>

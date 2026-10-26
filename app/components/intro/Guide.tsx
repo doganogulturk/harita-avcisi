@@ -6,6 +6,7 @@ import { PinchDemo, RotateDemo } from "../PlayTips";
 import { Logo } from "../Logo";
 import { GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
+import { messages } from "@/lib/i18n";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 import { gameInfo, GameIcon, GAMES, GROUPS } from "./games";
 
@@ -34,33 +35,34 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
   const swipeStartX = useRef<number | null>(null);
   // Telefon ve tablette ikinci ekran yan çevirmeyi ve iki parmakla yakınlaştırmayı gösterir; farede gereksiz.
   const [isTouch] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  const guide = messages().guide;
   const slides = [
     {
-      eyebrow: "Nasıl oynanır",
-      title: "Sorulan yeri haritada bul",
-      body: "Ekrana bir il, ülke, başkent, plaka ya da bayrak gelir; haritada yerine dokunursun. Doğruysa yeşil yanar, yanlışsa doğru yer gösterilir.",
+      eyebrow: guide.howEyebrow,
+      title: guide.howTitle,
+      body: guide.howBody,
       visual: <MapDemo />,
     },
     ...(isTouch
       ? [
           {
-            eyebrow: "Telefonda",
-            title: "Yan çevir, yakınlaştır",
-            body: "Yatayda harita iki kat büyük olur. Malta, Singapur gibi küçük yerler için iki parmağını haritanın üstünde aç.",
+            eyebrow: guide.touchEyebrow,
+            title: guide.touchTitle,
+            body: guide.touchBody,
             visual: <TouchDemo />,
           },
         ]
       : []),
     {
-      eyebrow: "Tek başıma ya da arkadaşlarımla",
-      title: "Nasıl istersen öyle oyna",
-      body: `Tek başıma: Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarımla: Düello ya da Oda.`,
+      eyebrow: guide.gamesEyebrow,
+      title: guide.gamesTitle,
+      body: guide.gamesBody(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS),
       visual: <GamesDemo />,
     },
     {
-      eyebrow: "Arkadaşlarınla",
-      title: "Kodu gönder, yarışın",
-      body: "Düello ya da oda kur, kodu veya bağlantıyı paylaş. Arkadaşların açınca aynı sorularla aynı anda yarışırsınız.",
+      eyebrow: guide.friendsEyebrow,
+      title: guide.friendsTitle,
+      body: guide.friendsBody,
       visual: <DuelDemo />,
     },
   ];
@@ -88,7 +90,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
   };
 
   return (
-    <div aria-label="Harita Avcısı tanıtımı" aria-modal="true" className="safe-area fixed inset-0 z-40 flex flex-col bg-slate-50" role="dialog">
+    <div aria-label={guide.dialog} aria-modal="true" className="safe-area fixed inset-0 z-40 flex flex-col bg-slate-50" role="dialog">
       <div className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 short:pt-2 lg:px-8 lg:pt-5">
         <Logo isHeading={false} />
         <button
@@ -96,7 +98,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
           onClick={onClose}
           type="button"
         >
-          Geç
+          {guide.skip}
         </button>
       </div>
 
@@ -114,7 +116,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
           {slides.map((slide, slideIndex) => (
             <section
               aria-hidden={slideIndex !== index}
-              aria-roledescription="slayt"
+              aria-roledescription={guide.slide}
               className="flex h-full w-full shrink-0 flex-col justify-center gap-4 overflow-y-auto px-4 py-3 short:py-2 md:flex-row md:items-center md:gap-8 lg:gap-12 lg:px-8"
               inert={slideIndex !== index}
               key={slide.title}
@@ -131,7 +133,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
 
                 {slideIndex === slides.length - 1 && canSignIn && (
                   <div className="mt-4 short:mt-2.5">
-                    <p className="text-xs text-slate-500">Yarış, düello ve oda için giriş gerekir; istersen şimdi yap:</p>
+                    <p className="text-xs text-slate-500">{guide.signInPrompt}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button
                         className="flex items-center gap-2 rounded-xl border border-[#747775] bg-white px-3.5 py-2 text-sm font-medium text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:ring-2 focus-visible:ring-[#0b57d0] focus-visible:outline-none short:py-1.5"
@@ -139,14 +141,14 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
                         type="button"
                       >
                         <GoogleMark />
-                        Google ile giriş
+                        {guide.google}
                       </button>
                       <button
                         className="rounded-xl border border-cyan-600 bg-white px-3.5 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:py-1.5"
                         onClick={onGuestSignIn}
                         type="button"
                       >
-                        Misafir adıyla
+                        {guide.guest}
                       </button>
                     </div>
                   </div>
@@ -163,14 +165,14 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
           onClick={() => goTo(index - 1)}
           type="button"
         >
-          ← Geri
+          {guide.back}
         </button>
 
         <div className="flex items-center gap-2">
           {slides.map((slide, slideIndex) => (
             <button
               aria-current={slideIndex === index ? "step" : undefined}
-              aria-label={`${slideIndex + 1}. ekran: ${slide.title}`}
+              aria-label={guide.stepLabel(slideIndex + 1, slide.title)}
               className={`hit-area h-2 rounded-full transition-all duration-300 ${slideIndex === index ? "w-6 bg-cyan-600" : "w-2 bg-slate-300 hover:bg-slate-400"}`}
               key={slide.title}
               onClick={() => goTo(slideIndex)}
@@ -185,7 +187,7 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
           onClick={isLast ? onClose : () => goTo(index + 1)}
           type="button"
         >
-          {isLast ? "Başlayalım" : "İleri"}
+          {isLast ? guide.done : guide.next}
           <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -295,16 +297,16 @@ function DuelDemo() {
           <span className={`flex h-8 w-8 items-center justify-center rounded-xl lg:h-11 lg:w-11 ${duel.theme.tile}`}>
             <GameIcon className="h-4 w-4 lg:h-6 lg:w-6" game="duel" />
           </span>
-          Düello
+          {duel.title}
         </span>
         <span className="rounded-xl border border-orange-200 bg-white px-3 py-1 font-mono text-sm font-bold tracking-[0.25em] text-slate-800 lg:text-lg">KX7P2M</span>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white p-3 shadow-sm lg:p-5">
-        <DemoPlayer initial="S" name="Sen" score={7} tone="bg-cyan-100 text-cyan-700" />
+        <DemoPlayer initial={messages().guide.youInitial} name={messages().guide.you} score={7} tone="bg-cyan-100 text-cyan-700" />
         <span className="font-display text-lg font-bold text-slate-300 lg:text-2xl">–</span>
-        <DemoPlayer initial="R" isRight name="Rakip" score={5} tone="bg-orange-100 text-orange-700" />
+        <DemoPlayer initial={messages().guide.opponentInitial} isRight name={messages().guide.opponent} score={5} tone="bg-orange-100 text-orange-700" />
       </div>
-      <p className="text-center text-xs text-slate-500 lg:text-sm">⚡ Kapan kazanır · {duel.facts[1]}</p>
+      <p className="text-center text-xs text-slate-500 lg:text-sm">⚡ {messages().duelRules.snatch.label} · {duel.facts[1]}</p>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BottomSheet } from "../BottomSheet";
 import { Leaderboard } from "../Leaderboard";
 import { ShareScoreButton } from "../ShareScoreButton";
+import { messages } from "@/lib/i18n";
 import { boardOf, dailyChoice, dailyDateLabel, dailyShareText, msUntilNextDaily, useDailyLeaderboards, type DailyStatus } from "@/lib/daily";
 import { BOARDS, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type PlayChoice, type Player } from "@/lib/game";
 
@@ -42,7 +43,7 @@ function StateLabel({ state, className = "" }: { state: ReturnType<typeof dailyS
   const tone = state.result ? "text-emerald-700" : state.isUsed ? "text-slate-400" : "text-cyan-700";
   return (
     <span className={`font-bold tabular-nums ${tone} ${className}`}>
-      {state.result ? `✓ ${state.result.score}/${QUESTIONS_PER_ROUND}` : state.isUsed ? "Bırakıldı" : "Oyna"}
+      {state.result ? `✓ ${state.result.score}/${QUESTIONS_PER_ROUND}` : state.isUsed ? messages().dailySheet.abandoned : messages().dailySheet.play}
     </span>
   );
 }
@@ -71,7 +72,7 @@ export function DailyBadge({ status, player, onOpen }: { status: DailyStatus | n
 
   return (
     <button
-      aria-label={`Günün meydan okuması${streak > 0 ? ` · ${streak} günlük seri` : ""}${hasOpenChallenge ? " · oynanmamış meydan okuma var" : ""}`}
+      aria-label={messages().daily.badgeAria(streak, hasOpenChallenge)}
       className="hit-area relative flex h-9 shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-bold text-amber-700 transition hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none max-[25rem]:px-2.5"
       onClick={() => {
         setHasOpened(true);
@@ -86,7 +87,7 @@ export function DailyBadge({ status, player, onOpen }: { status: DailyStatus | n
     >
       {!hasOpened && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-amber-300/40 motion-reduce:hidden" />}
       <span aria-hidden="true">{streak > 0 ? "🔥" : "🗓"}</span>
-      {streak > 0 ? <span className="tabular-nums">{streak}</span> : <span className="max-[25rem]:hidden">Günlük</span>}
+      {streak > 0 ? <span className="tabular-nums">{streak}</span> : <span className="max-[25rem]:hidden">{messages().daily.badge}</span>}
       {hasOpenChallenge && <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-slate-50" />}
     </button>
   );
@@ -115,12 +116,13 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
   const mine = selected ? dailyStateOf(status, selected).result : undefined;
   const streak = status?.streak ?? 0;
 
-  const description = [dailyDateLabel(), streak > 0 ? `🔥 ${streak} günlük seri` : null, msLeft !== null ? `yenisi ${hoursMinutes(msLeft)} sonra` : null]
+  const text = messages().dailySheet;
+  const description = [dailyDateLabel(), streak > 0 ? text.streak(streak) : null, msLeft !== null ? text.nextIn(hoursMinutes(msLeft)) : null]
     .filter(Boolean)
     .join(" · ");
 
   return (
-    <BottomSheet description={description} onClose={onClose} title="Günün meydan okuması">
+    <BottomSheet description={description} onClose={onClose} title={text.title}>
       <div className="grid shrink-0 grid-cols-2 gap-2">
         {BOARDS.map((board) => {
           const state = dailyStateOf(status, board.id);
@@ -153,11 +155,11 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
           {mine && (
             <div className="mb-3 flex shrink-0 items-center gap-3 rounded-2xl bg-emerald-50 px-3 py-2">
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-emerald-800">Senin sonucun</p>
+                <p className="text-xs text-emerald-800">{text.yourResult}</p>
                 <p className="font-display text-lg font-bold text-slate-900 tabular-nums">
                   {mine.score}/{QUESTIONS_PER_ROUND} · {formatTime(Math.round(mine.duration_ms / 1000))}
                   <span className="ml-2 text-sm font-semibold text-emerald-700">
-                    {mine.rank}. / {mine.players}
+                    {messages().common.rank(mine.rank)} / {mine.players}
                   </span>
                 </p>
               </div>
@@ -169,7 +171,7 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
           <Leaderboard
             boardId={selected}
             currentPlayerId={playerId}
-            emptyText="Bugün bu meydan okumayı henüz kimse bitirmedi."
+            emptyText={text.empty}
             fillHeight
             hideTabs
             isLoading={leaderboards === null}
@@ -181,8 +183,7 @@ export function DailySheet({ status, playerId, initialBoardId, notice, onPlay, o
         </div>
       ) : (
         <p className="mt-4 text-center text-sm text-slate-500">
-          Her mod için herkese aynı 10 soru, günde bir hak. Başlamak için bir moda dokun; bitirdiğinde günün sıralamasını burada
-          görürsün.
+          {text.intro}
         </p>
       )}
     </BottomSheet>

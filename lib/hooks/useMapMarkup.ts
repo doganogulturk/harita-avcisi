@@ -1,7 +1,8 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import { LOCATION_SELECTOR, MAP_LABELS, MAP_URLS, type GameMode } from "@/lib/game";
+import { LOCATION_SELECTOR, MAP_URLS, type GameMode } from "@/lib/game";
 
 const markupCache = new Map<GameMode, string>();
 const pendingLoads = new Map<GameMode, Promise<string>>();
@@ -12,7 +13,7 @@ async function fetchMapMarkup(mode: GameMode): Promise<string> {
   if (!response.ok) throw new Error("Harita indirilemedi.");
   const parsed = new DOMParser().parseFromString(await response.text(), "text/html");
   const svg = parsed.querySelector("svg");
-  if (!svg) throw new Error("Harita verisi okunamadı.");
+  if (!svg) throw new Error(messages().mapErrors.read);
 
   if (mode === "world") {
     // Dünya haritasında ISO kodu olmayan alanlar "_" ile başlar; onlar tıklanamaz kalır.
@@ -28,7 +29,7 @@ async function fetchMapMarkup(mode: GameMode): Promise<string> {
     location.setAttribute("tabindex", "0");
   });
 
-  svg.setAttribute("aria-label", MAP_LABELS[mode]);
+  svg.setAttribute("aria-label", messages().mapLabels[mode]);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   return svg.outerHTML;
 }
@@ -76,6 +77,6 @@ export function useMapMarkup(mode: GameMode) {
 
   return {
     mapMarkup,
-    mapError: failedMode === mode ? "Harita yüklenemedi. Lütfen sayfayı yenileyin." : null,
+    mapError: failedMode === mode ? messages().mapErrors.load : null,
   };
 }

@@ -1,3 +1,6 @@
+import { currentLocale } from "@/lib/i18n";
+import { CAPITALS_EN } from "@/lib/i18n/places-en";
+
 /**
  * Başkentler (Başkent modu): ülke koduna göre Türkçe başkent adı. Yazım TDK ve Türkçede yerleşik kullanımı izler (Pekin, Moskova, Varşova).
  *
@@ -185,6 +188,8 @@ export const CAPITALS: Readonly<Record<string, string>> = {
   zw: "Harare",
 };
 
+/** Başkentin arayüz dilindeki adı; başkenti listede olmayan ülkede yok. */
 export function capitalOf(countryCode: string): string | undefined {
-  return CAPITALS[countryCode];
+  if (!CAPITALS[countryCode]) return undefined;
+  return currentLocale() === "en" ? CAPITALS_EN[countryCode] : CAPITALS[countryCode];
 }

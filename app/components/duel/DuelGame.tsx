@@ -18,7 +18,8 @@ import {
   type DuelPlayer,
   type DuelState,
 } from "@/lib/duel";
-import { flagUrl, isCapitalChoice, isFlagChoice, isPlateChoice, normalizeLocationId } from "@/lib/game";
+import { flagUrl, isCapitalChoice, isFlagChoice, isPlateChoice, normalizeLocationId, questionName } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { capitalOf } from "@/lib/world-capitals";
 import { DuelAvatar, TONE_TEXT, type DuelTone } from "./DuelParts";
 
@@ -33,7 +34,7 @@ function useServerClock(serverNow: () => number) {
 }
 
 function formatSeconds(ms: number): string {
-  return `${(ms / 1000).toFixed(1).replace(".", ",")} sn`;
+  return messages().duel.seconds(ms);
 }
 
 const CHIP_TONE: Record<DuelTone, string> = {
@@ -43,9 +44,10 @@ const CHIP_TONE: Record<DuelTone, string> = {
 
 /** Oyuncunun o sorudaki durumu: düşünüyor, cevapladı (yeri gizli) ya da soru bittikten sonra cevabı. */
 function answerStatus(state: DuelState, answer: DuelAnswer | undefined, isEnded: boolean, isMe: boolean, isCountdown: boolean): string {
-  if (isCountdown) return "Hazır";
-  if (!answer) return isEnded ? "Cevaplamadı" : "Düşünüyor…";
-  if (!isEnded || answer.selected === null) return isMe ? "Cevapladın" : "Cevapladı";
+  const text = messages().duel;
+  if (isCountdown) return text.ready;
+  if (!answer) return isEnded ? text.noAnswer : text.thinking;
+  if (!isEnded || answer.selected === null) return isMe ? text.youAnswered : text.answered;
   const label = locationLabel(state.game_mode, state.variant, answer.selected);
   return answer.correct ? `✓ ${label} · ${formatSeconds(answer.response_ms ?? 0)}` : `✗ ${label}`;
 }
@@ -105,10 +107,10 @@ function CountdownRing({ remainingMs }: { remainingMs: number }) {
 function ExitButton({ onExit }: { onExit: () => void }) {
   return (
     <button
-      aria-label="Düellodan çık"
+      aria-label={messages().duel.exit}
       className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
       onClick={onExit}
-      title="Düellodan çık · 30 saniye içinde dönmezsen hükmen kaybedersin"
+      title={messages().duel.exitTitle}
       type="button"
     >
       <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
@@ -122,14 +124,13 @@ function ExitButton({ onExit }: { onExit: () => void }) {
 function revealMessage(state: DuelState, mine: DuelAnswer | undefined, theirs: DuelAnswer | undefined, opponentName: string): { text: string; tone: DuelTone | null } {
   const myPoints = mine?.points ?? 0;
   const theirPoints = theirs?.points ?? 0;
-  if (myPoints === 0 && theirPoints === 0) return { text: "Kimse bilemedi", tone: null };
-  if (state.rule === "snatch") return myPoints > 0 ? { text: "⚡ Kaptın! +1", tone: "me" } : { text: `⚡ ${opponentName} kaptı! +1`, tone: "opponent" };
+  const text = messages().duel;
+  if (myPoints === 0 && theirPoints === 0) return { text: text.nobody, tone: null };
+  if (state.rule === "snatch") return myPoints > 0 ? { text: text.youSnatched, tone: "me" } : { text: text.theySnatched(opponentName), tone: "opponent" };
   if (mine?.correct && theirs?.correct) {
-    return myPoints > theirPoints
-      ? { text: "🎯 İkiniz de bildiniz · sen daha hızlıydın (+1)", tone: "me" }
-      : { text: `🎯 İkiniz de bildiniz · ${opponentName} daha hızlıydı (+1)`, tone: "opponent" };
+    return myPoints > theirPoints ? { text: text.bothYouFaster, tone: "me" } : { text: text.bothTheyFaster(opponentName), tone: "opponent" };
   }
-  return myPoints > 0 ? { text: "🎯 Bildin! +1", tone: "me" } : { text: `🎯 ${opponentName} bildi +1`, tone: "opponent" };
+  return myPoints > 0 ? { text: text.youGot, tone: "me" } : { text: text.theyGot(opponentName), tone: "opponent" };
 }
 
 const BANNER_TONE: Record<DuelTone | "none", string> = {
@@ -172,7 +173,9 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
   const remainingMs = Math.max(0, startedAt + DUEL_QUESTION_MS - now);
   const nextInSeconds = endedAt ? Math.max(0, Math.ceil((endedAt + DUEL_REVEAL_MS - now) / 1000)) : 0;
   const reveal = isEnded ? revealMessage(state, mine, theirs, opponent.name) : null;
-  const countdown = isEnded ? `${position + 1 >= DUEL_QUESTIONS ? "Sonuçlar" : "Sonraki soru"} · ${nextInSeconds} sn` : null;
+  const countdown = isEnded
+    ? `${position + 1 >= DUEL_QUESTIONS ? messages().game.results : messages().game.nextQuestion} · ${messages().common.seconds(nextInSeconds)}`
+    : null;
 
   const select = (locationId: string) => {
     if (!canAnswer) return;
@@ -185,16 +188,16 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
   const questionArea = (
     <>
       <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-400 uppercase lg:text-xs">
-        Soru {Math.min(position + 1, DUEL_QUESTIONS)} / {DUEL_QUESTIONS}
+        {messages().duel.question(Math.min(position + 1, DUEL_QUESTIONS), DUEL_QUESTIONS)}
       </p>
       <div className="flex min-w-0 items-center gap-2 lg:gap-3">
         {isCountdown || !question || !location ? (
-          <h1 className="font-display text-2xl font-bold text-slate-400 lg:text-3xl">Hazır ol…</h1>
+          <h1 className="font-display text-2xl font-bold text-slate-400 lg:text-3xl">{messages().duel.getReady}</h1>
         ) : isFlagChoice(choice) && "code" in question ? (
           <>
-            <h1 className="sr-only">Bu bayrak hangi ülkenin?</h1>
+            <h1 className="sr-only">{messages().game.flagQuestion}</h1>
             <Image
-              alt="Sorulan ülkenin bayrağı"
+              alt={messages().game.flagAlt}
               className="h-9 w-auto rounded-sm border border-slate-200 shadow-sm lg:h-11"
               height={44}
               key={question.code}
@@ -202,7 +205,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
               unoptimized
               width={59}
             />
-            {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.name}</span>}
+            {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{questionName(question)}</span>}
           </>
         ) : isCapitalChoice(choice) && "code" in question && capitalOf(question.code) ? (
           <>
@@ -210,20 +213,20 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
               🏛️
             </span>
             <h1 className="min-w-0 truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">
-              <span className="sr-only">Başkenti </span>
+              <span className="sr-only">{messages().game.capitalBefore}</span>
               {capitalOf(question.code)}
-              <span className="sr-only"> olan ülke hangisi?</span>
+              <span className="sr-only">{messages().game.capitalAfter}</span>
             </h1>
-            {isEnded && <span className="shrink-0 truncate font-display text-xl font-bold text-slate-500 lg:text-2xl">· {question.name}</span>}
+            {isEnded && <span className="shrink-0 truncate font-display text-xl font-bold text-slate-500 lg:text-2xl">· {questionName(question)}</span>}
           </>
         ) : isPlateChoice(choice) && "plate" in question ? (
           <>
-            <h1 className="sr-only">Bu plaka hangi ilin?</h1>
+            <h1 className="sr-only">{messages().game.plateQuestion}</h1>
             <PlateBadge key={question.plate} plate={question.plate} />
             {isEnded && <span className="truncate font-display text-xl font-bold text-cyan-700 lg:text-2xl">{question.city}</span>}
           </>
         ) : (
-          <h1 className="truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">{"city" in question ? question.city : question.name}</h1>
+          <h1 className="truncate font-display text-2xl font-bold text-cyan-700 lg:text-3xl">{questionName(question)}</h1>
         )}
         {!isCountdown && !isEnded && question && <CountdownRing remainingMs={remainingMs} />}
       </div>
@@ -291,7 +294,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
 
         {isCountdown && (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
-            <p className="font-display text-xl font-bold tracking-[0.2em] text-slate-500 uppercase">Düello başlıyor</p>
+            <p className="font-display text-xl font-bold tracking-[0.2em] text-slate-500 uppercase">{messages().duel.starting}</p>
             <p className="font-display text-9xl font-bold text-cyan-600 tabular-nums" key={Math.ceil((startedAt - now) / 1000)}>
               {Math.max(1, Math.ceil((startedAt - now) / 1000))}
             </p>
@@ -318,16 +321,16 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
         {isEnded && (
           <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-2xl bg-white/90 p-3 text-xs shadow-lg backdrop-blur portrait:max-lg:bottom-14 lg:bottom-6 lg:left-6 lg:p-4 lg:text-sm">
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-emerald-400" /> Doğru cevap
+              <span className="h-3 w-3 rounded-full bg-emerald-400" /> {messages().duel.legendCorrect}
             </span>
             {mine && !mine.correct && (
               <span className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-rose-400" /> Senin tıkladığın
+                <span className="h-3 w-3 rounded-full bg-rose-400" /> {messages().duel.legendMine}
               </span>
             )}
             {theirs && (
               <span className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full border-2 border-orange-600 bg-orange-300" /> {opponent.name} tıkladı
+                <span className="h-3 w-3 rounded-full border-2 border-orange-600 bg-orange-300" /> {messages().duel.legendTheirs(opponent.name)}
               </span>
             )}
           </div>
@@ -336,7 +339,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
 
         {!opponent.online && (
           <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 rounded-xl bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 shadow">
-            {opponent.name} bağlantısını kaybetti. 30 saniye içinde dönmezse düelloyu kazanırsın.
+            {messages().duel.opponentOffline(opponent.name)}
           </div>
         )}
       </div>

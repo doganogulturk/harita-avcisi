@@ -1,3 +1,6 @@
+import { currentLocale, messages } from "@/lib/i18n";
+import { COUNTRY_NAMES_EN } from "@/lib/i18n/places-en";
+
 export type CountryTier = "common" | "rare";
 /**
  * Veritabanındaki dünya turu türü. Oyunda yalnızca "hard" (179 ülkenin tamamı, arayüzde "Dünya") oynanır; "normal"
@@ -229,11 +232,11 @@ export type MapBox = { x: number; y: number; width: number; height: number };
  * Ülke kutularından türetilmedi: Fransa, Portekiz ve Norveç gibi ülkelerin şekilleri
  * denizaşırı topraklarını da içerdiği için kutu kıtanın çok dışına taşıyor.
  */
-export const CONTINENTS: { id: Continent; label: string; view: MapBox }[] = [
-  { id: "africa", label: "Afrika", view: { x: 345, y: 430, width: 205, height: 195 } },
-  { id: "america", label: "Amerika", view: { x: 30, y: 250, width: 365, height: 445 } },
-  { id: "asia", label: "Asya", view: { x: 460, y: 300, width: 330, height: 265 } },
-  { id: "europe", label: "Avrupa", view: { x: 355, y: 322, width: 165, height: 123 } },
+export const CONTINENTS: { id: Continent; readonly label: string; view: MapBox }[] = [
+  { id: "africa", get label() { return messages().continents.africa; }, view: { x: 345, y: 430, width: 205, height: 195 } },
+  { id: "america", get label() { return messages().continents.america; }, view: { x: 30, y: 250, width: 365, height: 445 } },
+  { id: "asia", get label() { return messages().continents.asia; }, view: { x: 460, y: 300, width: 330, height: 265 } },
+  { id: "europe", get label() { return messages().continents.europe; }, view: { x: 355, y: 322, width: 165, height: 123 } },
 ];
 
 const continentCodes = {} as Record<Continent, ReadonlySet<string>>;
@@ -249,6 +252,13 @@ export function countriesIn(continent: Continent): Country[] {
   return countries.filter((country) => continentCodes[continent].has(country.code));
 }
 
+/** Ülkenin arayüz dilindeki adı (Türkçe ya da İngilizce). */
+export function countryName(country: Country | string): string {
+  const code = typeof country === "string" ? country : country.code;
+  if (currentLocale() === "en") return COUNTRY_NAMES_EN[code] ?? code.toUpperCase();
+  return typeof country === "string" ? (COUNTRIES_BY_CODE.get(code)?.name ?? code.toUpperCase()) : country.name;
+}
+
 export function continentInfo(continent: Continent) {
   return CONTINENTS.find((option) => option.id === continent)!;
 }
@@ -260,6 +270,7 @@ export function isContinentScope(scope: WorldScope): scope is Continent {
   return scope !== "all";
 }
 
+const COUNTRIES_BY_CODE = new Map(countries.map((country) => [country.code, country]));
 const allCountryCodes: ReadonlySet<string> = new Set(countries.map((country) => country.code));
 
 /** Kapsama giren ülkeler; giriş ekranındaki önizleme haritasında bunlar vurgulanır. */

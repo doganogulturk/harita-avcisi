@@ -1,5 +1,7 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
+import { serverMessage } from "@/lib/i18n/server-messages";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { type DuelSettings, type DuelState } from "@/lib/duel";
@@ -44,8 +46,8 @@ export function useDuel(code: string, player: Player | null) {
       isPolling = false;
       if (!isActive) return;
       if (error) {
-        if (isFirst) return setFatalError(error.message || "Düelloya katılınamadı.");
-        setConnectionError("Bağlantı sorunu, yeniden deneniyor...");
+        if (isFirst) return setFatalError(serverMessage(error.message) || messages().errors.duelJoinFailed);
+        setConnectionError(messages().errors.duelConnection);
       } else {
         setConnectionError(null);
         apply(data as DuelState);
@@ -78,7 +80,7 @@ export function useDuel(code: string, player: Player | null) {
       const supabase = getSupabaseClient();
       if (!supabase) return;
       const { data, error } = await supabase.rpc(fn, { p_code: code, ...args });
-      if (error) return setConnectionError(error.message);
+      if (error) return setConnectionError(serverMessage(error.message));
       apply(data as DuelState);
     },
     [apply, code],
@@ -95,7 +97,7 @@ export function useDuel(code: string, player: Player | null) {
       if (!supabase) return null;
       const { data, error } = await supabase.rpc("duel_rematch", { p_code: code, p_game_mode: mode, p_variant: variant, p_rule: rule });
       if (error) {
-        setConnectionError(error.message);
+        setConnectionError(serverMessage(error.message));
         return null;
       }
       return data as string;
@@ -111,8 +113,8 @@ export function useDuel(code: string, player: Player | null) {
 /** Yeni düello kurar ve kodunu döndürür. */
 export async function createDuel({ mode, variant, rule }: DuelSettings): Promise<{ code: string } | { error: string }> {
   const supabase = getSupabaseClient();
-  if (!supabase) return { error: "Supabase bağlantısı yapılandırılmalıdır." };
+  if (!supabase) return { error: messages().errors.notConfigured };
   const { data, error } = await supabase.rpc("create_duel", { p_game_mode: mode, p_variant: variant, p_rule: rule });
-  if (error || typeof data !== "string") return { error: error?.message ?? "Düello kurulamadı." };
+  if (error || typeof data !== "string") return { error: error ? serverMessage(error.message) : messages().errors.duelCreateFailed };
   return { code: data };
 }

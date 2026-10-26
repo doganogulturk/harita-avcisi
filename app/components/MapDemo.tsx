@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { PlateBadge } from "./GameTopBar";
 import { flagUrl, isSameLocation, LOCATION_SELECTOR, locationIdOf, locationName, type GameMode, type QuestionPrompt } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
+import { messages } from "@/lib/i18n";
 import { capitalOf } from "@/lib/world-capitals";
 import { continentLocationIds, isContinentScope, type WorldScope } from "@/lib/world-countries";
 
@@ -39,12 +40,13 @@ export function useDemoCycle(count: number, resetKey: string, stepMs = DEMO_STEP
 /** Sorunun yazısı: "Ankara nerede?", plaka, bayrak ya da başkent; cevapta "✓ Ankara". */
 export function DemoPrompt({ question, isRevealed }: { question: DemoQuestion; isRevealed: boolean }) {
   const name = locationName(question.mode, question.id);
+  const { demo } = messages();
   if (isRevealed) return <>✓ {name}</>;
   if (question.prompt === "plate") {
     return (
       <>
         <PlateBadge plate={Number(question.id)} size="sm" />
-        hangi il?
+        {demo.whichProvince}
       </>
     );
   }
@@ -52,7 +54,7 @@ export function DemoPrompt({ question, isRevealed }: { question: DemoQuestion; i
     return (
       <>
         <Image alt="" className="h-[1.2em] w-auto rounded-[3px] border border-slate-200" height={24} src={flagUrl(question.id)} unoptimized width={32} />
-        hangi ülke?
+        {demo.whichCountry}
       </>
     );
   }
@@ -60,11 +62,11 @@ export function DemoPrompt({ question, isRevealed }: { question: DemoQuestion; i
     return (
       <>
         <span aria-hidden="true">🏛️</span>
-        {capitalOf(question.id)} hangi ülke?
+        {demo.capitalWhich(capitalOf(question.id) ?? "")}
       </>
     );
   }
-  return <>{name} nerede?</>;
+  return <>{demo.where(name)}</>;
 }
 
 /** Sorunun durduğu yuvarlak etiket; cevapta yeşile döner. */

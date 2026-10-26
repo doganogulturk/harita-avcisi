@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { CornerTab } from "../CornerTab";
 import { gameInfo, GameIcon, GROUPS, type GroupInfo } from "./games";
@@ -79,7 +80,7 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
                 key={leader.place}
               >
                 <span aria-hidden="true">🏆</span>
-                <span className="shrink-0 font-semibold text-slate-500">{leader.place} 1.</span>
+                <span className="shrink-0 font-semibold text-slate-500">{leader.place}</span>
                 <span className="min-w-0 truncate font-bold">{leader.name}</span>
                 <span className="shrink-0 font-semibold tabular-nums">
                   · {leader.score} · {leader.time}
@@ -92,7 +93,7 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
               type="button"
             >
               <TrophyIcon />
-              Sıralamayı gör
+              {messages().home.showLeaderboard}
               <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -126,7 +127,7 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
   const join = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalized = code.trim().toUpperCase();
-    if (normalized.length !== 6) return setError("Kod 6 karakterdir.");
+    if (normalized.length !== 6) return setError(messages().home.codeLength);
     setIsBusy(true);
     const joinError = await onJoin(normalized);
     setIsBusy(false);
@@ -136,7 +137,7 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
   return (
     <form className="mt-3 flex min-w-0 flex-wrap items-center gap-1.5 short:mt-1.5 lg:mt-5 lg:gap-2" onSubmit={(event) => void join(event)}>
       <label className="w-full text-xs font-semibold text-slate-500 lg:text-sm" htmlFor="join-code">
-        Kodun var mı?
+        {messages().home.haveCode}
       </label>
       <input
         autoCapitalize="characters"
@@ -145,7 +146,7 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
         className={`h-10 w-32 min-w-0 rounded-full border-2 bg-white px-3 text-center font-mono text-sm font-bold tracking-[0.2em] text-slate-900 uppercase outline-none focus:ring-2 short:h-8 lg:h-12 lg:w-44 lg:text-base ${outlineClass}`}
         enterKeyHint="go"
         id="join-code"
-        aria-label="Düello ya da oda kodu"
+        aria-label={messages().home.codeLabel}
         maxLength={6}
         onChange={(event) => {
           setCode(event.target.value);
@@ -160,7 +161,7 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
         disabled={isBusy}
         type="submit"
       >
-        {isBusy ? "…" : "Katıl"}
+        {isBusy ? "…" : messages().home.join}
       </button>
       {error && <span className="w-full text-xs font-semibold text-rose-600">{error}</span>}
     </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { DUEL_QUESTION_MS, DUEL_QUESTIONS, DUEL_RULES, duelModeLabel, duelPath, duelSides, type DuelPlayer, type DuelState } from "@/lib/duel";
 import { DuelAvatar, SHIMMER_BUTTON, ShareCode, type DuelTone } from "./DuelParts";
 
@@ -22,11 +23,11 @@ function PlayerCard({ player, tone }: { player: DuelPlayer; tone: DuelTone }) {
       <DuelAvatar avatar={player.avatar} name={player.name} size="lobby" tone={tone} />
       <p className="max-w-full truncate font-display text-lg font-bold text-slate-900 sm:text-2xl lg:text-3xl">{player.name}</p>
       {player.ready ? (
-        <span className={`${STATUS_PILL} bg-emerald-100 text-emerald-700`}>✓ Hazır</span>
+        <span className={`${STATUS_PILL} bg-emerald-100 text-emerald-700`}>{messages().duel.lobbyReady}</span>
       ) : player.online ? (
-        <span className={`${STATUS_PILL} bg-slate-100 text-slate-500`}>Hazırlanıyor…</span>
+        <span className={`${STATUS_PILL} bg-slate-100 text-slate-500`}>{messages().duel.lobbyPreparing}</span>
       ) : (
-        <span className={`${STATUS_PILL} bg-amber-50 text-amber-700`}>Bağlantı bekleniyor…</span>
+        <span className={`${STATUS_PILL} bg-amber-50 text-amber-700`}>{messages().duel.lobbyWaitingConnection}</span>
       )}
     </div>
   );
@@ -38,8 +39,8 @@ function WaitingCard() {
       <span className="flex h-14 w-14 animate-pulse items-center justify-center rounded-full bg-slate-200 text-2xl text-slate-400 sm:h-20 sm:w-20 sm:text-3xl lg:h-24 lg:w-24">
         ?
       </span>
-      <p className="font-display text-lg leading-tight font-bold text-slate-400 sm:text-2xl lg:text-3xl">Rakip bekleniyor</p>
-      <span className="text-xs text-slate-500 sm:text-sm">Bağlantıyı gönder, açınca burada görünür.</span>
+      <p className="font-display text-lg leading-tight font-bold text-slate-400 sm:text-2xl lg:text-3xl">{messages().duel.waitingOpponent}</p>
+      <span className="text-xs text-slate-500 sm:text-sm">{messages().duel.waitingOpponentNote}</span>
     </div>
   );
 }
@@ -57,7 +58,7 @@ export function DuelLobby({ state, onReady }: { state: DuelState; onReady: (read
           {rule.icon} {rule.label}
         </span>
         <span className="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">
-          {DUEL_QUESTIONS} soru · {DUEL_QUESTION_MS / 1000} sn
+          {messages().duel.format(DUEL_QUESTIONS, DUEL_QUESTION_MS / 1000)}
         </span>
       </div>
 
@@ -74,18 +75,18 @@ export function DuelLobby({ state, onReady }: { state: DuelState; onReady: (read
           <button
             className="w-full rounded-2xl border-2 border-emerald-500 bg-emerald-50 py-3.5 font-display text-lg font-bold text-emerald-700 transition hover:bg-emerald-100 lg:text-xl"
             onClick={() => onReady(false)}
-            title="Hazır değilim"
+            title={messages().duel.notReady}
             type="button"
           >
-            ✓ Hazırsın{opponent ? ` · ${opponent.name} bekleniyor` : " · rakip bekleniyor"}
+            {messages().duel.youAreReady(opponent?.name ?? null)}
           </button>
         ) : (
           <button className={SHIMMER_BUTTON} onClick={() => onReady(true)} type="button">
-            Hazırım
+            {messages().duel.imReady}
           </button>
         )}
-        <p className="text-center text-xs text-slate-500">İkiniz de hazır olunca 3 saniyelik geri sayımla başlar. Düello genel sıralamaya işlenmez.</p>
-        <ShareCode code={state.code} label="Düello kodu" path={duelPath(state.code)} shareText="Benimle düello yap!" />
+        <p className="text-center text-xs text-slate-500">{messages().duel.lobbyNote}</p>
+        <ShareCode code={state.code} label={messages().duel.code} path={duelPath(state.code)} shareText={messages().duel.shareText} />
       </div>
     </div>
   );

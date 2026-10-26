@@ -22,6 +22,9 @@ meydan okuması** var.
 
 ## Öne çıkanlar
 
+- **Türkçe ve İngilizce:** Oyun cihazın diliyle açılır, hesap menüsünden değiştirilebilir. Ülke ve başkent adları,
+  rozetler, paylaşım metinleri, sunucu mesajları ve yasal sayfalar da iki dilde (KVKK metninin İngilizcesi bilgi amaçlı
+  çeviri; esas metin Türkçe).
 - **Sade ana ekran:** İki kart: Tek başıma ve Arkadaşlarımla; her kartın alt köşelerinde grubun iki oyunu (Yarış,
   Antrenman · Düello, Oda) tek dokunuşla açılır. Davet kodu doğrudan Arkadaşlarımla kartına yazılır; kodun düello mu oda
   mı olduğunu oyun kendisi bulur. Ayar ekranında oyun, harita ve soru tipi alt alta durur; altında seçimlere göre
@@ -55,9 +58,9 @@ Sıradaki işler, öncelik sırasıyla:
 
 1. **Android'in yeni sürümü:** Sürüm kodunu artırıp `npm run android:release` ile derlemek ve Google Play'e yüklemek.
    Mağaza sayfasındaki açıklamayı (başkentler, günün meydan okuması, rozetler, profil) ve ekran görüntülerini (yeni ana
-   ekran, başkent sorusu) güncellemek; hesap silme talimatlarını yeni hesap menüsüne göre düzeltmek.
-2. **İngilizce dil desteği.**
-3. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+   ekran, başkent sorusu) güncellemek; İngilizce mağaza sayfası eklemek; hesap silme talimatlarını yeni hesap menüsüne
+   göre düzeltmek.
+2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
 
 Teknik işler:
 

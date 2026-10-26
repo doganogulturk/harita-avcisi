@@ -17,6 +17,7 @@ import { useRoundPlay } from "@/lib/hooks/useRoundPlay";
 import { signInAsGuest as signInAsGuestSession, startGoogleSignIn } from "@/lib/auth";
 import { startDailyRound } from "@/lib/daily";
 import { questionForLocation } from "@/lib/duel";
+import { messages } from "@/lib/i18n";
 import { getSupabaseClient } from "@/lib/supabase";
 import { shuffle } from "@/lib/shuffle";
 import { provinces } from "@/lib/turkish-plates";
@@ -202,9 +203,9 @@ export default function Home() {
     if (nextChoice.daily) {
       void startDailyRound(nextChoice).then((started) => {
         setIsPreparing(false);
-        if (started === "played") return setDailyNotice("Bu meydan okumayı bugün oynadın; yenisi gece yarısı.");
+        if (started === "played") return setDailyNotice(messages().game.dailyPlayed);
         const dailyQuestions = started && questionsFrom(nextChoice, started.questions);
-        if (!started || !dailyQuestions) return setDailyNotice("Meydan okuma açılamadı. Bağlantını kontrol edip tekrar dene.");
+        if (!started || !dailyQuestions) return setDailyNotice(messages().game.dailyFailed);
         launchRound(nextChoice, dailyQuestions, started.roundId);
       });
       return;
@@ -290,7 +291,7 @@ export default function Home() {
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
-    if (error) return setAuthError("Çıkış yapılamadı. Lütfen tekrar deneyin.");
+    if (error) return setAuthError(messages().game.signOutFailed);
     clearPlayer();
   }
 
@@ -410,7 +411,7 @@ export default function Home() {
         <div aria-live="polite" className="delayed-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm" role="status">
           <p className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-xl shadow-slate-900/10">
             <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-200 border-t-cyan-600" />
-            Tur hazırlanıyor…
+            {messages().game.preparing}
           </p>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { BOARDS, boardIdFor, choiceForBoard, type PlayChoice } from "@/lib/game";
 
@@ -47,10 +48,10 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
   return (
     <div className="flex shrink-0 items-center rounded-full border border-slate-200">
       <button
-        aria-label="Turu yeniden başlat"
+        aria-label={messages().game.restartRound}
         className={`${SEGMENT_CLASS} w-7 justify-center rounded-l-full lg:w-8`}
         onClick={() => onPlay(choice)}
-        title="Turu yeniden başlat"
+        title={messages().game.restartRound}
         type="button"
       >
         <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -66,7 +67,7 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
           onClick={() => setIsOpen((open) => !open)}
           type="button"
         >
-          {isCompact ? <span className="sr-only">{currentLabel} · başka tur</span> : currentLabel}
+          {isCompact ? <span className="sr-only">{messages().game.otherRoundOf(currentLabel)}</span> : currentLabel}
           <svg aria-hidden="true" className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -74,7 +75,7 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
 
         {isOpen && (
           <div className="absolute right-0 z-20 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10" role="menu">
-            <p className="px-3 pt-1.5 pb-1 text-[10px] font-semibold tracking-[0.15em] text-slate-400 uppercase">Başka tur</p>
+            <p className="px-3 pt-1.5 pb-1 text-[10px] font-semibold tracking-[0.15em] text-slate-400 uppercase">{messages().game.otherRound}</p>
             {BOARDS.map((board) => (
               <button
                 className={ITEM_CLASS}
@@ -88,10 +89,10 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
                 type="button"
               >
                 {board.label}
-                {board.id === currentBoardId && <span className="text-[10px] font-bold text-cyan-700 uppercase">Şu an</span>}
+                {board.id === currentBoardId && <span className="text-[10px] font-bold text-cyan-700 uppercase">{messages().game.current}</span>}
               </button>
             ))}
-            <p className="px-3 pt-2 pb-1 text-[10px] text-slate-400">Yeni tur başlayınca bu turun skoru kaydedilmez.</p>
+            <p className="px-3 pt-2 pb-1 text-[10px] text-slate-400">{messages().game.newRoundNote}</p>
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "../Logo";
@@ -56,7 +57,7 @@ export function DuelScreen({ code }: { code: string }) {
 
   const goHome = () => router.push("/");
   const exitDuel = () => {
-    if (window.confirm("Düellodan çıkarsan ve 30 saniye içinde dönmezsen hükmen kaybedersin. Çıkmak istiyor musun?")) goHome();
+    if (window.confirm(messages().duel.exitConfirm)) goHome();
   };
   // Android geri tuşu oyun sırasında çıkış tuşuyla aynı işi yapar (onay sorar); lobide ve sonuçta geçmişte geri gidilir.
   useBackHandler(exitDuel, BACK_PRIORITY.screen, state?.status === "playing");
@@ -69,7 +70,7 @@ export function DuelScreen({ code }: { code: string }) {
 
   const header = (
     <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-      <button aria-label="Ana sayfa" onClick={goHome} type="button">
+      <button aria-label={messages().duel.homeLink} onClick={goHome} type="button">
         <Logo isHeading={false} />
       </button>
       <AccountMenu onSignOut={signOut} player={player} />
@@ -82,19 +83,20 @@ export function DuelScreen({ code }: { code: string }) {
     </Shell>
   );
 
-  if (!supabaseConfigured) return body(<Message title="Düello için Supabase bağlantısı yapılandırılmalıdır." />);
-  if (!isPlayerLoaded) return body(<Message title="Yükleniyor…" />);
+  if (!supabaseConfigured) return body(<Message title={messages().duel.notConfigured} />);
+  if (!isPlayerLoaded) return body(<Message title={messages().duel.loading} />);
 
   if (!player) {
     return body(
       <div className="mx-auto my-auto w-full max-w-2xl">
         <SignInPanel
-          description="Rakibin seni görebilsin diye giriş yap; misafir girişi de olur. Düello genel sıralamaya işlenmez."
+          description={messages().duel.inviteDescription}
           onCancel={goHome}
           onSignedIn={setPlayer}
           title={
             <>
-              ⚔️ <span className="text-cyan-700">Düello</span> daveti · kod {code.toUpperCase()}
+              ⚔️ <span className="text-cyan-700">{messages().duel.inviteTitle}</span>
+              {messages().duel.inviteSuffix(code.toUpperCase())}
             </>
           }
         />
@@ -106,13 +108,13 @@ export function DuelScreen({ code }: { code: string }) {
     return body(
       <Message title={fatalError}>
         <button className="mt-4 font-semibold text-cyan-700 underline-offset-4 hover:underline" onClick={goHome} type="button">
-          Ana sayfaya dön
+          {messages().duel.backHome}
         </button>
       </Message>,
     );
   }
 
-  if (!state) return body(<Message title="Düelloya bağlanılıyor…" />);
+  if (!state) return body(<Message title={messages().duel.connecting} />);
 
   const onRematch = async (settings: DuelSettings) => {
     setIsRequestingRematch(true);

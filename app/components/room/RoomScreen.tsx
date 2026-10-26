@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Logo } from "../Logo";
@@ -76,7 +77,7 @@ export function RoomScreen({ code }: { code: string }) {
   const shell = (children: React.ReactNode) => (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-        <button aria-label="Ana sayfa" onClick={goHome} type="button">
+        <button aria-label={messages().room.homeLink} onClick={goHome} type="button">
           <Logo isHeading={false} />
         </button>
         <AccountMenu onSignOut={signOut} player={player} />
@@ -96,19 +97,20 @@ export function RoomScreen({ code }: { code: string }) {
     </main>
   );
 
-  if (!getSupabaseClient()) return shell(<Message title="Oda için Supabase bağlantısı yapılandırılmalıdır." />);
-  if (!isPlayerLoaded) return shell(<Message title="Yükleniyor…" />);
+  if (!getSupabaseClient()) return shell(<Message title={messages().room.notConfigured} />);
+  if (!isPlayerLoaded) return shell(<Message title={messages().room.loading} />);
 
   if (!player) {
     return shell(
       <div className="mx-auto my-auto w-full max-w-2xl">
         <SignInPanel
-          description="Sıralamada görünmek için giriş yap; misafir girişi de olur. Oda turları genel sıralamaya da işlenir."
+          description={messages().room.inviteDescription}
           onCancel={goHome}
           onSignedIn={setPlayer}
           title={
             <>
-              👥 <span className="text-cyan-700">Oda</span> daveti · kod {code.toUpperCase()}
+              👥 <span className="text-cyan-700">{messages().room.inviteTitle}</span>
+              {messages().room.inviteSuffix(code.toUpperCase())}
             </>
           }
         />
@@ -120,13 +122,13 @@ export function RoomScreen({ code }: { code: string }) {
     return shell(
       <Message title={fatalError}>
         <button className="mt-4 font-semibold text-cyan-700 underline-offset-4 hover:underline" onClick={goHome} type="button">
-          Ana sayfaya dön
+          {messages().room.backHome}
         </button>
       </Message>,
     );
   }
 
-  if (!state) return shell(<Message title="Odaya bağlanılıyor…" />);
+  if (!state) return shell(<Message title={messages().room.connecting} />);
 
   if (activeRound) {
     return (

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
+import { messages } from "@/lib/i18n";
 
 type AuthPanelProps = {
   /** Oyuncunun giriş yapmadan önce seçtiği tur, ör. "Bayrak". */
@@ -23,7 +24,7 @@ type AuthPanelProps = {
 
 /** Misafir girişinde ad alanına önerilen ad; oyuncu isterse üzerine yazar. */
 function suggestGuestName() {
-  return `Avcı ${Math.floor(1000 + Math.random() * 9000)}`;
+  return messages().auth.guestSuggestion(Math.floor(1000 + Math.random() * 9000));
 }
 
 /**
@@ -41,8 +42,9 @@ export function AuthPanel({
   onGuestSignIn,
   onCancel,
   cancelAs = "back",
-  guestSubmitLabel = "Başla",
+  guestSubmitLabel,
 }: AuthPanelProps) {
+  const { auth, common } = messages();
   const [guestName, setGuestName] = useState(suggestGuestName);
   const [isGuestFormVisible, setIsGuestFormVisible] = useState(false);
 
@@ -55,7 +57,7 @@ export function AuthPanel({
     <div className="relative rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 short:p-5">
       {cancelAs === "close" ? (
         <button
-          aria-label="Kapat"
+          aria-label={common.close}
           className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
           onClick={onCancel}
           type="button"
@@ -70,19 +72,19 @@ export function AuthPanel({
           onClick={onCancel}
           type="button"
         >
-          ← Geri
+          {auth.back}
         </button>
       )}
 
       <p className={`text-lg font-bold text-slate-900 ${cancelAs === "close" ? "pr-10" : ""}`}>
         {title ?? (
           <>
-            <span className="text-cyan-700">{choiceLabel}</span> turu seni bekliyor
+            <span className="text-cyan-700">{choiceLabel}</span> {auth.waiting}
           </>
         )}
       </p>
       <p className="mt-1 text-sm text-slate-600">
-        {description ?? "Skorunun sıralamada görünmesi için giriş yap. Giriş yapar yapmaz bu tur başlıyor."}
+        {description ?? auth.defaultDescription}
       </p>
 
       <div className="mt-5 grid gap-3 short:mt-3 sm:grid-cols-2">
@@ -98,7 +100,7 @@ export function AuthPanel({
             <path d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z" fill="#FBBC05" />
             <path d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z" fill="#EA4335" />
           </svg>
-          Google ile devam et
+          {auth.google}
         </button>
         <button
           className="h-12 rounded-xl border border-cyan-600 bg-white px-4 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
@@ -106,13 +108,13 @@ export function AuthPanel({
           onClick={() => setIsGuestFormVisible(true)}
           type="button"
         >
-          Misafir olarak oyna
+          {auth.guest}
         </button>
       </div>
 
       {isGuestFormVisible && (
         <form className="mt-3 flex gap-2" onSubmit={submitGuestName}>
-          <label className="sr-only" htmlFor="guest-name">Sıralamada görünecek adın</label>
+          <label className="sr-only" htmlFor="guest-name">{auth.guestName}</label>
           <input
             autoFocus
             className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
@@ -124,7 +126,7 @@ export function AuthPanel({
             onChange={(event) => setGuestName(event.target.value)}
             // Önerilen ad seçili gelir: yazmaya başlayan kendi adını yazar, dokunmayan önerilenle devam eder.
             onFocus={(event) => event.currentTarget.select()}
-            placeholder="Sıralamada görünecek adın"
+            placeholder={auth.guestName}
             value={guestName}
           />
           <button
@@ -132,25 +134,25 @@ export function AuthPanel({
             disabled={isSigningIn}
             type="submit"
           >
-            {guestSubmitLabel}
+            {guestSubmitLabel ?? common.start}
           </button>
         </form>
       )}
 
       <p className="mt-4 text-xs text-slate-500 short:mt-3">
-        Giriş yaparak{" "}
+        {auth.termsBefore}
         <Link className="font-semibold underline underline-offset-2 hover:text-cyan-700" href="/kullanim-kosullari">
-          Kullanım Koşulları
+          {auth.terms}
         </Link>
-        &apos;nı kabul etmiş olursun. Adın ve skorun sıralamada herkese görünür; ayrıntılar{" "}
+        {auth.termsAfter}
         <Link className="font-semibold underline underline-offset-2 hover:text-cyan-700" href="/gizlilik">
-          Gizlilik Politikası
+          {auth.privacy}
         </Link>
-        &apos;nda.
+        {auth.privacyAfter}
       </p>
 
       {authError && <p className="mt-4 text-sm font-medium text-rose-600">{authError}</p>}
-      {!supabaseConfigured && <p className="mt-4 text-sm font-medium text-rose-600">Oynamak için Supabase bağlantısı yapılandırılmalıdır.</p>}
+      {!supabaseConfigured && <p className="mt-4 text-sm font-medium text-rose-600">{auth.notConfigured}</p>}
     </div>
   );
 }

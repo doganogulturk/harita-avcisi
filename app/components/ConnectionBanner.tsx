@@ -1,6 +1,7 @@
 "use client";
 
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
+import { messages } from "@/lib/i18n";
 
 /** Bağlantı kopunca her ekranın altında beliren uyarı; bağlantı gelince kendiliğinden kalkar. */
 export function ConnectionBanner() {
@@ -13,7 +14,7 @@ export function ConnectionBanner() {
     >
       <p className="max-w-md rounded-2xl bg-slate-900/95 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-xl">
         <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-rose-500 align-middle" />
-        Bağlantı yok. Antrenman oynanabilir; yarış, düello ve oda için bağlantı gerekir.
+        {messages().connection.offline}
       </p>
     </div>
   );

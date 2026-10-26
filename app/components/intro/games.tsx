@@ -1,6 +1,7 @@
 import { DUEL_QUESTION_MS, DUEL_QUESTIONS } from "@/lib/duel";
 import { GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND } from "@/lib/game";
 import { type IntroGame, type IntroGroup } from "@/lib/intro-preferences";
+import { messages } from "@/lib/i18n";
 import { ROOM_DURATIONS, ROOM_MAX_PLAYERS, ROOM_MIN_PLAYERS, ROOM_ROUND_COUNTS } from "@/lib/room";
 
 /**
@@ -36,22 +37,22 @@ export type GameTheme = {
 
 export type GameInfo = {
   id: IntroGame;
-  title: string;
-  description: string;
-  facts: string[];
-  action: string;
+  readonly title: string;
+  readonly description: string;
+  readonly facts: string[];
+  readonly action: string;
   theme: GameTheme;
 };
 
-export const formatMinutes = (minutes: number) => (minutes === 60 ? "1 saat" : `${minutes} dk`);
+export const formatMinutes = (minutes: number) => messages().common.minutes(minutes);
 
 export const GAMES: GameInfo[] = [
   {
     id: "ranked",
-    title: "Yarış",
-    description: `${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye. Eşit puanda hızlı olan önde; sonucun sıralamaya işlenir.`,
-    facts: [`${QUESTIONS_PER_ROUND} soru`, `${GAME_DURATION_SECONDS} sn`, "Sıralamaya işlenir"],
-    action: "Başla",
+    get title() { return messages().games.ranked.title; },
+    get description() { return messages().games.ranked.description(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS); },
+    get facts() { return messages().games.ranked.facts(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS); },
+    get action() { return messages().games.ranked.action; },
     theme: {
       surface: "bg-gradient-to-br from-cyan-50 via-white to-white",
       selected: "border-cyan-600 bg-cyan-600 text-white",
@@ -69,10 +70,10 @@ export const GAMES: GameInfo[] = [
   },
   {
     id: "practice",
-    title: "Antrenman",
-    description: "Giriş yok, süre yok. İstediğin kadar oyna, kıtaları tek tek çalış; hiçbir yere kaydedilmez.",
-    facts: ["Sınırsız soru", "Süre yok", "Kaydedilmez"],
-    action: "Başla",
+    get title() { return messages().games.practice.title; },
+    get description() { return messages().games.practice.description; },
+    get facts() { return messages().games.practice.facts; },
+    get action() { return messages().games.practice.action; },
     theme: {
       surface: "bg-gradient-to-br from-amber-50 via-white to-white",
       selected: "border-amber-400 bg-amber-400 text-amber-950",
@@ -90,10 +91,10 @@ export const GAMES: GameInfo[] = [
   },
   {
     id: "duel",
-    title: "Düello",
-    description: "Bir arkadaşınla aynı sorulara aynı anda cevap verin. Kodu gönder, kim daha hızlı görün.",
-    facts: ["2 kişi", `${DUEL_QUESTIONS} soru · ${DUEL_QUESTION_MS / 1000} sn`, "Sıralamaya işlenmez"],
-    action: "Düelloyu kur",
+    get title() { return messages().games.duel.title; },
+    get description() { return messages().games.duel.description; },
+    get facts() { return messages().games.duel.facts(DUEL_QUESTIONS, DUEL_QUESTION_MS / 1000); },
+    get action() { return messages().games.duel.action; },
     theme: {
       surface: "bg-gradient-to-br from-orange-50 via-white to-white",
       selected: "border-orange-500 bg-orange-500 text-white",
@@ -111,14 +112,17 @@ export const GAMES: GameInfo[] = [
   },
   {
     id: "room",
-    title: "Oda",
-    description: "Arkadaş grubunla aynı sorularla birkaç tur oynayın; oda sıralamasında kimin önde olduğunu görün.",
-    facts: [
-      `${ROOM_MIN_PLAYERS}–${ROOM_MAX_PLAYERS} kişi`,
-      `${ROOM_ROUND_COUNTS[0]}–${ROOM_ROUND_COUNTS.at(-1)} tur`,
-      `${formatMinutes(ROOM_DURATIONS[0])} – ${formatMinutes(ROOM_DURATIONS.at(-1) ?? 60)}`,
-    ],
-    action: "Odayı kur",
+    get title() { return messages().games.room.title; },
+    get description() { return messages().games.room.description; },
+    get facts() {
+      const { common } = messages();
+      return [
+        common.players(ROOM_MIN_PLAYERS, ROOM_MAX_PLAYERS),
+        common.rounds(ROOM_ROUND_COUNTS[0], ROOM_ROUND_COUNTS.at(-1) ?? 5),
+        `${formatMinutes(ROOM_DURATIONS[0])} – ${formatMinutes(ROOM_DURATIONS.at(-1) ?? 60)}`,
+      ];
+    },
+    get action() { return messages().games.room.action; },
     theme: {
       surface: "bg-gradient-to-br from-violet-50 via-white to-white",
       selected: "border-violet-600 bg-violet-600 text-white",
@@ -140,8 +144,8 @@ export const gameInfo = (id: IntroGame): GameInfo => GAMES.find((game) => game.i
 
 export type GroupInfo = {
   id: IntroGroup;
-  title: string;
-  description: string;
+  readonly title: string;
+  readonly description: string;
   /** İkinci adımın en üstündeki seçicide, bu sırayla. */
   games: [IntroGame, IntroGame];
   /** Kart, grubun ilk oyununun rengini taşır (Yarış camgöbeği, Düello turuncu). */
@@ -152,15 +156,15 @@ export type GroupInfo = {
 export const GROUPS: GroupInfo[] = [
   {
     id: "solo",
-    title: "Tek başıma",
-    description: `Yarışta ${QUESTIONS_PER_ROUND} soru, ${GAME_DURATION_SECONDS} saniye ve sıralama; antrenmanda süre yok, istediğin kıtayı çalış.`,
+    get title() { return messages().groups.solo.title; },
+    get description() { return messages().groups.solo.description(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS); },
     games: ["ranked", "practice"],
     theme: gameInfo("ranked").theme,
   },
   {
     id: "friends",
-    title: "Arkadaşlarımla",
-    description: "Düelloda bir arkadaşınla aynı anda, odada bir grupla birkaç tur. Kodu gönder, kim daha iyi görün.",
+    get title() { return messages().groups.friends.title; },
+    get description() { return messages().groups.friends.description; },
     games: ["duel", "room"],
     theme: gameInfo("duel").theme,
   },

@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { deleteMyAccount } from "@/lib/auth";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
@@ -19,6 +20,7 @@ export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccoun
     if (!isDeleting) onClose();
   }, BACK_PRIORITY.dialog);
   const [error, setError] = useState<string | null>(null);
+  const text = messages().deletion;
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -43,7 +45,7 @@ export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccoun
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
-        aria-label="Vazgeç"
+        aria-label={text.cancel}
         className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]"
         disabled={isDeleting}
         onClick={onClose}
@@ -59,14 +61,14 @@ export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccoun
         role="alertdialog"
       >
         <h2 className="font-display text-2xl leading-tight font-bold text-slate-900" id="delete-account-title">
-          Hesabın silinsin mi?
+          {text.dialogTitle}
         </h2>
         <div className="mt-3 space-y-2 text-sm text-slate-600" id="delete-account-description">
           <p>
-            <span className="font-semibold text-slate-800">{player.name}</span> hesabı ve şunlar kalıcı olarak silinir: sıralamadaki
-            skorların, oynadığın turlar, düelloların ve kurduğun odalar.
+            <span className="font-semibold text-slate-800">{player.name}</span>
+            {text.dialogBody}
           </p>
-          <p className="font-semibold text-rose-700">Bu işlem geri alınamaz.</p>
+          <p className="font-semibold text-rose-700">{text.irreversible}</p>
         </div>
 
         {error && <p className="mt-4 text-sm font-medium text-rose-600">{error}</p>}
@@ -79,7 +81,7 @@ export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccoun
             onClick={onClose}
             type="button"
           >
-            Vazgeç
+            {text.cancel}
           </button>
           <button
             className="rounded-full bg-rose-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 disabled:opacity-60"
@@ -87,7 +89,7 @@ export function DeleteAccountDialog({ player, onClose, onDeleted }: DeleteAccoun
             onClick={confirm}
             type="button"
           >
-            {isDeleting ? "Siliniyor…" : "Hesabımı sil"}
+            {isDeleting ? text.deleting : text.deleteButton}
           </button>
         </div>
       </div>

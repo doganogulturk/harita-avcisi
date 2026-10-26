@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useId } from "react";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
@@ -30,7 +31,7 @@ export function BottomSheet({ title, description, onClose, children }: BottomShe
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <button aria-label="Kapat" className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
+      <button aria-label={messages().common.close} className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
 
       <div
         aria-labelledby={titleId}
@@ -48,7 +49,7 @@ export function BottomSheet({ title, description, onClose, children }: BottomShe
             {description && <p className="mt-1.5 text-sm text-slate-500 sm:mt-2">{description}</p>}
           </div>
           <button
-            aria-label="Kapat"
+            aria-label={messages().common.close}
             autoFocus
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
             onClick={onClose}

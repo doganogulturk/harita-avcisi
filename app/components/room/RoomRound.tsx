@@ -1,5 +1,6 @@
 "use client";
 
+import { messages } from "@/lib/i18n";
 import { useEffect, useRef } from "react";
 import { GameMap, nextQuestionCountdown, streakCelebration, wrongPickNotice } from "../GameMap";
 import { GameTopBar } from "../GameTopBar";
@@ -66,7 +67,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
   }, [answerRecords, completionDurationMs, onDone, round, roundId, score, status]);
 
   const exitRound = () => {
-    if (!window.confirm("Turu bırakırsan bu tur 0 puan sayılır ve tekrar oynanamaz. Bırakmak istiyor musun?")) return;
+    if (!window.confirm(messages().room.leaveConfirm)) return;
     hasSaved.current = true;
     // Sunucu da hemen "yarım" saysın; haber veremezse tur 150 saniye sonra kendiliğinden yarım sayılır.
     void Promise.resolve(getSupabaseClient()?.rpc("abandon_round", { p_round_id: roundId })).finally(() =>
@@ -89,7 +90,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
         answerState={play.answerState}
         answers={play.answers}
         choice={choice}
-        exitTitle="Turu bırak · Bu tur 0 puan sayılır ve tekrar oynanamaz"
+        exitTitle={messages().room.leaveTitle}
         onExit={exitRound}
         onFinishPractice={() => {}}
         onSignOut={onSignOut}
@@ -97,7 +98,7 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
         question={play.currentQuestion}
         questionCount={play.questions.length}
         remainingGameSeconds={play.remainingGameSeconds}
-        roundLabel={`${state.name} · Tur ${round}/${state.round_count}`}
+        roundLabel={messages().room.roundLabel(state.name, round, state.round_count)}
         score={play.score}
       />
       <GameMap

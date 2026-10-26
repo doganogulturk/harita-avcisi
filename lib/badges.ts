@@ -2,40 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { type Player } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { getSupabaseClient } from "@/lib/supabase";
 
 /** Rozet grupları, profildeki sırayla; her grubun rozetleri kademe sırasıyla dizilir (3 → 7 → 30 gün). */
 export const BADGE_GROUPS = [
-  { id: "streak", title: "Gün serisi" },
-  { id: "daily", title: "Günlük meydan okuma" },
-  { id: "perfect", title: "Kusursuz tur" },
-  { id: "map", title: "Harita ustalığı" },
-  { id: "duel", title: "Düello" },
-  { id: "rank", title: "Sıralama" },
+  { id: "streak", get title() { return messages().badges.groups.streak; } },
+  { id: "daily", get title() { return messages().badges.groups.daily; } },
+  { id: "perfect", get title() { return messages().badges.groups.perfect; } },
+  { id: "map", get title() { return messages().badges.groups.map; } },
+  { id: "duel", get title() { return messages().badges.groups.duel; } },
+  { id: "rank", get title() { return messages().badges.groups.rank; } },
 ] as const;
 
 /**
  * Rozetler: oyuncunun başarıları. Hangisinin kazanıldığını ve ilerlemeyi sunucu hesaplar (my_badges, supabase/schema.sql);
- * adları, simgeleri ve açıklamaları burada. Sıra profildeki sıradır.
+ * simgeleri burada, adları ve açıklamaları sözlüklerde (lib/i18n). Sıra profildeki sıradır.
  */
 export const BADGES = [
-  { id: "streak_3", group: "streak", emoji: "🔥", title: "3 günlük seri", description: "Üç gün üst üste günlük meydan okuma bitir." },
-  { id: "streak_7", group: "streak", emoji: "🔥", title: "7 günlük seri", description: "Yedi gün üst üste günlük meydan okuma bitir." },
-  { id: "streak_30", group: "streak", emoji: "🔥", title: "30 günlük seri", description: "Otuz gün üst üste günlük meydan okuma bitir." },
-  { id: "daily_first", group: "daily", emoji: "🗓", title: "İlk meydan okuma", description: "Bir günlük meydan okumayı bitir." },
-  { id: "daily_full", group: "daily", emoji: "🌟", title: "Tam gün", description: "Aynı gün beş meydan okumanın hepsini bitir." },
-  { id: "perfect_turkey", group: "perfect", emoji: "🇹🇷", title: "Türkiye'de 10/10", description: "Türkiye yarışında hepsini bil." },
-  { id: "perfect_plates", group: "perfect", emoji: "🚗", title: "Plakada 10/10", description: "Plaka yarışında hepsini bil." },
-  { id: "perfect_world", group: "perfect", emoji: "🌍", title: "Dünya'da 10/10", description: "Dünya yarışında hepsini bil." },
-  { id: "perfect_flags", group: "perfect", emoji: "🏳️", title: "Bayrakta 10/10", description: "Bayrak yarışında hepsini bil." },
-  { id: "perfect_capitals", group: "perfect", emoji: "🏛️", title: "Başkentte 10/10", description: "Başkent yarışında hepsini bil." },
-  { id: "lightning", group: "perfect", emoji: "⚡", title: "Şimşek", description: "Bir yarışta 45 saniyenin altında 10/10 yap." },
-  { id: "provinces_81", group: "map", emoji: "🗺️", title: "81 il", description: "Yarışlarda her ili en az bir kez doğru bil." },
-  { id: "countries_100", group: "map", emoji: "🧭", title: "100 ülke", description: "Yarışlarda 100 farklı ülkeyi doğru bil." },
-  { id: "duel_first_win", group: "duel", emoji: "⚔️", title: "İlk galibiyet", description: "Bir düello kazan." },
-  { id: "duel_10_wins", group: "duel", emoji: "🏅", title: "10 galibiyet", description: "On düello kazan." },
-  { id: "podium", group: "rank", emoji: "🥉", title: "Kürsü", description: "Herhangi bir sıralamada ilk üçe gir." },
-  { id: "summit", group: "rank", emoji: "🏆", title: "Zirve", description: "Herhangi bir sıralamada birinci ol." },
+  { id: "streak_3", group: "streak", emoji: "🔥", get title() { return messages().badges.items.streak_3.title; }, get description() { return messages().badges.items.streak_3.description; } },
+  { id: "streak_7", group: "streak", emoji: "🔥", get title() { return messages().badges.items.streak_7.title; }, get description() { return messages().badges.items.streak_7.description; } },
+  { id: "streak_30", group: "streak", emoji: "🔥", get title() { return messages().badges.items.streak_30.title; }, get description() { return messages().badges.items.streak_30.description; } },
+  { id: "daily_first", group: "daily", emoji: "🗓", get title() { return messages().badges.items.daily_first.title; }, get description() { return messages().badges.items.daily_first.description; } },
+  { id: "daily_full", group: "daily", emoji: "🌟", get title() { return messages().badges.items.daily_full.title; }, get description() { return messages().badges.items.daily_full.description; } },
+  { id: "perfect_turkey", group: "perfect", emoji: "🇹🇷", get title() { return messages().badges.items.perfect_turkey.title; }, get description() { return messages().badges.items.perfect_turkey.description; } },
+  { id: "perfect_plates", group: "perfect", emoji: "🚗", get title() { return messages().badges.items.perfect_plates.title; }, get description() { return messages().badges.items.perfect_plates.description; } },
+  { id: "perfect_world", group: "perfect", emoji: "🌍", get title() { return messages().badges.items.perfect_world.title; }, get description() { return messages().badges.items.perfect_world.description; } },
+  { id: "perfect_flags", group: "perfect", emoji: "🏳️", get title() { return messages().badges.items.perfect_flags.title; }, get description() { return messages().badges.items.perfect_flags.description; } },
+  { id: "perfect_capitals", group: "perfect", emoji: "🏛️", get title() { return messages().badges.items.perfect_capitals.title; }, get description() { return messages().badges.items.perfect_capitals.description; } },
+  { id: "lightning", group: "perfect", emoji: "⚡", get title() { return messages().badges.items.lightning.title; }, get description() { return messages().badges.items.lightning.description; } },
+  { id: "provinces_81", group: "map", emoji: "🗺️", get title() { return messages().badges.items.provinces_81.title; }, get description() { return messages().badges.items.provinces_81.description; } },
+  { id: "countries_100", group: "map", emoji: "🧭", get title() { return messages().badges.items.countries_100.title; }, get description() { return messages().badges.items.countries_100.description; } },
+  { id: "duel_first_win", group: "duel", emoji: "⚔️", get title() { return messages().badges.items.duel_first_win.title; }, get description() { return messages().badges.items.duel_first_win.description; } },
+  { id: "duel_10_wins", group: "duel", emoji: "🏅", get title() { return messages().badges.items.duel_10_wins.title; }, get description() { return messages().badges.items.duel_10_wins.description; } },
+  { id: "podium", group: "rank", emoji: "🥉", get title() { return messages().badges.items.podium.title; }, get description() { return messages().badges.items.podium.description; } },
+  { id: "summit", group: "rank", emoji: "🏆", get title() { return messages().badges.items.summit.title; }, get description() { return messages().badges.items.summit.description; } },
 ] as const;
 
 export type BadgeId = (typeof BADGES)[number]["id"];

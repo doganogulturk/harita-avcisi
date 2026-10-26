@@ -1,5 +1,6 @@
 import { provinces, type Province } from "@/lib/turkish-plates";
-import { continentInfo, countries, isContinentScope, type Continent, type Country, type WorldDifficulty, type WorldScope } from "@/lib/world-countries";
+import { messages } from "@/lib/i18n";
+import { continentInfo, countryName, isContinentScope, type Continent, type Country, type WorldDifficulty, type WorldScope } from "@/lib/world-countries";
 
 export type AnswerState = "correct" | "incorrect" | null;
 export type GameMode = "turkey" | "world";
@@ -51,20 +52,21 @@ export function isCapitalChoice(choice: PlayChoice): boolean {
 
 /** Soru tipinin adı (Bayrak, Başkent, Plaka); yer adıyla sorulan turda yok. */
 function promptLabel(choice: PlayChoice): string | undefined {
-  if (isFlagChoice(choice)) return "Bayrak";
-  if (isCapitalChoice(choice)) return "Başkent";
-  if (isPlateChoice(choice)) return "Plaka";
+  const boards = messages().boards;
+  if (isFlagChoice(choice)) return boards.flags;
+  if (isCapitalChoice(choice)) return boards.capitals;
+  if (isPlateChoice(choice)) return boards.plates;
 }
 
 export function choiceLabel(choice: PlayChoice): string {
   const { kind, mode, difficulty, continent } = choice;
+  const { boards, choice: text } = messages();
   const prompt = promptLabel(choice);
-  if (choice.daily) return `Günün meydan okuması · ${prompt ?? (mode === "turkey" ? "Türkiye" : "Dünya")}`;
+  if (choice.daily) return text.daily(prompt ?? (mode === "turkey" ? boards.turkey : boards.world));
   if (kind === "ranked" && prompt) return prompt;
-  const map =
-    mode === "turkey" ? "Türkiye" : continent ? continentInfo(continent).label : difficulty === "hard" ? "Dünya" : "Dünya · Tanınmış ülkeler";
+  const map = mode === "turkey" ? boards.turkey : continent ? continentInfo(continent).label : difficulty === "hard" ? boards.world : boards.legacyWorld;
   const label = prompt ? `${map} · ${prompt}` : map;
-  return kind === "practice" ? `Antrenman · ${label}` : label;
+  return kind === "practice" ? text.practice(label) : label;
 }
 
 export function flagUrl(countryCode: string): string {
@@ -87,11 +89,6 @@ export const MAP_URLS: Record<GameMode, string> = {
   world: "/maps/world.svg",
 };
 
-export const MAP_LABELS: Record<GameMode, string> = {
-  turkey: "Türkiye il haritası",
-  world: "Dünya ülkeleri haritası",
-};
-
 export const GAME_MODES: GameMode[] = ["turkey", "world"];
 
 /**
@@ -106,12 +103,13 @@ export type BoardId = "turkey" | "turkey-plates" | "world-hard" | "world-flags" 
  */
 export type BoardVariant = WorldDifficulty | "flags" | "capitals" | "plates";
 
-export const BOARDS: { id: BoardId; label: string; mode: GameMode; variant: BoardVariant }[] = [
-  { id: "turkey", label: "Türkiye", mode: "turkey", variant: "normal" },
-  { id: "turkey-plates", label: "Plaka", mode: "turkey", variant: "plates" },
-  { id: "world-hard", label: "Dünya", mode: "world", variant: "hard" },
-  { id: "world-flags", label: "Bayrak", mode: "world", variant: "flags" },
-  { id: "world-capitals", label: "Başkent", mode: "world", variant: "capitals" },
+/** Sıralamalar; adları arayüz dilindedir. */
+export const BOARDS: { id: BoardId; readonly label: string; mode: GameMode; variant: BoardVariant }[] = [
+  { id: "turkey", get label() { return messages().boards.turkey; }, mode: "turkey", variant: "normal" },
+  { id: "turkey-plates", get label() { return messages().boards.plates; }, mode: "turkey", variant: "plates" },
+  { id: "world-hard", get label() { return messages().boards.world; }, mode: "world", variant: "hard" },
+  { id: "world-flags", get label() { return messages().boards.flags; }, mode: "world", variant: "flags" },
+  { id: "world-capitals", get label() { return messages().boards.capitals; }, mode: "world", variant: "capitals" },
 ];
 
 /** Her sıralama için boş liste; sıralamalar yüklenemediğinde ya da henüz yüklenmediğinde. */
@@ -165,7 +163,7 @@ export const LOCATION_SELECTOR: Record<GameMode, string> = {
 };
 
 export function questionName(question: Question): string {
-  return "city" in question ? question.city : question.name;
+  return "city" in question ? question.city : countryName(question);
 }
 
 export function correctLocationId(question: Question): string {
@@ -205,10 +203,8 @@ export function normalizeLocationId(mode: GameMode, locationId: string): string 
 }
 
 const PROVINCE_NAMES = new Map(provinces.map((province) => [String(province.plate), province.city]));
-const COUNTRY_NAMES = new Map(countries.map((country) => [country.code, country.name]));
-
 export function locationName(mode: GameMode, locationId: string): string {
-  return (mode === "turkey" ? PROVINCE_NAMES : COUNTRY_NAMES).get(locationId) ?? locationId.toUpperCase();
+  return mode === "turkey" ? (PROVINCE_NAMES.get(locationId) ?? locationId.toUpperCase()) : countryName(locationId);
 }
 
 export function formatTime(seconds: number): string {

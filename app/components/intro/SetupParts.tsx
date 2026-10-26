@@ -5,6 +5,7 @@ import { createContext, useContext } from "react";
 import { CornerTab } from "../CornerTab";
 import { SetupPreviewMap } from "../MapDemo";
 import { flagUrl, type GameMode, type QuestionPrompt } from "@/lib/game";
+import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { type WorldScope } from "@/lib/world-countries";
 import { gameInfo, GameIcon, type GameInfo, type GroupInfo } from "./games";
@@ -90,7 +91,7 @@ export function SetupShell({
           </div>
 
           <TabSelector
-            label="Oyun"
+            label={messages().setup.game}
             onChange={onGameChange}
             options={group.games.map((id) => ({ id, label: gameInfo(id).title, icon: <GameIcon className="h-4 w-4 lg:h-5 lg:w-5" game={id} /> }))}
             selectedClass={game.theme.selected}
@@ -101,12 +102,12 @@ export function SetupShell({
           {/* Alçak (yatay telefon) ekranda harita ve soru tipi yan yana; önizlemeye yer kalsın. */}
           <div className="flex shrink-0 flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5">
             <TabSelector
-              label="Harita"
+              label={messages().setup.map}
               onChange={onMapChange}
-              options={MAP_OPTIONS.map((option) => ({ ...option, icon: <MapIcon map={option.id} /> }))}
+              options={MAP_IDS.map((id) => ({ id, label: messages().setup.maps[id], icon: <MapIcon map={id} /> }))}
               value={map}
             />
-            <TabSelector label="Soru tipi" onChange={onModeChange} options={modes} size="sm" value={mode} />
+            <TabSelector label={messages().setup.promptType} onChange={onModeChange} options={modes} size="sm" value={mode} />
           </div>
 
           {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. Soru tipinin ne demek olduğu
@@ -114,7 +115,7 @@ export function SetupShell({
           <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] md:min-h-0">
             <SetupPreviewMap mode={map} prompt={previewPrompt} scope={previewScope} />
             <p className="pointer-events-none absolute bottom-0 left-0 max-w-[85%] rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-sm lg:px-3 lg:py-1 lg:text-sm">
-              {PROMPT_NOTES[map === "turkey" ? "turkey" : "world"][previewPrompt] ?? ""}
+              {(messages().setup.notes[map] as Partial<Record<QuestionPrompt, string>>)[previewPrompt] ?? ""}
             </p>
           </div>
         </div>
@@ -144,10 +145,10 @@ export function SetupShell({
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
-      aria-label="Oyun seçimine dön"
+      aria-label={messages().setup.backToGames}
       className="hit-area flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:h-8 short:w-8 lg:h-11 lg:w-11"
       onClick={onClick}
-      title="Oyun seçimine dön"
+      title={messages().setup.backToGames}
       type="button"
     >
       <svg aria-hidden="true" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -157,16 +158,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-/** Önizlemenin altındaki kısa not: soru tipinde ne gelir, oyuncu ne bulur. */
-const PROMPT_NOTES: Record<GameMode, Partial<Record<QuestionPrompt, string>>> = {
-  turkey: { name: "İlin adı gelir, haritada yerini bul", plate: "Plaka gelir, o ili bul" },
-  world: { name: "Ülkenin adı gelir, haritada yerini bul", flag: "Bayrak gelir, o ülkeyi bul", capital: "Başkent gelir, ülkesini bul" },
-};
-
-const MAP_OPTIONS: { id: GameMode; label: string }[] = [
-  { id: "turkey", label: "Türkiye" },
-  { id: "world", label: "Dünya" },
-];
+const MAP_IDS: GameMode[] = ["turkey", "world"];
 
 function MapIcon({ map }: { map: GameMode }) {
   if (map === "turkey") {

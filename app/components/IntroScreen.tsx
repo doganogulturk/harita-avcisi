@@ -16,6 +16,7 @@ import { useDailyStatus } from "@/lib/daily";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
+import { messages } from "@/lib/i18n";
 import { joinPathFor } from "@/lib/join-code";
 import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
@@ -31,9 +32,9 @@ import {
 import { type WorldScope } from "@/lib/world-countries";
 
 /** Tek başıma kartında birincisi gösterilen sıralamalar. */
-const HIGHLIGHT_BOARDS: { id: BoardId; place: string }[] = [
-  { id: "turkey", place: "Türkiye'de" },
-  { id: "world-hard", place: "Dünya'da" },
+const HIGHLIGHT_BOARDS: { id: BoardId; readonly place: string }[] = [
+  { id: "turkey", get place() { return messages().home.leaderIn.turkey; } },
+  { id: "world-hard", get place() { return messages().home.leaderIn.world; } },
 ];
 
 type IntroScreenProps = {
@@ -235,17 +236,17 @@ export function IntroScreen({
       return (
         <div className="mx-auto w-full max-w-2xl rounded-3xl border-2 border-cyan-200 bg-cyan-50/60 p-6 sm:p-8">
           <p className="text-xl font-bold text-slate-900">
-            Giriş tamam — <span className="text-cyan-700">{choiceLabel(pendingChoice)}</span> turun hazır
+            {messages().home.pendingSignedIn} <span className="text-cyan-700">{choiceLabel(pendingChoice)}</span> {messages().home.pendingReady}
           </p>
-          <p className="mt-1.5 text-sm text-slate-600">Başla dediğin anda {GAME_DURATION_SECONDS} saniyelik süre işlemeye başlar.</p>
+          <p className="mt-1.5 text-sm text-slate-600">{messages().home.pendingNote(GAME_DURATION_SECONDS)}</p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            <PlayButton disabled={!readyModes.includes(pendingChoice.mode)} label="Başla" onClick={() => onPlay(pendingChoice)} />
+            <PlayButton disabled={!readyModes.includes(pendingChoice.mode)} label={messages().common.start} onClick={() => onPlay(pendingChoice)} />
             <button
               className="text-sm font-semibold text-slate-500 underline-offset-2 transition hover:text-cyan-700 hover:underline"
               onClick={onCancelPendingChoice}
               type="button"
             >
-              Başka bir oyun seç
+              {messages().home.otherGame}
             </button>
           </div>
         </div>
@@ -287,7 +288,7 @@ export function IntroScreen({
         introStepMs={INTRO_CARD_STEP_MS}
         onJoin={async (code) => {
           const path = await joinPathFor(code);
-          if (!path) return "Bu kodla bir düello ya da oda bulunamadı.";
+          if (!path) return messages().home.codeNotFound;
           router.push(path);
           return null;
         }}
@@ -308,7 +309,7 @@ export function IntroScreen({
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3 short:gap-2 lg:gap-5">
         <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
           <h1 className="min-w-0">
-            <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title="Ana menü" type="button">
+            <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title={messages().menu.home} type="button">
               <Logo isHeading={false} />
             </button>
           </h1>
@@ -323,7 +324,7 @@ export function IntroScreen({
                 onClick={() => setIsSignInOpen(true)}
                 type="button"
               >
-                Giriş yap
+                {messages().home.signIn}
               </button>
             )}
             <AccountMenu onShowGuide={() => setIsGuideRequested(true)} onSignOut={onSignOut} player={player} />
