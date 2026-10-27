@@ -42,12 +42,14 @@ meydan okuması** var.
   yakınlaşır. Tur sonunda soru soru döküm görünür.
 - **Telefonda dikey ve yatay:** Bütün ekranlar ve oyunlar dikeyde de oynanır. Dikeyde ilk oyundan önce yan çevirmeyi
   ve iki parmakla yakınlaştırmayı gösteren kısa bir ipucu açılır; yatayda harita iki kat büyür.
-- **Ana ekranda canlı bilgi:** Tek başıma kartında Türkiye'nin ve Dünya'nın birincisi; sıralama telefonda alttan açılır.
+- **Ana ekranda canlı bilgi:** Tek başıma kartındaki 👑 Liderler panosunda Türkiye'nin ve Dünya'nın birincisi; sıralama
+  telefonda alttan açılır.
 
 ## Nerede oynanır
 
 - **Web:** Tarayıcıdan, kurulum gerekmeden. Ana ekrana uygulama olarak da eklenebilir.
-- **Android:** Google Play'de kapalı testte. Yayındaki sürüm, yukarıdaki son özelliklerden önceki sürümdür.
+- **Android:** Google Play'de kapalı testte, sürüm 1.1.0 (yukarıdaki özelliklerin hepsiyle). Mağaza sayfası Türkçe ve
+  İngilizce.
 - **iOS:** Hazırlanıyor.
 
 Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giriş gerekmez.
@@ -56,18 +58,16 @@ Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giri
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Android'in yeni sürümü:** Sürüm kodunu artırıp `npm run android:release` ile derlemek ve Google Play'e yüklemek.
-   Mağaza sayfasındaki açıklamayı (başkentler, günün meydan okuması, rozetler, profil) ve ekran görüntülerini (yeni ana
-   ekran, başkent sorusu) güncellemek; İngilizce mağaza sayfası eklemek; hesap silme talimatlarını yeni hesap menüsüne
-   göre düzeltmek.
-2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+1. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+2. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
+   üretim erişimi başvurusu).
 
 Teknik işler:
 
-- Android'in yeni sürümü yayıldıktan 2–3 hafta sonra eski tur açma yolunu (`start_round`) kapatmak; skor doğrulaması o
-  zaman bütün turlarda geçerli olur.
-- Supabase'de çalıştırılmış tek seferlik geçiş dosyalarını (`supabase/2026-10-*.sql`) kaldırmak; kalıcı tanım
-  `supabase/schema.sql`'dedir.
+- **10–17 Kasım 2026 civarı:** eski tur açma yolunu (`start_round`) kapatmak. Android 1.0.0, yarış turunu sorularını
+  kendisi seçerek bu yoldan açıyor; sunucu bu turların skorunu yalnızca süre ve biçimden denetleyebiliyor. 1.1.0 soruları
+  sunucuya seçtiriyor (`start_ranked_round`). Oyuncuların çoğu güncelleyince eski yol kapatılır ve skor doğrulaması bütün
+  turlarda geçerli olur; güncellemeyen eski sürüm yarış skoru kaydedemez.
 - Ana sayfa bileşeninin (`app/page.tsx`) sadeleştirilmesi.
 
 Sonraya bırakılan fikirler: karanlık tema, misafir hesabı Google hesabına bağlama, profilde zayıf yerlere özel

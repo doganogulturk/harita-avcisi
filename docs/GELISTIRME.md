@@ -422,7 +422,7 @@ haritanın görünüm kutusu Türkiye'ye göre daraltıldı. Tıklanabilir alanl
 ## Supabase ve oturum açma
 
 1. Supabase projesi oluşturun.
-2. SQL Editor'de [`supabase/schema.sql`](../supabase/schema.sql) dosyasını çalıştırın. Her şey `do_harita_avcisi` şemasında kurulur, böylece aynı Supabase projesindeki başka uygulamalarla karışmaz. Dosya idempotent'tir; şema değiştiğinde (ör. yeni bir `variant` eklendiğinde) tekrar çalıştırın.
+2. SQL Editor'de [`supabase/schema.sql`](../supabase/schema.sql) dosyasını çalıştırın. Her şey `do_harita_avcisi` şemasında kurulur, böylece aynı Supabase projesindeki başka uygulamalarla karışmaz. Dosya idempotent'tir; şema değiştiğinde (ör. yeni bir `variant` eklendiğinde) tekrar çalıştırın. `create table if not exists` var olan tablonun kısıtlarını değiştirmediği için, kurulu bir veritabanında böyle değişiklikler (ör. tür listesindeki bir kısıt) tek seferlik bir geçiş dosyasıyla yapılır (`supabase/YYYY-MM-ad.sql`); dosya SQL Editor'de bir kez çalıştırılır ve sonra depodan silinir, kalıcı tanım `schema.sql`'de kalır.
 3. Settings > API > **Exposed schemas** listesine `do_harita_avcisi` ekleyin; istemci bu şemaya bağlanır (`lib/supabase.ts`'teki `SUPABASE_SCHEMA`).
 4. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
 5. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.

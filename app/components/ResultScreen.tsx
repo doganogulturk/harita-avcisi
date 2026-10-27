@@ -97,7 +97,8 @@ function ResultShell({
         </button>
         <AccountMenu onSignOut={onSignOut} player={player} />
       </header>
-      <div className="grid gap-3 md:min-h-0 md:flex-1 md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
+      {/* Dikey telefonda tek sütun içerikle genişlemez (minmax(0,1fr)); uzun yer adı sayfayı ekrandan taşırmaz. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:min-h-0 md:flex-1 md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         {aside}
         <div className="flex min-w-0 flex-col gap-3 md:min-h-0 md:overflow-y-auto lg:gap-5">{children}</div>
       </div>

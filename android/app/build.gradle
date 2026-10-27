@@ -18,8 +18,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // scripts/android-release.mjs her sürüm paketinde versionCode'u bir artırır ve versionName'i package.json'daki
         // sürümden alır; elle değiştirmeyin. Play Console aynı versionCode'u ikinci kez kabul etmez.
-        versionCode 2
-        versionName "1.0.0"
+        versionCode 3
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
