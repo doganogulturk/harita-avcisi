@@ -25,8 +25,8 @@ meydan okuması** var.
 - **Türkçe ve İngilizce:** Oyun cihazın diliyle açılır, hesap menüsünden değiştirilebilir. Ülke ve başkent adları,
   rozetler, paylaşım metinleri, sunucu mesajları ve yasal sayfalar da iki dilde (KVKK metninin İngilizcesi bilgi amaçlı
   çeviri; esas metin Türkçe).
-- **Sade ana ekran:** İki kart: Tek başıma ve Arkadaşlarımla; her kartın alt köşelerinde grubun iki oyunu (Yarış,
-  Antrenman · Düello, Oda) tek dokunuşla açılır. Davet kodu doğrudan Arkadaşlarımla kartına yazılır; kodun düello mu oda
+- **Sade ana ekran:** Yarış kartı, altında ince bir Antrenman şeridi ve Arkadaşlarımla kartı; oyun kartın alt köşesindeki
+  sekmeyle (Yarışa başla, Antrenman yap; Arkadaşlarımla kartında Düello ve Oda yan yana) tek dokunuşla açılır. Davet kodu doğrudan Arkadaşlarımla kartına yazılır; kodun düello mu oda
   mı olduğunu oyun kendisi bulur. Ayar ekranında oyun, harita ve soru tipi alt alta durur; altında seçimlere göre
   haritada canlı bir önizleme döner ("🏛️ Kanberra hangi ülke?" → Avustralya yeşil yanar).
 - **Başkentler:** Ekrana başkent gelir, sen ülkesini bulursun; cevaptan sonra ülkenin adı da yazar. 174 ülke (başkenti
@@ -42,7 +42,7 @@ meydan okuması** var.
   yakınlaşır. Tur sonunda soru soru döküm görünür.
 - **Telefonda dikey ve yatay:** Bütün ekranlar ve oyunlar dikeyde de oynanır. Dikeyde ilk oyundan önce yan çevirmeyi
   ve iki parmakla yakınlaştırmayı gösteren kısa bir ipucu açılır; yatayda harita iki kat büyür.
-- **Ana ekranda canlı bilgi:** Tek başıma kartındaki 👑 Liderler panosunda Türkiye'nin ve Dünya'nın birincisi; sıralama
+- **Ana ekranda canlı bilgi:** Yarış kartındaki 👑 Liderler panosunda Türkiye'nin ve Dünya'nın birincisi; sıralama
   telefonda alttan açılır.
 
 ## Nerede oynanır

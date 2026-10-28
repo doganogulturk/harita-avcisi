@@ -102,7 +102,9 @@ export const tr = {
   home: {
     leaders: "Liderler",
     /** Ana ekran kartlarının alt köşelerindeki oyun sekmeleri. */
-    tabs: { ranked: "Yarış", practice: "Antrenman", duel: "Düello kur", room: "Oda kur" },
+    tabs: { ranked: "Yarışa başla", practice: "Antrenman yap", duel: "Düello kur", room: "Oda kur" },
+    /** Ana ekrandaki ince Antrenman şeridinin tek satırlık notu. */
+    practiceNote: "Süre yok. İstediğin kadar oyna.",
     showLeaderboard: "Sıralamayı gör",
     haveCode: "Kodun var mı?",
     codeLabel: "Düello ya da oda kodu",

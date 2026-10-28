@@ -6,7 +6,7 @@ import { flagUrl, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
 import { CornerTab } from "../CornerTab";
-import { gameInfo, GameIcon, GROUPS, type GroupInfo } from "./games";
+import { gameInfo, GameIcon, HOME_CARDS, type HomeCardInfo } from "./games";
 
 type ModeGridProps = {
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
@@ -17,36 +17,41 @@ type ModeGridProps = {
   onShowLeaderboard: () => void;
   /** Arkadaşlarımla kartındaki kod alanı: kod bir düelloya ya da odaya götürür. Hata varsa metnini döndürür. */
   onJoin: (code: string) => Promise<string | null>;
-  /** Tek başıma kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
+  /** Yarış kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
   rankedLeaders?: CardLeader[];
 };
 
 export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
 
 /**
- * Adım 1: iki büyük kart, Tek başıma ve Arkadaşlarımla (dikey telefonda alt alta). Kartın sol ve sağ alt köşesinden grubun
- * iki oyununun sekmesi içeri kıvrılır (Yarış, Antrenman · Düello, Oda); sekme o oyunun ayar ekranını açar, ara adım yoktur. Kartın kendisi bir
- * çerçevedir, dokunmak bir şey yapmaz. Ekran yetmezse (küçük telefon) liste kayar, yazılar üst üste binmez. Kaydırma
- * alanının kenar boşluğu, kartın gölgesi kırpılmasın diye.
+ * Adım 1: Yarış kartı, altında ince Antrenman şeridi ve Arkadaşlarımla kartı (dikey telefonda alt alta). Geniş ekranda sol
+ * sütunda Yarış ve Antrenman, sağda iki satır boyunca Arkadaşlarımla durur. Oyunun sekmesi kartın sağ alt köşesinden içeri
+ * kıvrılır (Arkadaşlarımla kartında iki sekme: Düello, Oda); sekme o oyunun ayar ekranını açar, ara adım yoktur. Kartın
+ * kendisi bir çerçevedir, dokunmak bir şey yapmaz. Ekran yetmezse (küçük telefon) liste kayar, yazılar üst üste binmez.
+ * Kaydırma alanının kenar boşluğu, kartın gölgesi kırpılmasın diye.
  */
 export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
   return (
-    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[repeat(2,minmax(min-content,1fr))] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[minmax(min-content,1fr)] lg:max-h-[36rem] lg:gap-5">
-      {GROUPS.map((group, index) => (
-        <GroupCard
-          delayMs={introDelayMs + introStepMs * index}
-          group={group}
-          key={group.id}
-          onSelect={onSelect}
-          {...(group.id === "solo" ? { leaders: rankedLeaders, onShowLeaderboard } : { onJoin })}
-        />
-      ))}
+    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[minmax(min-content,1fr)_min-content_minmax(min-content,1fr)] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[minmax(min-content,1fr)_min-content] lg:max-h-[48rem] lg:gap-5">
+      {HOME_CARDS.map((card, index) =>
+        card.id === "practice" ? (
+          <PracticeCard card={card} delayMs={introDelayMs + introStepMs * index} key={card.id} onSelect={onSelect} />
+        ) : (
+          <HomeCard
+            card={card}
+            delayMs={introDelayMs + introStepMs * index}
+            key={card.id}
+            onSelect={onSelect}
+            {...(card.id === "ranked" ? { leaders: rankedLeaders, onShowLeaderboard } : { onJoin })}
+          />
+        ),
+      )}
     </div>
   );
 }
 
-type GroupCardProps = {
-  group: GroupInfo;
+type HomeCardProps = {
+  card: HomeCardInfo;
   delayMs: number;
   onSelect: (game: IntroGame) => void;
   leaders?: CardLeader[];
@@ -54,13 +59,14 @@ type GroupCardProps = {
   onJoin?: (code: string) => Promise<string | null>;
 };
 
-function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, onJoin }: GroupCardProps) {
-  const { theme } = group;
+function HomeCard({ card, delayMs, onSelect, leaders = [], onShowLeaderboard, onJoin }: HomeCardProps) {
+  const { theme } = card;
+  const isPair = card.games.length > 1;
 
   return (
     <section
-      aria-label={group.title}
-      className={`intro-focus relative mb-1.5 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border-2 p-(--card-pad) [--card-pad:1rem] short:[--card-pad:0.75rem] sm:[--card-pad:1.5rem] lg:[--card-pad:2.25rem] ${theme.surface} ${theme.depth}`}
+      aria-label={card.title}
+      className={`intro-focus relative mb-1.5 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border-2 p-(--card-pad) [--card-pad:1rem] short:[--card-pad:0.75rem] sm:[--card-pad:1.5rem] lg:[--card-pad:2.25rem] ${isPair ? "sm:col-start-2 sm:row-span-2 sm:row-start-1" : ""} ${theme.surface} ${theme.depth}`}
       style={{ "--intro-delay": `${delayMs}ms` } as React.CSSProperties}
     >
       {/* Zeminde silik nokta deseni (harita ızgarası gibi); kart düz bir kutu değil, bir oyun kartı gibi durur. */}
@@ -69,20 +75,20 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
         className="pointer-events-none absolute inset-0 opacity-[0.12]"
         style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
       />
-      {/* Grubun simgesi kartın sağ üst köşesinde büyük ve silik durur; kartı uzaktan tanınır kılar. */}
+      {/* Kartın simgesi sağ üst köşede büyük ve silik durur; kartı uzaktan tanınır kılar. */}
       <GameIcon
         className={`pointer-events-none absolute -top-6 -right-6 h-36 w-36 opacity-[0.08] short:h-24 short:w-24 sm:h-48 sm:w-48 lg:h-64 lg:w-64 ${theme.watermark}`}
-        game={group.id}
+        game={card.id}
       />
 
       <div className="relative min-w-0">
         <div className="flex items-center gap-3 lg:gap-4">
           <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm short:h-9 short:w-9 short:rounded-xl lg:h-16 lg:w-16 ${theme.badge}`}>
-            <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-9 lg:w-9" game={group.id} />
+            <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-9 lg:w-9" game={card.id} />
           </span>
-          <h2 className="min-w-0 font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl sm:text-4xl lg:text-6xl">{group.title}</h2>
+          <h2 className="min-w-0 font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl sm:text-4xl lg:text-6xl">{card.title}</h2>
         </div>
-        <p className="mt-2 line-clamp-2 text-sm text-slate-500 short:mt-1 short:text-xs max-[25rem]:text-xs lg:mt-4 lg:max-w-lg lg:text-lg">{group.description}</p>
+        <p className="mt-2 line-clamp-2 text-sm text-slate-500 short:mt-1 short:text-xs max-[25rem]:text-xs lg:mt-4 lg:max-w-lg lg:text-lg">{card.description}</p>
       </div>
 
       {/* Kartın canlı kısmı (liderler panosu ya da davet kodu) başlıkla sekmeler arasında kalan yerde dikeyde ortalanır. */}
@@ -91,19 +97,27 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
         {onJoin && <JoinForm onJoin={onJoin} outlineClass={theme.outline} submitClass={theme.badge} />}
       </div>
 
-      {/* Grubun iki oyunu kartın alt köşelerinden içeri kıvrılan büyük sekmelerdir; ikisi kartın ortasında buluşur. Her biri
-          kendi oyununun renginde, dış köşede dolu ve ortaya doğru şeffaflaşarak; dokununca o oyunun ayar ekranı açılır. Bu
-          boşluk sekmelerin yeridir. */}
+      {/* Oyunlar kartın alt köşelerinden içeri kıvrılan büyük sekmelerdir; dokununca o oyunun ayar ekranı açılır. Arkadaşlarımla
+          kartında iki sekme kartın ortasında buluşur: her biri kendi oyununun renginde, dış köşede dolu ve ortaya doğru
+          şeffaflaşarak. Yarış kartında tek sekme sağ altta dolu renkte durur. Bu boşluk sekmelerin yeridir. */}
       <div aria-hidden="true" className="h-11 shrink-0 short:h-8 lg:h-16" />
-      {group.games.map((id, index) => {
+      {card.games.map((id, index) => {
         const game = gameInfo(id);
+        const icon = <GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game={id} />;
+        if (!isPair) {
+          return (
+            <div className="absolute right-0 bottom-0 z-10" key={id}>
+              <CornerTab colorClass={game.theme.badge} corner="bottom-right" fillClass={game.theme.badgeFill} icon={icon} label={messages().home.tabs[id]} onClick={() => onSelect(id)} size="lg" />
+            </div>
+          );
+        }
         return (
           <div className={`absolute bottom-0 z-10 w-1/2 ${index === 0 ? "left-0" : "right-0"}`} key={id}>
             <CornerTab
               colorClass={`${index === 0 ? "bg-gradient-to-r" : "bg-gradient-to-l"} ${game.theme.fade}`}
               corner={index === 0 ? "bottom-left" : "bottom-right"}
               fillClass={game.theme.badgeFill}
-              icon={<GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game={id} />}
+              icon={icon}
               label={messages().home.tabs[id]}
               onClick={() => onSelect(id)}
               size="lg"
@@ -112,6 +126,45 @@ function GroupCard({ group, delayMs, onSelect, leaders = [], onShowLeaderboard, 
           </div>
         );
       })}
+    </section>
+  );
+}
+
+/**
+ * Antrenman: Yarış kartının altında başlıksız ince bir şerit; tek satırlık not ve sağ altta köşeden içeri kıvrılan
+ * "Antrenman yap" sekmesi. Şerit genişse (29rem ve üstü) not sekmenin solunda durur; darsa (telefon) not kendi satırında,
+ * sekme altında sağdadır, böylece not hiçbir genişlikte kırpılmaz. Sekmenin üstündeki kıvrım sığsın diye üstünde boşluk
+ * bırakılır.
+ */
+function PracticeCard({ card, delayMs, onSelect }: { card: HomeCardInfo; delayMs: number; onSelect: (game: IntroGame) => void }) {
+  const { theme } = card;
+  return (
+    <section
+      aria-label={card.title}
+      className={`intro-focus @container relative mb-1.5 min-w-0 overflow-hidden rounded-3xl border-2 ${theme.surface} ${theme.depth}`}
+      style={{ "--intro-delay": `${delayMs}ms` } as React.CSSProperties}
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
+      />
+      <div className="relative flex flex-col items-end @min-[29rem]:flex-row">
+        <p className="min-w-0 self-stretch truncate px-4 pt-3 text-sm text-slate-500 short:pt-2 short:text-xs sm:px-6 lg:px-9 lg:text-base @min-[29rem]:flex-1 @min-[29rem]:self-center @min-[29rem]:py-3 @min-[29rem]:pr-2 short:@min-[29rem]:py-2 lg:@min-[29rem]:py-4">
+          {messages().home.practiceNote}
+        </p>
+        <div className="shrink-0 pt-2 @min-[29rem]:pt-4 lg:@min-[29rem]:pt-6">
+          <CornerTab
+            colorClass={theme.badge}
+            corner="bottom-right"
+            fillClass={theme.badgeFill}
+            icon={<GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game="practice" />}
+            label={messages().home.tabs.practice}
+            onClick={() => onSelect("practice")}
+            size="lg"
+          />
+        </div>
+      </div>
     </section>
   );
 }
@@ -132,7 +185,7 @@ function MapBadge({ map }: { map: GameMode }) {
 }
 
 /**
- * Tek başıma kartındaki liderler panosu: Türkiye'nin ve Dünya'nın birincisi, taçlı ve altın halkalı profil resmiyle;
+ * Yarış kartındaki liderler panosu: Türkiye'nin ve Dünya'nın birincisi, taçlı ve altın halkalı profil resmiyle;
  * skor altın renkli bir rozette. Oyuncuya "zirve burada" der; panonun altından sıralama açılır.
  */
 function LeadersBoard({ leaders, onShowLeaderboard }: { leaders: CardLeader[]; onShowLeaderboard: () => void }) {

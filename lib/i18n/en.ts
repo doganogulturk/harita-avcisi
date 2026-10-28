@@ -97,7 +97,8 @@ export const en: Messages = {
   },
   home: {
     leaders: "Leaders",
-    tabs: { ranked: "Race", practice: "Practice", duel: "Create duel", room: "Create room" },
+    tabs: { ranked: "Start a race", practice: "Practice", duel: "Create duel", room: "Create room" },
+    practiceNote: "No timer. Play as long as you like.",
     showLeaderboard: "Leaderboard",
     haveCode: "Got a code?",
     codeLabel: "Duel or room code",

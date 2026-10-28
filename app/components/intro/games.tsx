@@ -190,6 +190,25 @@ export const GROUPS: GroupInfo[] = [
 
 export const groupInfo = (id: IntroGroup): GroupInfo => GROUPS.find((group) => group.id === id) ?? GROUPS[0];
 
+/**
+ * Ana ekranın kartları: Yarış ve Antrenman kendi kartında (tek sekme), Düello ile Oda Arkadaşlarımla kartında (iki sekme).
+ * Tek oyunlu kartın başlığı oyunun adıdır; sekmesi oyunun eylemini (Başla) yazar.
+ */
+export type HomeCardInfo = Omit<GroupInfo, "id" | "games"> & { id: IntroGame | IntroGroup; games: IntroGame[] };
+
+const singleGameCard = (id: IntroGame): HomeCardInfo => {
+  const game = gameInfo(id);
+  return {
+    id,
+    get title() { return game.title; },
+    get description() { return game.description; },
+    games: [id],
+    theme: game.theme,
+  };
+};
+
+export const HOME_CARDS: HomeCardInfo[] = [singleGameCard("ranked"), singleGameCard("practice"), groupInfo("friends")];
+
 /** Kronometre, döngü oku, çapraz kılıçlar ve bir grup insan; gruplar için tek kişi ve iki kişi. */
 export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame | IntroGroup; className?: string }) {
   return (

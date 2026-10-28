@@ -5,13 +5,16 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 ## Oyun
 
-Giriş ekranı iki adımlıdır. İlk adımda iki büyük kart durur: **Tek başıma** (Yarış ve Antrenman) ve **Arkadaşlarımla**
-(Düello ve Oda). Kartlar renkli çerçeveli, altında kalın renkli gölgeli, zemininde silik nokta deseni olan oyun kartlarıdır;
-başlığın yanında grubun simgesi renkli bir karoda durur. Kartın kendisine dokunmak bir şey yapmaz; grubun iki oyunu kartın
+Giriş ekranı iki adımlıdır. İlk adımda **Yarış** kartı, altında başlıksız ince bir **Antrenman** şeridi
+ve **Arkadaşlarımla** kartı (Düello ve Oda) durur. Geniş ekranda sol sütunda Yarış ve Antrenman, sağda iki satır boyunca
+Arkadaşlarımla; dikey telefonda üçü alt alta. Antrenman şeridinde solda tek satırlık bir not ("Süre yok. İstediğin kadar oyna."), sağ
+altta **Antrenman yap** sekmesi vardır; şerit 29rem'den darsa (telefonlarda) not kendi satırına, sekme onun altına geçer. Kartlar renkli çerçeveli, altında kalın renkli gölgeli, zemininde silik nokta deseni olan oyun kartlarıdır;
+başlığın yanında kartın simgesi renkli bir karoda durur. Kartın kendisine dokunmak bir şey yapmaz. Yarış kartında
+sağ alt köşede dolu renkli tek bir **Yarışa başla** sekmesi durur; Arkadaşlarımla kartında iki oyun kartın
 sol ve sağ alt köşesinden içeri kıvrılan ve kartın ortasında buluşan büyük sekmelerdir (`CornerTab`, `stretch`). Her biri
 kendi oyununun renginde (Yarış camgöbeği, Antrenman sarı, Düello turuncu, Oda mor), dış köşede dolu ve ortaya doğru
 şeffaflaşan bir gradyenle, oyunun simgesi ve adıyla durur. Sekme doğrudan o oyunun ayar ekranını açar; ara adım yoktur.
-Kartın canlı kısmı başlıkla sekmeler arasındaki boşlukta dikeyde ortalanır: Tek başıma kartında **👑 Liderler** panosu
+Kartın canlı kısmı başlıkla sekmeler arasındaki boşlukta dikeyde ortalanır: Yarış kartında **👑 Liderler** panosu
 (Türkiye'nin ve Dünya'nın birincisi; harita simgesi, altın halkalı ve taçlı profil resmi, altın rozette skor ve süre) ve
 **Sıralamayı gör** bağlantısı; Arkadaşlarımla kartında hep açık duran kod alanı. Davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için
 kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa kartta yazar.

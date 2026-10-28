@@ -44,7 +44,7 @@ function createPreference<T extends string>(key: string, isValid: (value: string
   return [() => useSyncExternalStore(subscribe, read, () => fallback), write] as const;
 }
 
-/** Dört oyun; giriş ekranının ilk adımında iki kartta durur: tek başıma (Yarış, Antrenman) ve arkadaşlarımla (Düello, Oda). */
+/** Dört oyun; giriş ekranının ilk adımında üç kartta durur: Yarış, Antrenman ve arkadaşlarımla (Düello, Oda). */
 export type IntroGame = "ranked" | "practice" | "duel" | "room";
 export type IntroGroup = "solo" | "friends";
 
