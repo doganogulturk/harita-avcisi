@@ -320,10 +320,10 @@ export function IntroScreen({
             </button>
           </h1>
           <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
-            {/* Giriş yapmamış oyuncunun başlığında "Giriş yap" da durur; dar telefonda (400 pikselden dar) logoya yer kalsın
-                diye rozet gizlenir. Günlük meydan okuma zaten giriş ister. */}
+            {/* Giriş yapmamış oyuncunun başlığında "Giriş yap" da durur; telefonda (480 pikselden dar) logoya yer kalsın diye
+                rozet gizlenir. Günlük meydan okuma zaten giriş ister. */}
             {supabaseConfigured && selectedGame === null && !pendingChoice && (
-              <span className={player ? "contents" : "contents max-[25rem]:hidden"}>
+              <span className={player ? "contents" : "contents max-[30rem]:hidden"}>
                 <DailyBadge onOpen={() => setDailySheet({ board: null })} player={player} status={dailyStatus} />
               </span>
             )}

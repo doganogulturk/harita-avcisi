@@ -56,6 +56,13 @@ Yarışın soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.1.1)**
+
+```
+• Yenilenen ana ekran: Yarış, Antrenman ve Arkadaşlarımla ayrı ayrı, tek dokunuşla
+• Büyük telefonlarda başlıktaki logo artık örtülmüyor
+```
+
 **Sürüm notları (1.1.0)**
 
 ```
@@ -120,6 +127,13 @@ Race questions are picked on the server, and scores and times are verified there
 • No ads, no tracking
 ```
 
+**Release notes (1.1.1)**
+
+```
+• Refreshed home screen: Race, Practice and With friends each one tap away
+• The logo in the header is no longer covered on large phones
+```
+
 **Release notes (1.1.0)**
 
 ```
@@ -136,7 +150,7 @@ Race questions are picked on the server, and scores and times are verified there
 
 Telefon için en az 2, en fazla 8 görüntü (9:16 ya da 16:9, kenar 320–3840 piksel). Önerilen sıra:
 
-1. Ana ekran (Tek başıma ve Arkadaşlarımla, Liderler panosu)
+1. Ana ekran (Yarış ve Liderler panosu, Antrenman, Arkadaşlarımla)
 2. Başkent sorusu (oyun ekranı, yatay)
 3. Günün meydan okuması sayfası
 4. Sonuç ekranı ve soru soru döküm

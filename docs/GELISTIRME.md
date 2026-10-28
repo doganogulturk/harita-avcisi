@@ -158,7 +158,8 @@ doğrulanır ve genel sıralamaya da işlenir. Giriş gerekir (misafir de olur).
 sunucuya ulaşılamazsa ya da mod bugün oynandıysa ana ekrandaki şeritte not çıkar.
 
 Ana ekranın başlığında, profil resminin yanında bir rozet durur: gün serisi ("🔥 3"; seri yoksa "🗓 Günlük"); bugün
-oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta. Hiç açılmadıysa bir halka atar. Dokununca **Günün meydan
+oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta. Hiç açılmadıysa bir halka atar. Giriş yapmamış oyuncuda başlıkta "Giriş yap" da
+durduğu için rozet 480 pikselden dar ekranda gizlenir; logoya yer kalır. Dokununca **Günün meydan
 okuması** alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve beş mod ikişerli, tek kalan tam satır (oynanmamışta "Oyna",
 bitirilende skor, bırakılanda "Bırakıldı"). Oynanmamış moda dokununca tur başlar; bitirilen mod seçilir ve altında o
 modun günlük sıralaması, oyuncunun sonucu ve paylaşma tuşu görünür. Her ekranda yalnızca rozet vardır; kartlar ekranı
