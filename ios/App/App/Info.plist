@@ -34,6 +34,9 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Yalnızca HTTPS (işletim sisteminin şifrelemesi) kullanılıyor; App Store'daki ihracat sorusu her yüklemede sorulmasın. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

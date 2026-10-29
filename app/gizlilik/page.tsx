@@ -36,6 +36,11 @@ const TURKISH = (
         Google hesap kimliğin. Google şifrene hiçbir zaman erişmeyiz.
       </li>
       <li>
+        <strong>Apple ile giriş (iOS uygulamasında):</strong> paylaşmayı seçersen adın, e-posta adresin (gerçek adresin
+        ya da Apple&apos;ın gizli yönlendirme adresi) ve Apple hesap kimliğin. Adını paylaşmazsan sana bir takma ad
+        verilir. Apple şifrene hiçbir zaman erişmeyiz.
+      </li>
+      <li>
         <strong>Misafir girişi:</strong> yalnızca yazdığın ad. Gerçek adını yazmak zorunda değilsin.
       </li>
     </ul>
@@ -113,6 +118,10 @@ const TURKISH = (
           <td>Google</td>
           <td>Google ile giriş. Profil fotoğrafları Google&apos;ın sunucularından yüklenir.</td>
         </tr>
+        <tr>
+          <td>Apple</td>
+          <td>Apple ile giriş (iOS uygulamasında).</td>
+        </tr>
       </tbody>
     </table>
     <p>
@@ -142,7 +151,7 @@ const TURKISH = (
     <h2>Çocuklar</h2>
     <p>
       Harita Avcısı genel kitleye yönelik bir eğitici oyundur ve özellikle çocuklara yönelik değildir. Google ile
-      giriş yalnızca Google&apos;ın yaş koşullarını karşılayan hesaplarla yapılabilir. Misafir girişinde gerçek ad
+      ya da Apple ile giriş yalnızca bu şirketlerin yaş koşullarını karşılayan hesaplarla yapılabilir. Misafir girişinde gerçek ad
       yazmak gerekmez; çocukların takma ad kullanmasını öneririz.
     </p>
 
@@ -178,6 +187,11 @@ const ENGLISH = (
       <li>
         <strong>Sign in with Google:</strong> the name, email address, profile photo address and account ID of your
         Google account. We never have access to your Google password.
+      </li>
+      <li>
+        <strong>Sign in with Apple (in the iOS app):</strong> your name if you choose to share it, your email address
+        (your real address or Apple&apos;s private relay address) and your Apple account ID. If you don&apos;t share your
+        name, you get a nickname. We never have access to your Apple password.
       </li>
       <li>
         <strong>Guest sign-in:</strong> only the name you type. You don&apos;t have to use your real name.
@@ -258,6 +272,10 @@ const ENGLISH = (
           <td>Google</td>
           <td>Sign in with Google. Profile photos are loaded from Google&apos;s servers.</td>
         </tr>
+        <tr>
+          <td>Apple</td>
+          <td>Sign in with Apple (in the iOS app).</td>
+        </tr>
       </tbody>
     </table>
     <p>
@@ -287,7 +305,7 @@ const ENGLISH = (
     <h2>Children</h2>
     <p>
       Harita Avcısı is an educational game for a general audience and is not specifically aimed at children. Signing in
-      with Google is only possible with accounts that meet Google&apos;s age requirements. Guest sign-in doesn&apos;t
+      with Google or Apple is only possible with accounts that meet those companies&apos; age requirements. Guest sign-in doesn&apos;t
       require a real name; we recommend that children use a nickname.
     </p>
 
@@ -299,8 +317,8 @@ const ENGLISH = (
 export default function PrivacyPage() {
   return (
     <LegalPage
-      en={{ title: "Privacy Policy", updated: "26 October 2026", body: ENGLISH }}
-      tr={{ title: "Gizlilik Politikası", updated: "26 Ekim 2026", body: TURKISH }}
+      en={{ title: "Privacy Policy", updated: "30 October 2026", body: ENGLISH }}
+      tr={{ title: "Gizlilik Politikası", updated: "30 Ekim 2026", body: TURKISH }}
     />
   );
 }

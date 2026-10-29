@@ -32,11 +32,11 @@ const TURKISH = (
       <tbody>
         <tr>
           <td>Kimlik</td>
-          <td>Ad ve soyad (Google ile girişte), misafir girişinde yazılan ad, profil fotoğrafı</td>
+          <td>Ad ve soyad (Google ya da Apple ile girişte), misafir girişinde yazılan ad, profil fotoğrafı</td>
         </tr>
         <tr>
           <td>İletişim</td>
-          <td>E-posta adresi (Google ile girişte)</td>
+          <td>E-posta adresi (Google ya da Apple ile girişte)</td>
         </tr>
         <tr>
           <td>Müşteri işlem</td>
@@ -100,16 +100,16 @@ const TURKISH = (
 
     <h2>4. Toplama yöntemi</h2>
     <p>
-      Kişisel veriler, web sitesi ve mobil uygulamalar üzerinden elektronik ortamda; Google ile girişte Google&apos;dan,
-      misafir girişinde doğrudan kullanıcıdan ve oyun sırasında otomatik yollarla toplanır.
+      Kişisel veriler, web sitesi ve mobil uygulamalar üzerinden elektronik ortamda; Google ya da Apple ile
+      girişte bu şirketlerden, misafir girişinde doğrudan kullanıcıdan ve oyun sırasında otomatik yollarla toplanır.
     </p>
 
     <h2>5. Aktarım</h2>
     <p>
       Kişisel veriler yalnızca hizmetin sunulması amacıyla, veri işleyen sıfatıyla hizmet veren şu sağlayıcılara
-      aktarılır: Supabase (veritabanı ve kimlik doğrulama), Vercel (web barındırma ve ziyaret istatistikleri) ve
-      Google (Google ile giriş). Bu sağlayıcıların sunucuları Türkiye dışında bulunduğundan veriler yurt dışına
-      aktarılmaktadır. Aktarım KVKK m. 9 çerçevesinde yapılır.
+      aktarılır: Supabase (veritabanı ve kimlik doğrulama), Vercel (web barındırma ve ziyaret istatistikleri),
+      Google (Google ile giriş) ve Apple (iOS uygulamasında Apple ile giriş). Bu sağlayıcıların sunucuları Türkiye
+      dışında bulunduğundan veriler yurt dışına aktarılmaktadır. Aktarım KVKK m. 9 çerçevesinde yapılır.
     </p>
     <p>
       Bunların dışında kişisel veriler, yalnızca kanunen yetkili kamu kurum ve kuruluşlarına, talep etmeleri hâlinde
@@ -143,8 +143,8 @@ const TURKISH = (
 
     <h2>8. Başvuru</h2>
     <p>
-      Haklarını kullanmak için talebini, adını ve Harita Avcısı&apos;nda kullandığın hesabı (Google ile girdiysen
-      e-posta adresini, misafir olarak girdiysen sıralamada görünen adını) belirterek <ContactEmail /> adresine
+      Haklarını kullanmak için talebini, adını ve Harita Avcısı&apos;nda kullandığın hesabı (Google ya da Apple ile
+      girdiysen e-posta adresini, misafir olarak girdiysen sıralamada görünen adını) belirterek <ContactEmail /> adresine
       iletebilirsin. Başvurun, Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ uyarınca en geç 30 gün
       içinde ücretsiz olarak sonuçlandırılır.
     </p>
@@ -180,11 +180,11 @@ const ENGLISH = (
       <tbody>
         <tr>
           <td>Identity</td>
-          <td>Name and surname (with Google sign-in), the name entered for guest sign-in, profile photo</td>
+          <td>Name and surname (with Google or Apple sign-in), the name entered for guest sign-in, profile photo</td>
         </tr>
         <tr>
           <td>Contact</td>
-          <td>Email address (with Google sign-in)</td>
+          <td>Email address (with Google or Apple sign-in)</td>
         </tr>
         <tr>
           <td>Customer transaction</td>
@@ -247,14 +247,15 @@ const ENGLISH = (
 
     <h2>4. Method of collection</h2>
     <p>
-      Personal data is collected electronically through the website and mobile apps: from Google with Google sign-in,
+      Personal data is collected electronically through the website and mobile apps: from Google or Apple when signing in with them,
       directly from the user with guest sign-in, and automatically during play.
     </p>
 
     <h2>5. Transfers</h2>
     <p>
       Personal data is transferred only to deliver the service, to the following providers acting as data processors:
-      Supabase (database and authentication), Vercel (web hosting and visit statistics) and Google (Google sign-in).
+      Supabase (database and authentication), Vercel (web hosting and visit statistics), Google (Google sign-in) and
+      Apple (Sign in with Apple in the iOS app).
       Because these providers&apos; servers are located outside Türkiye, data is transferred abroad. Transfers are made
       within the framework of KVKK Art. 9.
     </p>
@@ -288,7 +289,7 @@ const ENGLISH = (
     <h2>8. Applications</h2>
     <p>
       To exercise your rights, send your request to <ContactEmail />, stating your name and the account you use in
-      Harita Avcısı (your email address if you signed in with Google, or the name shown on the leaderboard if you
+      Harita Avcısı (your email address if you signed in with Google or Apple, or the name shown on the leaderboard if you
       signed in as a guest). Under the Communiqué on the Procedures and Principles of Applications to the Data
       Controller, your application is concluded free of charge within 30 days at the latest.
     </p>
@@ -302,8 +303,8 @@ const ENGLISH = (
 export default function KvkkPage() {
   return (
     <LegalPage
-      en={{ title: "KVKK Information Notice", updated: "18 October 2026", body: ENGLISH, isCourtesyTranslation: true }}
-      tr={{ title: "KVKK Aydınlatma Metni", updated: "18 Ekim 2026", body: TURKISH }}
+      en={{ title: "KVKK Information Notice", updated: "30 October 2026", body: ENGLISH, isCourtesyTranslation: true }}
+      tr={{ title: "KVKK Aydınlatma Metni", updated: "30 Ekim 2026", body: TURKISH }}
     />
   );
 }

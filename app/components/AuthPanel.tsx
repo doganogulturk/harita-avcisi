@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
+import { AppleMark } from "./AppleMark";
+import { isAppleSignInAvailable, startAppleSignIn } from "@/lib/auth";
 import { messages } from "@/lib/i18n";
 
 type AuthPanelProps = {
@@ -47,6 +49,18 @@ export function AuthPanel({
   const { auth, common } = messages();
   const [guestName, setGuestName] = useState(suggestGuestName);
   const [isGuestFormVisible, setIsGuestFormVisible] = useState(false);
+  // Apple girişi (yalnızca iOS) sayfadan ayrılmadan biter ve sayfayı yeniden yükler; durumu bu panelde tutulur.
+  const [isAppleAvailable] = useState(isAppleSignInAvailable);
+  const [isAppleSigningIn, setIsAppleSigningIn] = useState(false);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const isBusy = isSigningIn || isAppleSigningIn;
+
+  const signInWithApple = async () => {
+    setIsAppleSigningIn(true);
+    setAppleError(null);
+    setAppleError(await startAppleSignIn());
+    setIsAppleSigningIn(false);
+  };
 
   const submitGuestName = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,9 +102,20 @@ export function AuthPanel({
       </p>
 
       <div className="mt-5 grid gap-3 short:mt-3 sm:grid-cols-2">
+        {isAppleAvailable && (
+          <button
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
+            disabled={isBusy}
+            onClick={signInWithApple}
+            type="button"
+          >
+            <AppleMark className="h-5 w-5" />
+            {auth.apple}
+          </button>
+        )}
         <button
           className="flex h-12 items-center justify-center gap-3 rounded-xl border border-[#747775] bg-white px-4 text-sm font-medium text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:ring-2 focus-visible:ring-[#0b57d0] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
-          disabled={isSigningIn}
+          disabled={isBusy}
           onClick={onGoogleSignIn}
           type="button"
         >
@@ -103,8 +128,8 @@ export function AuthPanel({
           {auth.google}
         </button>
         <button
-          className="h-12 rounded-xl border border-cyan-600 bg-white px-4 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
-          disabled={isSigningIn}
+          className={`h-12 rounded-xl border border-cyan-600 bg-white px-4 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70 ${isAppleAvailable ? "sm:col-span-2" : ""}`}
+          disabled={isBusy}
           onClick={() => setIsGuestFormVisible(true)}
           type="button"
         >
@@ -118,7 +143,7 @@ export function AuthPanel({
           <input
             autoFocus
             className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-            disabled={isSigningIn}
+            disabled={isBusy}
             autoComplete="nickname"
             enterKeyHint="go"
             id="guest-name"
@@ -131,7 +156,7 @@ export function AuthPanel({
           />
           <button
             className="rounded-xl bg-cyan-600 px-5 py-3 font-bold text-white transition hover:bg-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
-            disabled={isSigningIn}
+            disabled={isBusy}
             type="submit"
           >
             {guestSubmitLabel ?? common.start}
@@ -151,7 +176,7 @@ export function AuthPanel({
         {auth.privacyAfter}
       </p>
 
-      {authError && <p className="mt-4 text-sm font-medium text-rose-600">{authError}</p>}
+      {(appleError ?? authError) && <p className="mt-4 text-sm font-medium text-rose-600">{appleError ?? authError}</p>}
       {!supabaseConfigured && <p className="mt-4 text-sm font-medium text-rose-600">{auth.notConfigured}</p>}
     </div>
   );

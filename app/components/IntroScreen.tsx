@@ -17,6 +17,7 @@ import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
 import { messages } from "@/lib/i18n";
+import { isAppleSignInAvailable, startAppleSignIn } from "@/lib/auth";
 import { joinPathFor } from "@/lib/join-code";
 import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type LeaderboardEntry, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
@@ -372,6 +373,17 @@ export function IntroScreen({
             closeGuide();
             onGoogleSignIn();
           }}
+          onAppleSignIn={
+            isAppleSignInAvailable()
+              ? () => {
+                  closeGuide();
+                  // Başarılıysa sayfa yeniden yüklenir; olmazsa giriş penceresi açılır, orada yeniden denenebilir.
+                  void startAppleSignIn().then((error) => {
+                    if (error) setIsSignInOpen(true);
+                  });
+                }
+              : undefined
+          }
           onGuestSignIn={() => {
             closeGuide();
             setIsSignInOpen(true);

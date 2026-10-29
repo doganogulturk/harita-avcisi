@@ -1,7 +1,7 @@
 import { messages } from "@/lib/i18n";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
-import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 import { getSupabaseClient } from "@/lib/supabase";
 import { type Player } from "@/lib/game";
 
@@ -72,6 +72,55 @@ async function startNativeGoogleSignIn(supabase: NonNullable<ReturnType<typeof g
 
     Browser.open({ url: authUrl }).catch(() => finish(messages().errors.googleFailed));
   });
+}
+
+type AppleSignInPlugin = {
+  authorize(options: { nonce: string }): Promise<{ identityToken: string; givenName: string; familyName: string }>;
+};
+
+/** ios/App/App/AppleSignInPlugin.swift */
+const AppleSignIn = registerPlugin<AppleSignInPlugin>("AppleSignIn");
+
+/** Apple ile giriş yalnızca iOS uygulamasında sunulur (App Store, Google girişinin yanında bunu istiyor). */
+export function isAppleSignInAvailable(): boolean {
+  return Capacitor.getPlatform() === "ios";
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * iOS'un kendi Apple giriş penceresini açar; dönen kimlik belirteciyle Supabase oturumu açılır ve sayfa yeniden
+ * yüklenir (Google girişindeki gibi usePlayer oturumu bulur). Apple adı yalnızca ilk girişte verir: o zaman hesaba
+ * yazılır. Ad hiç yoksa sıralamada e-posta (çoğu zaman Apple'ın gizli adresi) görünmesin diye misafirlerdeki gibi bir
+ * takma ad verilir. Kullanıcı vazgeçerse `null`, başarısız olursa hata metni döner.
+ */
+export async function startAppleSignIn(): Promise<string | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return messages().errors.notConfigured;
+
+  const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  let credential: Awaited<ReturnType<AppleSignInPlugin["authorize"]>>;
+  try {
+    credential = await AppleSignIn.authorize({ nonce: await sha256Hex(nonce) });
+  } catch (error) {
+    return (error as { code?: string }).code === "canceled" ? null : messages().errors.appleFailed;
+  }
+
+  const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: credential.identityToken, nonce });
+  if (error || !data.user) return messages().errors.appleFailed;
+
+  const fullName = [credential.givenName, credential.familyName].map((part) => part.trim()).filter(Boolean).join(" ");
+  const { full_name: savedName, name, display_name: nickname } = data.user.user_metadata;
+  if (fullName) {
+    await supabase.auth.updateUser({ data: { full_name: fullName } });
+  } else if (![savedName, name, nickname].some((value) => typeof value === "string" && value.trim())) {
+    await supabase.auth.updateUser({ data: { display_name: messages().auth.guestSuggestion(Math.floor(1000 + Math.random() * 9000)) } });
+  }
+  window.location.reload();
+  return null;
 }
 
 /** Misafir oturumu açar; ad sıralamada ve düelloda görünür. */

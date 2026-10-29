@@ -3,6 +3,7 @@
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { DemoPill, useDemoCycle, type DemoQuestion } from "../MapDemo";
 import { PinchDemo, RotateDemo } from "../PlayTips";
+import { AppleMark } from "../AppleMark";
 import { Logo } from "../Logo";
 import { GAME_DURATION_SECONDS, isSameLocation, LOCATION_SELECTOR, locationIdOf, QUESTIONS_PER_ROUND } from "@/lib/game";
 import { useMapMarkup } from "@/lib/hooks/useMapMarkup";
@@ -16,6 +17,8 @@ type GuideProps = {
   /** "Geç" ve son ekrandaki "Başlayalım": tanıtım kapanır, ana ekrandaki oyun seçimi görünür. */
   onClose: () => void;
   onGoogleSignIn: () => void;
+  /** Verilirse (yalnızca iOS) Apple ile giriş tuşu da çıkar. */
+  onAppleSignIn?: () => void;
   /** Misafir adıyla giriş penceresini açar. */
   onGuestSignIn: () => void;
 };
@@ -30,7 +33,7 @@ const SWIPE_THRESHOLD_PX = 50;
  * da alttaki tuşlarla gezilir; "Geç" her ekranda durur. Son ekranın asıl tuşu ana ekrandaki oyun seçimine götürür,
  * giriş yalnızca bir seçenek olarak sunulur. Bilgi menüsündeki "Nasıl oynanır?" ile yeniden açılır.
  */
-export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: GuideProps) {
+export function Guide({ canSignIn, onClose, onGoogleSignIn, onAppleSignIn, onGuestSignIn }: GuideProps) {
   const [index, setIndex] = useState(0);
   const swipeStartX = useRef<number | null>(null);
   // Telefon ve tablette ikinci ekran yan çevirmeyi ve iki parmakla yakınlaştırmayı gösterir; farede gereksiz.
@@ -135,6 +138,16 @@ export function Guide({ canSignIn, onClose, onGoogleSignIn, onGuestSignIn }: Gui
                   <div className="mt-4 short:mt-2.5">
                     <p className="text-xs text-slate-500">{guide.signInPrompt}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {onAppleSignIn && (
+                        <button
+                          className="flex items-center gap-1.5 rounded-xl bg-black px-3.5 py-2 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none short:py-1.5"
+                          onClick={onAppleSignIn}
+                          type="button"
+                        >
+                          <AppleMark className="h-4 w-4" />
+                          {guide.apple}
+                        </button>
+                      )}
                       <button
                         className="flex items-center gap-2 rounded-xl border border-[#747775] bg-white px-3.5 py-2 text-sm font-medium text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:ring-2 focus-visible:ring-[#0b57d0] focus-visible:outline-none short:py-1.5"
                         onClick={onGoogleSignIn}

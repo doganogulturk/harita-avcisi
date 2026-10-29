@@ -32,7 +32,7 @@ const TURKISH = (
     <h2>Uygulamaya erişemiyorsan</h2>
     <p>
       Uygulamayı kaldırdıysan ya da misafir olarak oynadığın cihaza artık erişemiyorsan <ContactEmail /> adresine
-      &ldquo;Hesap silme&rdquo; konulu bir e-posta gönder; Google hesabının e-posta adresini ya da sıralamada görünen
+      &ldquo;Hesap silme&rdquo; konulu bir e-posta gönder; Google ya da Apple hesabının e-posta adresini ya da sıralamada görünen
       adını yaz. Talebini en geç 30 gün içinde sonuçlandırırız.
     </p>
 
@@ -82,7 +82,7 @@ const ENGLISH = (
     <h2>If you can&apos;t access the app</h2>
     <p>
       If you uninstalled the app or no longer have the device you played on as a guest, send an email with the subject
-      &ldquo;Account deletion&rdquo; to <ContactEmail />, including your Google account&apos;s email address or the name
+      &ldquo;Account deletion&rdquo; to <ContactEmail />, including your Google or Apple account&apos;s email address or the name
       shown on the leaderboard. We complete your request within 30 days at the latest.
     </p>
 

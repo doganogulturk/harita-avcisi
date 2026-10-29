@@ -81,7 +81,7 @@ const TURKISH = (
 
     <h2>Hesap</h2>
     <ul>
-      <li>Yarış, düello ve oda modları için Google ile ya da misafir olarak giriş gerekir.</li>
+      <li>Yarış, düello ve oda modları için Google ya da Apple ile veya misafir olarak giriş gerekir.</li>
       <li>
         Misafir hesabı yalnızca giriş yaptığın cihazda ve tarayıcıda durur. Oturum bilgisi silinirse (ör. tarayıcı
         verilerini temizlediğinde ya da uygulamayı kaldırdığında) o hesaba yeniden erişilemez.
@@ -155,7 +155,7 @@ const ENGLISH = (
 
     <h2>Accounts</h2>
     <ul>
-      <li>Races, duels and rooms require signing in with Google or as a guest.</li>
+      <li>Races, duels and rooms require signing in with Google, Apple or as a guest.</li>
       <li>
         A guest account exists only on the device and browser you signed in with. If the session is deleted (for example
         when you clear browser data or uninstall the app), that account can&apos;t be accessed again.
@@ -214,8 +214,8 @@ const ENGLISH = (
 export default function TermsPage() {
   return (
     <LegalPage
-      en={{ title: "Terms of Use", updated: "26 October 2026", body: ENGLISH }}
-      tr={{ title: "Kullanım Koşulları", updated: "13 Ekim 2026", body: TURKISH }}
+      en={{ title: "Terms of Use", updated: "30 October 2026", body: ENGLISH }}
+      tr={{ title: "Kullanım Koşulları", updated: "30 Ekim 2026", body: TURKISH }}
     />
   );
 }
