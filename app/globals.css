@@ -2,6 +2,13 @@
 
 /* Yatay telefon gibi alçak ekranlar: giriş ekranı boşlukları sıkılaştırılır. */
 @custom-variant short (@media (max-height: 30rem));
+/* Dikey tutulan telefon; tabletler (en küçüğü iPad mini, 744 px) dışarıda: onlarda harita dikeyde de yeterince büyük
+   ve iPad'de çoklu pencere yüzünden ekran yataya kilitlenemiyor. lib/orientation.ts'teki PORTRAIT_QUERY ile aynı. */
+@custom-variant portrait-phone (@media (orientation: portrait) and (max-width: 40rem));
+/* Ayar ekranının iki sütunu: yeterince geniş ve yatay ekran. Dikey tablette (iPad) sütunlar alt alta durur; yoksa ekran
+   boyunca uzar, içleri boş kalır. */
+@custom-variant side (@media (min-width: 48rem) and (orientation: landscape));
+@custom-variant stacked (@media not all and (min-width: 48rem) and (orientation: landscape));
 
 @theme inline {
   --font-display: var(--font-stack-notch), ui-sans-serif, system-ui, sans-serif;

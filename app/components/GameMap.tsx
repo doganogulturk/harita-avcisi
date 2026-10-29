@@ -97,7 +97,7 @@ let isRotateHintDismissed = false;
 
 /**
  * Dikeyde oynanırken haritanın sol altındaki küçük ipucu: yatayda harita iki kat büyür. Yalnızca dikey telefonda
- * görünür (portrait:max-lg); oyuncu kapatabilir. Mobil uygulamada ipucu bir tuştur: dokununca ekran yataya kilitlenir,
+ * görünür (portrait-phone); oyuncu kapatabilir. Mobil uygulamada ipucu bir tuştur: dokununca ekran yataya kilitlenir,
  * telefonun yön kilidi açık olsa bile. Dokunmalar haritaya geçmesin diye kendi alanı tıklanabilir.
  */
 function RotateHint() {
@@ -110,7 +110,7 @@ function RotateHint() {
     </svg>
   );
   return (
-    <div className="absolute bottom-3 left-3 z-10 hidden items-center gap-1 rounded-full border border-slate-200 bg-white/90 py-1 pr-1 pl-3 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur portrait:max-lg:flex">
+    <div className="absolute bottom-3 left-3 z-10 hidden items-center gap-1 rounded-full border border-slate-200 bg-white/90 py-1 pr-1 pl-3 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur portrait-phone:flex">
       {canLockLandscape() ? (
         <button className="flex items-center gap-1 text-cyan-700" onClick={() => void lockLandscape()} type="button">
           {icon}

@@ -36,16 +36,16 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
 
   useEffect(() => {
     if (!isOpen) return;
-    const closeOnOutsideClick = (event: MouseEvent) => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setIsOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIsOpen(false);
     };
-    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("pointerdown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
-      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [isOpen]);

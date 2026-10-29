@@ -94,7 +94,8 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
       onModeChange={(next) => save(next as BoardVariant, rule)}
       previewPrompt={previewPromptFor(variant)}
     >
-      {/* Alçak ekranda kurallar yan yana, açıklamaları gizli; seçili kuralın açıklaması altta not olarak kalır. */}
+      {/* Alçak ekranda kurallar yan yana, açıklamaları gizli; seçili kuralın açıklaması altta not olarak kalır. Sütun
+          dar kalırsa (yatay telefon) kuralın adı iki satıra sarılır. */}
       <Field noteOn="short" label={messages().setup.duel.rule} note={DUEL_RULES[rule].summary}>
         <div className="flex flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5" role="radiogroup">
           {(Object.keys(DUEL_RULES) as DuelRule[]).map((option) => {
@@ -102,7 +103,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
             return (
               <button
                 aria-checked={isSelected}
-                className={`rounded-2xl border-2 px-4 py-2.5 text-left transition focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:outline-none short:rounded-xl short:px-2 short:py-1 ${
+                className={`min-w-0 rounded-2xl border-2 px-4 py-2.5 text-left transition focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:outline-none short:rounded-xl short:px-2 short:py-1 ${
                   isSelected ? "border-orange-400 bg-orange-50/70" : "border-slate-200 hover:border-orange-200"
                 }`}
                 key={option}
@@ -110,7 +111,7 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
                 role="radio"
                 type="button"
               >
-                <span className={`block font-display text-lg font-bold short:text-[13px] short:whitespace-nowrap ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
+                <span className={`block font-display text-lg font-bold short:text-[13px] short:leading-tight ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
                   {DUEL_RULES[option].icon} {DUEL_RULES[option].label}
                 </span>
                 <span className="mt-0.5 block text-xs text-slate-500 short:hidden lg:text-sm">{DUEL_RULES[option].summary}</span>

@@ -30,7 +30,7 @@ export function BottomSheet({ title, description, onClose, children }: BottomShe
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:px-4 sm:pt-[max(1rem,env(safe-area-inset-top))] sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
       <button aria-label={messages().common.close} className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
 
       <div

@@ -58,10 +58,10 @@ export function SetupShell({
 }: SetupShellProps) {
   return (
     <SelectedClass.Provider value={game.theme.selected}>
-      {/* Dikey telefonda harita kartı ve ayarlar alt alta durur; ayarlar uzunsa ekran kayar, harita ezilmez. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 max-md:overflow-y-auto md:flex-row md:gap-4 lg:gap-5">
+      {/* Dikey ekranda (telefon ya da tablet) harita kartı ve ayarlar alt alta durur; ayarlar uzunsa ekran kayar, harita ezilmez. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 stacked:overflow-y-auto side:flex-row side:gap-4 lg:gap-5">
         {/* Dikeyde kart içeriğinden kısa olmaz ama boş kalan yeri alır: önizleme büyür, ekranın altı boş kalmaz. */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 max-md:flex-[1_0_auto] short:gap-1.5 lg:gap-3 lg:p-5">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-3xl border-2 border-slate-200 bg-white p-3 stacked:flex-[1_0_auto] short:gap-1.5 lg:gap-3 lg:p-5">
           <div className="flex shrink-0 items-center gap-2.5 lg:gap-3">
             <BackButton onClick={onBack} />
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl short:h-8 short:w-8 lg:h-12 lg:w-12 lg:rounded-2xl ${game.theme.tile}`}>
@@ -97,7 +97,7 @@ export function SetupShell({
 
           {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. Soru tipinin ne demek olduğu
               haritanın sol alt köşesinde (denizde) kısa bir not olarak durur. */}
-          <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] md:min-h-0">
+          <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] side:min-h-0">
             <SetupPreviewMap mode={map} prompt={previewPrompt} scope={previewScope} />
             <p className="pointer-events-none absolute bottom-0 left-0 max-w-[85%] rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-sm lg:px-3 lg:py-1 lg:text-sm">
               {(messages().setup.notes[map] as Partial<Record<QuestionPrompt, string>>)[previewPrompt] ?? ""}
@@ -107,7 +107,7 @@ export function SetupShell({
 
         {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Eylem tuşu giriş kartlarındaki gibi
             panelin sağ üst köşesinden içeri kıvrılan sekmedir. */}
-        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white md:w-[44%] lg:w-[24rem] xl:w-[26rem]">
+        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white side:w-[44%] side:lg:w-[24rem] side:xl:w-[26rem]">
           <div className="flex shrink-0 items-start justify-between gap-3">
             <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{messages().setup.settings}</p>
             <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />

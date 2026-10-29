@@ -28,11 +28,12 @@ export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null
  * sütunda Yarış ve Antrenman, sağda iki satır boyunca Arkadaşlarımla durur. Oyunun sekmesi kartın sağ alt köşesinden içeri
  * kıvrılır (Arkadaşlarımla kartında iki sekme: Düello, Oda); sekme o oyunun ayar ekranını açar, ara adım yoktur. Kartın
  * kendisi bir çerçevedir, dokunmak bir şey yapmaz. Ekran yetmezse (küçük telefon) liste kayar, yazılar üst üste binmez.
- * Kaydırma alanının kenar boşluğu, kartın gölgesi kırpılmasın diye.
+ * Kaydırma alanının kenar boşluğu, kartın gölgesi kırpılmasın diye. İki sütunda yükseklik sınırlı: dikey iPad gibi uzun
+ * ekranlarda kartlar ekran boyunca uzayıp içleri boş kalmasın, ortada dursun.
  */
 export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
   return (
-    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[minmax(min-content,1fr)_min-content_minmax(min-content,1fr)] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:grid-cols-2 sm:grid-rows-[minmax(min-content,1fr)_min-content] lg:max-h-[48rem] lg:gap-5">
+    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[minmax(min-content,1fr)_min-content_minmax(min-content,1fr)] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:max-h-[36rem] sm:grid-cols-2 sm:grid-rows-[minmax(min-content,1fr)_min-content] lg:max-h-[48rem] lg:gap-5">
       {HOME_CARDS.map((card, index) =>
         card.id === "practice" ? (
           <PracticeCard card={card} delayMs={introDelayMs + introStepMs * index} key={card.id} onSelect={onSelect} />
@@ -150,7 +151,7 @@ function PracticeCard({ card, delayMs, onSelect }: { card: HomeCardInfo; delayMs
         style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
       />
       <div className="relative flex flex-col items-end @min-[29rem]:flex-row">
-        <p className="min-w-0 self-stretch truncate px-4 pt-3 text-sm text-slate-500 short:pt-2 short:text-xs sm:px-6 lg:px-9 lg:text-base @min-[29rem]:flex-1 @min-[29rem]:self-center @min-[29rem]:py-3 @min-[29rem]:pr-2 short:@min-[29rem]:py-2 lg:@min-[29rem]:py-4">
+        <p className="min-w-0 self-stretch line-clamp-2 px-4 pt-3 text-sm text-slate-500 short:pt-2 short:text-xs sm:px-6 lg:px-9 lg:text-base @min-[29rem]:flex-1 @min-[29rem]:self-center @min-[29rem]:py-3 @min-[29rem]:pr-2 short:@min-[29rem]:py-2 lg:@min-[29rem]:py-4">
           {messages().home.practiceNote}
         </p>
         <div className="shrink-0 pt-2 @min-[29rem]:pt-4 lg:@min-[29rem]:pt-6">

@@ -3,10 +3,11 @@ import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { useSyncExternalStore } from "react";
 
 /**
- * Telefonun ya da küçük tabletin dikey tutulduğu durum; haritadaki "Yan çevir" ipucunun CSS koşuluyla
- * (portrait:max-lg) aynıdır.
+ * Telefonun dikey tutulduğu durum; haritadaki "Yan çevir" ipucunun CSS koşuluyla (portrait-phone, globals.css)
+ * aynıdır. Tabletler dışarıda: dikeyde de harita yeterince büyük, iPad'de de ekran yataya kilitlenemiyor (çoklu
+ * pencereyi destekleyen uygulamada iOS yön kilidini uygulamıyor).
  */
-const PORTRAIT_QUERY = "(orientation: portrait) and (max-width: 63.999rem)";
+const PORTRAIT_QUERY = "(orientation: portrait) and (max-width: 40rem)";
 
 export const isPortraitPhoneNow = () => window.matchMedia(PORTRAIT_QUERY).matches;
 

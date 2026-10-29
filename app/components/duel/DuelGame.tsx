@@ -319,7 +319,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
         )}
 
         {isEnded && (
-          <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-2xl bg-white/90 p-3 text-xs shadow-lg backdrop-blur portrait:max-lg:bottom-14 lg:bottom-6 lg:left-6 lg:p-4 lg:text-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-2xl bg-white/90 p-3 text-xs shadow-lg backdrop-blur portrait-phone:bottom-14 lg:bottom-6 lg:left-6 lg:p-4 lg:text-sm">
             <span className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-400" /> {messages().duel.legendCorrect}
             </span>
