@@ -178,22 +178,33 @@ No demo account is needed. Practice mode works without signing in. To try races,
 
 ## Ekran görüntüleri
 
-Gereken boyutlar (en az 1, en fazla 10):
+`release/` altında (depoya girmez): `release/app-store/{iphone,ipad}/{tr,en}/`, her birinde yükleme sırasıyla 8
+görüntü (ana ekran, başkent sorusu, cevap, sonuç, günün meydan okuması, sıralama, kurulum, plaka sorusu).
 
-- **iPhone 6.9"**: 1320 × 2868 (dikey) ya da 2868 × 1320 (yatay). Diğer iPhone boyutları bundan küçültülür.
-- **iPad 13"**: 2064 × 2752 (dikey) ya da 2752 × 2064 (yatay).
+- **iPhone 6.9"**: 1320 × 2868 (dikey); oyun ekranları 2868 × 1320 (yatay, harita iki kat büyük).
+- **iPad 13"**: hepsi 2752 × 2064 (yatay; dikeyde harita küçük kalıyor).
 
-Önerilen sıra Google Play'dekiyle aynı (ana ekran, yatay oyun, günün meydan okuması, sonuç, düello, profil). Gerçek
-kişilerin adı ve fotoğrafı görünmemeli: sıralama ve liderler panosu yerel bir veritabanındaki örnek oyuncularla ya
-da bu bölümler görünmeden çekilir.
+Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. Sıralama istekleri uydurma adlarla
+yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
+"iPhone 6.9" Display" ve "iPad 13" Display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
-## Apple hesabı açılınca
+## Durum (30 Ekim 2026)
 
-1. **Certificates, Identifiers & Profiles → Identifiers:** `com.haritaavcisi.app` kaydında **Sign in with Apple**
-   işaretlenir. Xcode'da Signing & Capabilities → Team seçilir (yetki dosyası ios/App/App/App.entitlements hazır).
-2. **Supabase → Authentication → Sign In / Providers → Apple:** açılır, **Client IDs** alanına
-   `com.haritaavcisi.app` yazılır. Uygulama iOS'un kendi Apple penceresini kullandığı için (signInWithIdToken)
-   Services ID ve gizli anahtar gerekmez; yalnızca web'de Apple girişi istenirse gerekir.
-3. App Store Connect'te uygulama kaydı oluşturulur, bu belgedeki metinler girilir, Xcode'dan Archive → TestFlight.
-4. TestFlight'ta denenecekler: Apple ile ilk giriş (ad sıralamaya doğru yazılıyor mu), çıkıp yeniden giriş, Google
-   girişinden uygulamaya dönüş, düello ve oda lobileri, profil, hesap silme.
+Yapıldı:
+
+- Apple Developer hesabı (bireysel, takım `358VBZ4XZK`); Xcode'da hesap ve otomatik imzalama.
+- `com.haritaavcisi.app` Sign in with Apple yetkisiyle kayıtlı; Supabase'de Apple sağlayıcısı açık (Client ID
+  `com.haritaavcisi.app`). Apple ile giriş gerçek iPhone'da denendi, çalışıyor.
+- App Store Connect'te uygulama kaydı (Türkçe birincil dil).
+- 1.1.1 (yapı 1) TestFlight'a yüklendi, dahili test grubuyla iPhone'a kuruldu.
+- Ekran görüntüleri `release/app-store/` altında.
+
+Kalan, sırasıyla:
+
+1. TestFlight'ta denemeler: Apple ile ilk giriş ve yeniden giriş, Google girişinden uygulamaya dönüş, yarış sonucunun
+   sıralamaya düşmesi, düello ve oda lobileri, paylaşma, profil, hesap silme.
+2. Yeni yapı (1.1.1, yapı 2): yapı 1'den sonra profilde "Apple hesabı" ve giriş yöntemlerini saymayan metinler eklendi.
+3. App Store Connect: "iOS App Version 1.0" sayfasında sürümü **1.1.1** yapmak ve yapı 2'yi eklemek; bu belgedeki
+   metinler, kategori, adresler, App Privacy, yaş derecelendirmesi, inceleme notu; Türkçe ve İngilizce ekran
+   görüntüleri; **Add for Review**.
+4. İnceleme Android'in üretime geçişiyle aynı haftaya denk getirilmez (bir haftada tek mağaza incelemesi).

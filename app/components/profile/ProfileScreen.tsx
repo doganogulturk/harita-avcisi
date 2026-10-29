@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AccountMenu } from "../AccountMenu";
 import { BottomSheet } from "../BottomSheet";
 import { DuelAvatar } from "../duel/DuelParts";
@@ -297,6 +297,12 @@ export function ProfileScreen() {
   const profile = useProfile(player);
   const badges = useBadges(player);
   const text = messages().profile;
+  // Hesabın türü (Google ya da Apple) oturumdan okunur; misafirliği profil söyler.
+  const [provider, setProvider] = useState<string | null>(null);
+  useEffect(() => {
+    if (!player) return;
+    void getSupabaseClient()?.auth.getSession().then(({ data }) => setProvider(data.session?.user.app_metadata.provider ?? null));
+  }, [player]);
 
   const signOut = async () => {
     await getSupabaseClient()?.auth.signOut();
@@ -332,7 +338,7 @@ export function ProfileScreen() {
                 <div className="min-w-0">
                   <h1 className="truncate font-display text-2xl leading-tight font-bold text-slate-900 lg:text-3xl">{player.name}</h1>
                   <p className="mt-0.5 text-sm text-slate-500">
-                    {profile?.is_guest ? text.guestAccount : text.googleAccount}
+                    {profile?.is_guest ? text.guestAccount : provider === "apple" ? text.appleAccount : text.googleAccount}
                     {profile?.first_played_at && text.firstPlayed(formatDate(profile.first_played_at))}
                   </p>
                 </div>

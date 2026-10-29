@@ -50,16 +50,23 @@ meydan okuması** var.
 - **Web:** Tarayıcıdan, kurulum gerekmeden. Ana ekrana uygulama olarak da eklenebilir.
 - **Android:** Google Play'de kapalı testte, sürüm 1.1.0 (yukarıdaki özelliklerin hepsiyle). Mağaza sayfası Türkçe ve
   İngilizce.
-- **iOS:** Hazırlanıyor.
+- **iOS (iPhone ve iPad):** TestFlight'ta dahili testte, sürüm 1.1.1. App Store incelemesine gönderilmeyi bekliyor.
 
-Google hesabınla ya da misafir olarak giriş yapabilirsin; antrenman için giriş gerekmez.
+Google hesabınla (iOS uygulamasında Apple hesabınla da) ya da misafir olarak giriş yapabilirsin; antrenman için giriş
+gerekmez.
 
 ## Yol haritası
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
-2. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
+1. **App Store'a çıkış:** uygulama kaydı, Apple ile giriş, TestFlight ve ekran görüntüleri hazır. Kalanlar:
+   TestFlight'ta son denemeler (Apple ve Google girişi, düello ve oda lobileri, profil, hesap silme), App Store
+   Connect'te sürüm numarasını 1.0'dan 1.1.1'e çevirmek, metinleri, App Privacy formunu, yaş derecelendirmesini ve
+   ekran görüntülerini girmek, son düzeltmelerle yeni bir yapı yükleyip incelemeye göndermek. Metinler ve adımlar:
+   [docs/APP-STORE.md](docs/APP-STORE.md). Bir haftada tek mağaza incelemesi: Android'in üretime geçişiyle aynı haftaya
+   denk getirilmez.
+2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+3. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
    üretim erişimi başvurusu).
 
 Teknik işler:
@@ -69,6 +76,12 @@ Teknik işler:
   sunucuya seçtiriyor (`start_ranked_round`). Oyuncuların çoğu güncelleyince eski yol kapatılır ve skor doğrulaması bütün
   turlarda geçerli olur; güncellemeyen eski sürüm yarış skoru kaydedemez.
 - Ana sayfa bileşeninin (`app/page.tsx`) sadeleştirilmesi.
+
+App Store incelemesinde istenirse:
+
+- Sıralamada görünen adlar için bildirme ve gizleme (Kural 1.2; oyuncular yalnızca ad yazıyor, sohbet yok).
+- Apple ile giren oyuncu hesabını silince Apple'daki bağlantının da kaldırılması (Sign in with Apple REST API; Apple'dan
+  bir gizli anahtar ve sunucu tarafında bir çağrı gerekir).
 
 Sonraya bırakılan fikirler: karanlık tema, misafir hesabı Google hesabına bağlama, profilde zayıf yerlere özel
 antrenman.

@@ -321,8 +321,21 @@ Uygulamaya özgü davranışlar:
 - **Paylaşım** (`@capacitor/share`, `lib/share.ts`): uygulamada sistemin paylaşma menüsü açılır (Android'in
   WebView'inde tarayıcının paylaşma API'si yok).
 
-Uygulama kimliği
-(`capacitor.config.ts` → `appId`) şimdilik geçicidir; mağazaya ilk yüklemeden sonra değiştirilemez.
+- **Apple ile giriş** (yalnızca iOS; App Store, Google girişi olan uygulamada bunu da ister): `lib/auth.ts` →
+  `startAppleSignIn`. iOS'un kendi Apple penceresi uygulamanın içindeki küçük bir eklentiyle açılır
+  (`ios/App/App/AppleSignInPlugin.swift`; `AppViewController` köprüye kaydeder). Hazır topluluk eklentisi Capacitor 8'in
+  Swift paketleriyle çözülmediği için uygulamanın içinde. Dönen kimlik belirteci Supabase'de `signInWithIdToken` ile
+  oturuma çevrilir; bu yüzden Supabase'de Services ID ya da altı ayda bir yenilenen gizli anahtar gerekmez. Apple adı
+  yalnızca ilk girişte verir, o zaman `full_name` olarak yazılır; ad hiç yoksa sıralamada e-posta (çoğu zaman Apple'ın
+  gizli adresi) görünmesin diye misafirlerdeki gibi bir takma ad verilir. Düğme giriş penceresinde (`AuthPanel`) ve
+  tanıtımın son ekranında (`Guide`) çıkar; web'de ve Android'de görünmez. Profilde hesap türü oturumdaki
+  `app_metadata.provider`'dan okunur.
+
+iOS projesindeki mağaza ayarları: takım `358VBZ4XZK` (otomatik imzalama), Sign in with Apple yetkisi
+(`App.entitlements`), şifreleme beyanı (`Info.plist` → `ITSAppUsesNonExemptEncryption`), Apple'ın gizlilik bildirimi
+(`PrivacyInfo.xcprivacy`; App Store Connect'teki App Privacy yanıtlarıyla aynı olmalı).
+
+Uygulama kimliği (`capacitor.config.ts` → `appId`, `com.haritaavcisi.app`) iki mağazada da kayıtlı; değiştirilemez.
 
 ## Yerelde çalıştırma
 
@@ -428,7 +441,7 @@ haritanın görünüm kutusu Türkiye'ye göre daraltıldı. Tıklanabilir alanl
 1. Supabase projesi oluşturun.
 2. SQL Editor'de [`supabase/schema.sql`](../supabase/schema.sql) dosyasını çalıştırın. Her şey `do_harita_avcisi` şemasında kurulur, böylece aynı Supabase projesindeki başka uygulamalarla karışmaz. Dosya idempotent'tir; şema değiştiğinde (ör. yeni bir `variant` eklendiğinde) tekrar çalıştırın. `create table if not exists` var olan tablonun kısıtlarını değiştirmediği için, kurulu bir veritabanında böyle değişiklikler (ör. tür listesindeki bir kısıt) tek seferlik bir geçiş dosyasıyla yapılır (`supabase/YYYY-MM-ad.sql`); dosya SQL Editor'de bir kez çalıştırılır ve sonra depodan silinir, kalıcı tanım `schema.sql`'de kalır.
 3. Settings > API > **Exposed schemas** listesine `do_harita_avcisi` ekleyin; istemci bu şemaya bağlanır (`lib/supabase.ts`'teki `SUPABASE_SCHEMA`).
-4. Authentication > Providers altında **Google** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin.
+4. Authentication > Providers altında **Google**, **Apple** ve **Anonymous sign-ins** sağlayıcılarını etkinleştirin. Google Cloud OAuth istemcinizde Supabase'in callback URL'sini yetkili yönlendirme adresi olarak ekleyin. Apple'da **Client IDs** alanına `com.haritaavcisi.app` yazılır; Secret Key boş kalır (giriş yalnızca iOS uygulamasında, kimlik belirteciyle).
 5. `.env.example` dosyasını `.env.local` olarak kopyalayın ve proje URL'si ile Publishable Key değerlerini girin.
 6. Authentication > URL Configuration ekranında Site URL `https://haritaavcisi.com` olmalı. Redirect URLs listesine yerel
    adresinizi, `https://haritaavcisi.com/**`, `https://www.haritaavcisi.com/**` ve Vercel önizleme adreslerini ekleyin. Mobil uygulamanın
@@ -559,6 +572,29 @@ Paket, Play App Signing'e yüklenen **yükleme anahtarıyla** imzalanır. Anahta
 `~/.android-anahtarlar/harita-avcisi/` altında `upload-keystore.jks` ve şifresini taşıyan `keystore.properties`
 (yol `HARITA_AVCISI_KEYSTORE` ile değiştirilebilir). İkisi birlikte yedeklenmeli; kaybolursa Play Console'dan yükleme
 anahtarı sıfırlama istenir. Uygulamanın asıl imza anahtarını Google saklar.
+
+## App Store sürümü
+
+Sürüm numarası `package.json` ile aynı tutulur: Xcode projesinde `MARKETING_VERSION`
+(`ios/App/App.xcodeproj/project.pbxproj`, iki yapılandırmada). Her yüklemede yapı numarası (`CURRENT_PROJECT_VERSION`)
+bir artırılır; App Store Connect aynı numarayı ikinci kez kabul etmez. 1.1.1 için yapı 1 yüklendi.
+
+```bash
+npm run build && npx cap sync ios
+cd ios/App
+xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
+  -archivePath /tmp/HaritaAvcisi.xcarchive -allowProvisioningUpdates archive
+xcodebuild -exportArchive -archivePath /tmp/HaritaAvcisi.xcarchive -exportOptionsPlist ExportOptions.plist \
+  -exportPath /tmp/ha-export -allowProvisioningUpdates
+```
+
+`ExportOptions.plist` depoda değil; içinde `method` = `app-store-connect`, `destination` = `upload`, `teamID` =
+`358VBZ4XZK`, `signingStyle` = `automatic` olur. Yükleme, Xcode'a eklenmiş Apple hesabıyla yapılır (Xcode → Settings →
+Accounts). Yüklenen yapı birkaç dakika işlendikten sonra TestFlight'ta görünür; dahili test grubundakiler TestFlight
+uygulamasından kurar.
+
+Mağaza metinleri, App Privacy ve yaş derecelendirmesi yanıtları, inceleme notu ve ekran görüntüleri:
+[APP-STORE.md](APP-STORE.md).
 
 ## Kontroller
 
