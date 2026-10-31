@@ -577,7 +577,7 @@ anahtarı sıfırlama istenir. Uygulamanın asıl imza anahtarını Google sakla
 
 Sürüm numarası `package.json` ile aynı tutulur: Xcode projesinde `MARKETING_VERSION`
 (`ios/App/App.xcodeproj/project.pbxproj`, iki yapılandırmada). Her yüklemede yapı numarası (`CURRENT_PROJECT_VERSION`)
-bir artırılır; App Store Connect aynı numarayı ikinci kez kabul etmez. 1.1.1 için yapı 1 yüklendi.
+bir artırılır; App Store Connect aynı numarayı ikinci kez kabul etmez. 1.1.1 için yapı 1 ve 2 yüklendi.
 
 ```bash
 npm run build && npx cap sync ios

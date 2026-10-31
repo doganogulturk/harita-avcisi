@@ -188,7 +188,7 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone 6.9" Display" ve "iPad 13" Display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
-## Durum (30 Ekim 2026)
+## Durum (1 Kasım 2026)
 
 Yapıldı:
 
@@ -196,15 +196,15 @@ Yapıldı:
 - `com.haritaavcisi.app` Sign in with Apple yetkisiyle kayıtlı; Supabase'de Apple sağlayıcısı açık (Client ID
   `com.haritaavcisi.app`). Apple ile giriş gerçek iPhone'da denendi, çalışıyor.
 - App Store Connect'te uygulama kaydı (Türkçe birincil dil).
-- 1.1.1 (yapı 1) TestFlight'a yüklendi, dahili test grubuyla iPhone'a kuruldu.
+- 1.1.1 (yapı 1) TestFlight'a yüklendi, dahili test grubuyla iPhone'a kuruldu. Yapı 2 (1 Kasım) profilde "Apple
+  hesabı" ve giriş yöntemlerini saymayan metinlerle yüklendi; incelemeye giden yapı bu.
 - Ekran görüntüleri `release/app-store/` altında.
 
 Kalan, sırasıyla:
 
 1. TestFlight'ta denemeler: Apple ile ilk giriş ve yeniden giriş, Google girişinden uygulamaya dönüş, yarış sonucunun
    sıralamaya düşmesi, düello ve oda lobileri, paylaşma, profil, hesap silme.
-2. Yeni yapı (1.1.1, yapı 2): yapı 1'den sonra profilde "Apple hesabı" ve giriş yöntemlerini saymayan metinler eklendi.
-3. App Store Connect: "iOS App Version 1.0" sayfasında sürümü **1.1.1** yapmak ve yapı 2'yi eklemek; bu belgedeki
+2. App Store Connect: "iOS App Version 1.0" sayfasında sürümü **1.1.1** yapmak ve yapı 2'yi eklemek; bu belgedeki
    metinler, kategori, adresler, App Privacy, yaş derecelendirmesi, inceleme notu; Türkçe ve İngilizce ekran
    görüntüleri; **Add for Review**.
-4. İnceleme Android'in üretime geçişiyle aynı haftaya denk getirilmez (bir haftada tek mağaza incelemesi).
+3. İnceleme Android'in üretime geçişiyle aynı haftaya denk getirilmez (bir haftada tek mağaza incelemesi).
