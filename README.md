@@ -50,7 +50,7 @@ meydan okuması** var.
 - **Web:** Tarayıcıdan, kurulum gerekmeden. Ana ekrana uygulama olarak da eklenebilir.
 - **Android:** Google Play'de kapalı testte, sürüm 1.1.0 (yukarıdaki özelliklerin hepsiyle). Mağaza sayfası Türkçe ve
   İngilizce.
-- **iOS (iPhone ve iPad):** TestFlight'ta dahili testte, sürüm 1.1.1. App Store incelemesine gönderilmeyi bekliyor.
+- **iOS (iPhone ve iPad):** Sürüm 1.1.1, 1 Kasım 2026'da App Store incelemesine gönderildi.
 
 Google hesabınla (iOS uygulamasında Apple hesabınla da) ya da misafir olarak giriş yapabilirsin; antrenman için giriş
 gerekmez.
@@ -59,12 +59,8 @@ gerekmez.
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **App Store'a çıkış:** uygulama kaydı, Apple ile giriş, TestFlight ve ekran görüntüleri hazır. Kalanlar:
-   TestFlight'ta son denemeler (Apple ve Google girişi, düello ve oda lobileri, profil, hesap silme), App Store
-   Connect'te sürüm numarasını 1.0'dan 1.1.1'e çevirmek, metinleri, App Privacy formunu, yaş derecelendirmesini ve
-   ekran görüntülerini girmek, son düzeltmelerle yeni bir yapı yükleyip incelemeye göndermek. Metinler ve adımlar:
-   [docs/APP-STORE.md](docs/APP-STORE.md). Bir haftada tek mağaza incelemesi: Android'in üretime geçişiyle aynı haftaya
-   denk getirilmez.
+1. **App Store'a çıkış:** 1.1.1 incelemede (1 Kasım 2026). Onaydan sonra yayın elle başlatılır; Android'in üretime
+   geçişiyle aynı haftaya denk getirilmez. Ayrıntılar: [docs/APP-STORE.md](docs/APP-STORE.md) → "Durum".
 2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
 3. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
    üretim erişimi başvurusu).

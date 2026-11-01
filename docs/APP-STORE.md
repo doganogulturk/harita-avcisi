@@ -3,7 +3,8 @@
 App Store Connect → **Uygulamalar → Harita Avcısı**. Türkçe birincil dildir; İngilizce (U.K. ya da U.S.) yerelleştirme
 olarak eklenir. Sınırlar App Store Connect'inkiler: ad 30, alt başlık 30, tanıtım metni 170, açıklama 4000, anahtar
 kelimeler 100 karakter. Anahtar kelimeler virgülle ayrılır, boşluk bırakılmaz; addaki ve alt başlıktaki kelimeler
-zaten aranır, tekrar yazılmaz. Metinler Google Play'dekilerle (docs/GOOGLE-PLAY.md) aynı içerikte; farkı Apple ile
+zaten aranır, tekrar yazılmaz. Açıklamada emoji kullanılmaz: App Store Connect 🟩🟥 gibi karakterler olan açıklamayı
+kaydetmiyor (hata da göstermiyor). Metinler Google Play'dekilerle (docs/GOOGLE-PLAY.md) aynı içerikte; farkı Apple ile
 giriş ve iPad.
 
 ## Türkçe
@@ -47,7 +48,7 @@ BEŞ MOD
 • Başkent: başkent gelir, ülkesini bul
 
 HER GÜN YENİ BİR MEYDAN OKUMA
-Her gün beş mod için herkese aynı 10 soru, günde bir hak. Günün sıralamasında yerini gör, gün serini sürdür, sonucunu 🟩🟥 kareleriyle paylaş.
+Her gün beş mod için herkese aynı 10 soru, günde bir hak. Günün sıralamasında yerini gör, gün serini sürdür, sonucunu renkli karelerle paylaş.
 
 ROZETLER VE PROFİL
 Gün serileri, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 17 rozet. Profilinde yarış özetin, düelloların ve sıralamalardaki yerin.
@@ -111,7 +112,7 @@ FIVE MODES
 • Capitals: a capital appears, find its country
 
 A NEW CHALLENGE EVERY DAY
-The same 10 questions for everyone in each of the five modes, one try a day. See your place on today's leaderboard, keep your day streak going and share your result with 🟩🟥 squares.
+The same 10 questions for everyone in each of the five modes, one try a day. See your place on today's leaderboard, keep your day streak going and share your result as coloured squares.
 
 BADGES AND PROFILE
 17 badges such as day streaks, perfect rounds, all 81 provinces, 100 countries, duel wins, podium and summit. Your profile shows your race summary, duels and leaderboard positions.
@@ -137,7 +138,8 @@ geography,quiz,countries,flags,capitals,turkey,provinces,world,trivia,atlas,duel
 ## Uygulama bilgileri
 
 - **Paket kimliği:** `com.haritaavcisi.app` (Android'le aynı).
-- **Kategori:** birincil Oyunlar → alt kategoriler Bilgi Yarışması ve Eğitici; ikincil Eğitim.
+- **Kategori:** birincil Oyunlar → alt kategori Bilgi Yarışması (Trivia; oyunlarda "Eğitici" alt kategorisi yok); ikincil
+  Eğitim.
 - **Telif hakkı:** `2026 Doğan Oğultürk`
 - **Gizlilik politikası adresi:** `https://haritaavcisi.com/gizlilik`
 - **Destek adresi:** `https://haritaavcisi.com/gizlilik` (iletişim e-postası sayfada). Ayrı bir destek sayfası daha
@@ -181,30 +183,36 @@ No demo account is needed. Practice mode works without signing in. To try races,
 `release/` altında (depoya girmez): `release/app-store/{iphone,ipad}/{tr,en}/`, her birinde yükleme sırasıyla 8
 görüntü (ana ekran, başkent sorusu, cevap, sonuç, günün meydan okuması, sıralama, kurulum, plaka sorusu).
 
-- **iPhone 6.9"**: 1320 × 2868 (dikey); oyun ekranları 2868 × 1320 (yatay, harita iki kat büyük).
+- **iPhone (6.1"/6.3" Dynamic Island)**: 1206 × 2622 (dikey); oyun ekranları 2622 × 1206 (yatay, harita iki kat
+  büyük). App Store Connect'in sürüm sayfasındaki iPhone alanı bu boyutu istiyor; 6.9" (1320 × 2868) orada "File
+  dimensions are invalid" hatası veriyor.
 - **iPad 13"**: hepsi 2752 × 2064 (yatay; dikeyde harita küçük kalıyor).
 
 Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. Sıralama istekleri uydurma adlarla
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
-"iPhone 6.9" Display" ve "iPad 13" Display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
+"iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
 ## Durum (1 Kasım 2026)
 
-Yapıldı:
+App Store Connect'te girildi (tarayıcıdan, 1 Kasım):
 
-- Apple Developer hesabı (bireysel, takım `358VBZ4XZK`); Xcode'da hesap ve otomatik imzalama.
-- `com.haritaavcisi.app` Sign in with Apple yetkisiyle kayıtlı; Supabase'de Apple sağlayıcısı açık (Client ID
-  `com.haritaavcisi.app`). Apple ile giriş gerçek iPhone'da denendi, çalışıyor.
-- App Store Connect'te uygulama kaydı (Türkçe birincil dil).
-- 1.1.1 (yapı 1) TestFlight'a yüklendi, dahili test grubuyla iPhone'a kuruldu. Yapı 2 (1 Kasım) profilde "Apple
-  hesabı" ve giriş yöntemlerini saymayan metinlerle yüklendi; incelemeye giden yapı bu.
-- Ekran görüntüleri `release/app-store/` altında.
+- Sürüm 1.1.1, yapı 2 seçili; Türkçe ve İngilizce (U.K.) tanıtım metni, açıklama, anahtar kelimeler, destek ve
+  pazarlama adresleri; telif; inceleme notu ve iletişim bilgisi; "Sign-in required" kapalı; yayın elle (Manually
+  release).
+- App Information: Türkçe ve İngilizce ad ve alt başlık; kategori Games → Trivia, ikincil Education.
+- Yaş derecelendirmesi: bütün sorular Hayır/Yok (kullanıcı içeriği dahil) → **4+**.
+- Fiyat ücretsiz, 175 ülkede.
+- App Privacy: gizlilik politikası adresi (iki dilde).
+- TestFlight'ta yapı 2 kullanıcının iPhone'unda denendi, sorun yok.
 
-Kalan, sırasıyla:
+Hesap sahibi tarafından (1 Kasım): ekran görüntüleri (TR/EN, iPhone ve iPad), App Privacy beyanı (Ad, E-posta,
+Kullanıcı Kimliği, Oyun İçeriği; kullanıcıya bağlı, izleme yok, App Functionality), Content Rights, Digital Services
+Act. **1 Kasım 2026'da incelemeye gönderildi** (Waiting for Review). Yayın elle: onaydan sonra "Release This Version"
+ile yayına alınır.
 
-1. TestFlight'ta denemeler: Apple ile ilk giriş ve yeniden giriş, Google girişinden uygulamaya dönüş, yarış sonucunun
-   sıralamaya düşmesi, düello ve oda lobileri, paylaşma, profil, hesap silme.
-2. App Store Connect: "iOS App Version 1.0" sayfasında sürümü **1.1.1** yapmak ve yapı 2'yi eklemek; bu belgedeki
-   metinler, kategori, adresler, App Privacy, yaş derecelendirmesi, inceleme notu; Türkçe ve İngilizce ekran
-   görüntüleri; **Add for Review**.
-3. İnceleme Android'in üretime geçişiyle aynı haftaya denk getirilmez (bir haftada tek mağaza incelemesi).
+Sıradaki:
+
+1. İnceleme sonucu (genelde 1–2 gün). Ret gelirse gerekçesi App Store Connect → Resolution Center'da; olası
+   konular README'deki "App Store incelemesinde istenirse" başlığında.
+2. Onaydan sonra yayın tarihi seçilir; Android'in üretime geçişiyle aynı haftaya denk getirilmez.
+3. README'de "Nerede oynanır" ve yol haritası App Store'a çıkınca güncellenir.
