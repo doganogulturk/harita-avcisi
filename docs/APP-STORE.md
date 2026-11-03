@@ -192,6 +192,78 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
+## İnceleme yanıtı: Guideline 2.1, Information Needed (2 Kasım 2026)
+
+Apple, inceleme geçmişi az olan geliştirici hesaplarından bilgi istiyor; ret gerekçesi değil, bir hata bildirilmedi.
+Cevap App Store Connect → uygulama → **App Review** → mesaj → **Reply** ile verilir; aynı metin sürüm sayfasındaki
+**App Review Information → Notes** alanına da yazılır (sonraki gönderimler için). Kayıt yanıta eklenir; dosya
+yüklenemezse herkese açık olmayan bir bağlantı (iCloud, Google Drive, liste dışı YouTube) verilir.
+
+### Ekran kaydı
+
+Fiziksel iPhone, en güncel iOS, App Store'a gönderilen yapı (TestFlight'tan 1.1.1 (2)). Telefon dili İngilizce
+olsun (uygulama cihaz diliyle açılır, inceleme ekibi İngilizce okur). Denetim Merkezi → Ekran Kaydı; kayıt ana
+ekrandan, uygulama ikonuna dokunarak başlar. Kayıttan önce uygulama silinip TestFlight'tan yeniden kurulursa giriş
+yapılmamış hâlden başlanır. Sıra (3–5 dakika yeter):
+
+1. Uygulamayı ikonundan aç; ana ekranı göster.
+2. **Practice**: giriş olmadan birkaç soru cevapla (bir doğru, bir yanlış), çık.
+3. **Sign in** → **Play as guest** → ad yaz (hesap oluşturma).
+4. **Race** (ör. World): 10 soruyu bitir; sonuç ekranı ve sıralama.
+5. Başlıktaki 🔥 rozetiyle **Daily challenge**; bir tur.
+6. **With friends → Create duel**: kod oluştur (ikinci cihaz yoksa kodu göstermek yeter). İsteğe bağlı **Room**.
+7. Profil resmi (sağ üst) → **My profile**: rozetler, istatistikler.
+8. Hesap menüsünden yasal sayfalardan birini aç (**Privacy**, **Terms**).
+9. **Delete account** → **Delete my account**: hesap silinir, giriş yapılmamış hâle dönülür.
+10. **Sign in with Apple** ile giriş; ardından onu da sil (Apple girişinde de silme çalıştığı görünsün).
+
+Uygulama içi satın alma yok; bu kısım kayıtta yer almaz.
+
+### Yanıt metni
+
+```
+Hello,
+
+Thank you for reviewing Harita Avcısı. Please find the requested information below. The attached screen recording was captured on a physical iPhone running the latest iOS version, using the submitted build (1.1.1 (2)).
+
+1. Screen recording
+The recording starts by launching the app from the Home Screen and shows: practice mode without an account, account creation (guest sign-in), a ranked race and the leaderboard, the daily challenge, creating a duel with friends, the profile page, the in-app legal pages, account deletion, and Sign in with Apple followed by deleting that account as well.
+The app has no in-app purchases, no paid content, no ads and no chat or messaging. The only text a player enters is a display name (max. 30 characters), which is shown on leaderboards and in duels/rooms. Our Terms of Use prohibit offensive names, and players can contact us at doganogulturk@gmail.com to report a name; we remove reported names.
+
+2. Purpose and target audience
+Harita Avcısı ("Map Hunter") is a geography quiz game. The app names a Turkish province, a Turkish licence plate code, a country, a flag or a capital city, and the player taps the correct place on the map. It is for anyone who wants to learn geography in a fun way: students, quiz fans and casual players of all ages. It solves a simple problem: maps are hard to memorise from a book. The game teaches through short timed rounds, shows the tapped place's name after a wrong answer, zooms in on small countries and gives a question-by-question review after each round. Players can race on global leaderboards, play a daily challenge (the same 10 questions for everyone each day), earn badges, or play duels and rooms with friends using a short invite code.
+
+3. How to access the features
+No demo account is needed and no setup is required.
+- Practice mode works without signing in: on the home screen tap "Practice" under the Race card.
+- For races, the daily challenge, duels and rooms: tap "Sign in" and choose "Play as guest" (type any name), or use Sign in with Apple. Google sign-in is also offered.
+- Race: home screen > "Start a race" > choose a map and question type > Start. 10 questions, 120 seconds.
+- Daily challenge: the flame (🔥) badge in the header.
+- Duel / Room: "With friends" card > "Create duel" or "Create room" creates a 6-character code; another player enters it in the "Got a code?" field on the same card. A second device is needed to play a duel against someone, but creating one works with a single device.
+- Profile: tap the profile picture (top right) > "My profile". Account deletion: profile picture > "Delete account" > "Delete my account". Deletion is permanent and removes all of the player's data.
+- Language: the app follows the device language (English or Turkish) and can be changed in the account menu.
+
+4. External services
+- Supabase (supabase.com): database, authentication and realtime updates for leaderboards, duels and rooms.
+- Sign in with Apple: optional sign-in on iOS.
+- Google Sign-In (Google OAuth through Supabase): optional sign-in, opened in the system browser.
+- Vercel: hosts our website haritaavcisi.com (privacy policy, terms). The app itself does not load content from it.
+The app uses no AI services, payment processors, advertising, analytics or tracking SDKs. All maps and flags are bundled in the app.
+
+5. Regional differences
+The app works the same in all regions. All modes and features are available everywhere. The interface is available in English and Turkish, chosen automatically from the device language. One of the maps is a map of Türkiye's 81 provinces; it is available to all players like the world map.
+
+6. Regulated industry / third-party material
+The app does not operate in a regulated industry. The only third-party material is openly licensed and credited in the app's Terms of Use (profile picture or account menu > "Terms"):
+- Map of Türkiye: dnomak/svg-turkiye-haritasi (MIT licence)
+- World map: flekschas/simple-world-map (CC BY-SA 3.0)
+- Flags: lipis/flag-icons (MIT licence)
+- Heading font: Stack Sans Notch (SIL Open Font License 1.1)
+
+Thank you,
+Doğan Oğultürk
+```
+
 ## Durum (1 Kasım 2026)
 
 App Store Connect'te girildi (tarayıcıdan, 1 Kasım):
@@ -212,7 +284,8 @@ ile yayına alınır.
 
 Sıradaki:
 
-1. İnceleme sonucu (genelde 1–2 gün). Ret gelirse gerekçesi App Store Connect → Resolution Center'da; olası
+1. 2 Kasım'ta Apple "Guideline 2.1 - Information Needed" ile ekran kaydı ve bilgi istedi (yukarıdaki "İnceleme
+   yanıtı"). Kayıt çekilip yanıt gönderilince inceleme sürer. İnceleme sonucu (genelde 1–2 gün). Ret gelirse gerekçesi App Store Connect → Resolution Center'da; olası
    konular README'deki "App Store incelemesinde istenirse" başlığında.
 2. Onaydan sonra yayın tarihi seçilir; Android'in üretime geçişiyle aynı haftaya denk getirilmez.
 3. README'de "Nerede oynanır" ve yol haritası App Store'a çıkınca güncellenir.
