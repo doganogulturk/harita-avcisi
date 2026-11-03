@@ -221,44 +221,47 @@ Uygulama içi satın alma yok; bu kısım kayıtta yer almaz.
 
 ### Yanıt metni
 
+App Store Connect'in yanıt alanı 4000 karakterle sınırlı; metin satır sonları dahil yaklaşık 3500 karakter.
+
 ```
 Hello,
 
-Thank you for reviewing Harita Avcısı. Please find the requested information below. The attached screen recording was captured on a physical iPhone running the latest iOS version, using the submitted build (1.1.1 (2)).
+Thank you for reviewing Harita Avcısı. The attached screen recording was captured on a physical iPhone running the latest iOS, using the submitted build 1.1.1 (2).
 
 1. Screen recording
-The recording starts by launching the app from the Home Screen and shows: practice mode without an account, account creation (guest sign-in), a ranked race and the leaderboard, the daily challenge, creating a duel with friends, the profile page, the in-app legal pages, account deletion, and Sign in with Apple followed by deleting that account as well.
-The app has no in-app purchases, no paid content, no ads and no chat or messaging. The only text a player enters is a display name (max. 30 characters), which is shown on leaderboards and in duels/rooms. Our Terms of Use prohibit offensive names, and players can contact us at doganogulturk@gmail.com to report a name; we remove reported names.
+It starts by launching the app from the Home Screen and shows: practice without an account, account creation (guest sign-in), a ranked race and the leaderboard, the daily challenge, creating a duel, the profile, the legal pages, account deletion, and Sign in with Apple followed by deleting that account too.
+There are no in-app purchases, paid content, ads, chat or messaging. The only text a player enters is a display name (max. 30 characters), shown on leaderboards and in duels/rooms. Our Terms of Use prohibit offensive names; players can report a name to doganogulturk@gmail.com and we remove reported names.
 
 2. Purpose and target audience
-Harita Avcısı ("Map Hunter") is a geography quiz game. The app names a Turkish province, a Turkish licence plate code, a country, a flag or a capital city, and the player taps the correct place on the map. It is for anyone who wants to learn geography in a fun way: students, quiz fans and casual players of all ages. It solves a simple problem: maps are hard to memorise from a book. The game teaches through short timed rounds, shows the tapped place's name after a wrong answer, zooms in on small countries and gives a question-by-question review after each round. Players can race on global leaderboards, play a daily challenge (the same 10 questions for everyone each day), earn badges, or play duels and rooms with friends using a short invite code.
+Harita Avcısı ("Map Hunter") is a geography quiz game. The app names a Turkish province, a Turkish licence plate code, a country, a flag or a capital, and the player taps the right place on the map. It is for anyone who wants to learn geography in a fun way: students, quiz fans and casual players of all ages. Maps are hard to memorise from a book; the game teaches through short rounds, names the tapped place after a wrong answer, zooms in on small countries and reviews each round question by question. Players can race on leaderboards, play a daily challenge (the same 10 questions for everyone each day), earn badges, or play duels and rooms with friends using an invite code.
 
 3. How to access the features
-No demo account is needed and no setup is required.
-- Practice mode works without signing in: on the home screen tap "Practice" under the Race card.
-- For races, the daily challenge, duels and rooms: tap "Sign in" and choose "Play as guest" (type any name), or use Sign in with Apple. Google sign-in is also offered.
-- Race: home screen > "Start a race" > choose a map and question type > Start. 10 questions, 120 seconds.
-- Daily challenge: the flame (🔥) badge in the header.
-- Duel / Room: "With friends" card > "Create duel" or "Create room" creates a 6-character code; another player enters it in the "Got a code?" field on the same card. A second device is needed to play a duel against someone, but creating one works with a single device.
-- Profile: tap the profile picture (top right) > "My profile". Account deletion: profile picture > "Delete account" > "Delete my account". Deletion is permanent and removes all of the player's data.
-- Language: the app follows the device language (English or Turkish) and can be changed in the account menu.
+No demo account or setup is needed.
+- Practice works without signing in: home screen > "Practice" under the Race card.
+- Races, daily challenge, duels and rooms: tap "Sign in" > "Play as guest" (any name), or Sign in with Apple. Google sign-in is also offered.
+- Race: home screen > "Start a race" > choose map and question type > Start. 10 questions, 120 seconds.
+- Daily challenge: the flame badge in the header.
+- Duel / Room: "With friends" card > "Create duel" or "Create room" gives a 6-character code; another player enters it in "Got a code?" on the same card. Playing a duel needs a second device; creating one does not.
+- Profile: profile picture (top right) > "My profile".
+- Account deletion: profile picture > "Delete account" > "Delete my account". It permanently removes all of the player's data.
+- Language: follows the device (English or Turkish); can be changed in the account menu.
 
 4. External services
-- Supabase (supabase.com): database, authentication and realtime updates for leaderboards, duels and rooms.
-- Sign in with Apple: optional sign-in on iOS.
-- Google Sign-In (Google OAuth through Supabase): optional sign-in, opened in the system browser.
-- Vercel: hosts our website haritaavcisi.com (privacy policy, terms). The app itself does not load content from it.
-The app uses no AI services, payment processors, advertising, analytics or tracking SDKs. All maps and flags are bundled in the app.
+- Supabase: database, authentication and realtime updates.
+- Sign in with Apple: optional sign-in.
+- Google Sign-In (OAuth via Supabase): optional sign-in in the system browser.
+- Vercel: hosts our website haritaavcisi.com (privacy policy, terms); the app loads no content from it.
+No AI services, payment processors, ads, analytics or tracking SDKs. All maps and flags are bundled in the app.
 
 5. Regional differences
-The app works the same in all regions. All modes and features are available everywhere. The interface is available in English and Turkish, chosen automatically from the device language. One of the maps is a map of Türkiye's 81 provinces; it is available to all players like the world map.
+The app works the same in all regions; all modes and features are available everywhere. The interface is in English and Turkish, chosen from the device language. The map of Türkiye's 81 provinces is available to all players, like the world map.
 
 6. Regulated industry / third-party material
-The app does not operate in a regulated industry. The only third-party material is openly licensed and credited in the app's Terms of Use (profile picture or account menu > "Terms"):
-- Map of Türkiye: dnomak/svg-turkiye-haritasi (MIT licence)
+Not a regulated industry. The only third-party material is openly licensed and credited in the Terms of Use (account menu > "Terms"):
+- Map of Türkiye: dnomak/svg-turkiye-haritasi (MIT)
 - World map: flekschas/simple-world-map (CC BY-SA 3.0)
-- Flags: lipis/flag-icons (MIT licence)
-- Heading font: Stack Sans Notch (SIL Open Font License 1.1)
+- Flags: lipis/flag-icons (MIT)
+- Heading font: Stack Sans Notch (SIL OFL 1.1)
 
 Thank you,
 Doğan Oğultürk
