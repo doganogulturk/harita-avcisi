@@ -24,7 +24,16 @@ const LOGO_SIZES = {
  * Oyunun adı ve nişangah rozeti. Giriş ekranında açılış animasyonuyla belirir; animasyon sınıfları
  * yalnızca data-intro taşıyan bir kapsayıcının içinde çalıştığı için başka ekranlarda durağandır.
  */
-export function Logo({ size = "header", isHeading = true }: { size?: keyof typeof LOGO_SIZES; isHeading?: boolean }) {
+export function Logo({
+  size = "header",
+  isHeading = true,
+  onDark = false,
+}: {
+  size?: keyof typeof LOGO_SIZES;
+  isHeading?: boolean;
+  /** Koyu deniz zemininde (ana ekran, sonuç ekranı): ad beyaz, rozet yarı saydam. */
+  onDark?: boolean;
+}) {
   const style = LOGO_SIZES[size];
   const Tag = isHeading ? "h1" : "span";
   const subtitle = messages().brand.subtitle;
@@ -32,7 +41,7 @@ export function Logo({ size = "header", isHeading = true }: { size?: keyof typeo
     <Tag className={`flex items-center ${style.row}`}>
       <span
         aria-hidden="true"
-        className={`intro-lock flex shrink-0 items-center justify-center bg-cyan-50 text-cyan-700 ${style.badge}`}
+        className={`intro-lock flex shrink-0 items-center justify-center ${onDark ? "bg-white/10 text-cyan-300 ring-1 ring-white/15" : "bg-cyan-50 text-cyan-700"} ${style.badge}`}
       >
         {/* Nişangah: "avcı" ve haritada bir yeri hedefleme. */}
         <svg className={style.icon} fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={2} viewBox="0 0 24 24">
@@ -42,11 +51,11 @@ export function Logo({ size = "header", isHeading = true }: { size?: keyof typeo
         </svg>
       </span>
       <span className="intro-reveal flex flex-col">
-        <span className={`font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap text-slate-900 ${style.text}`}>
-          harita <span className="text-cyan-700">avcısı</span>
+        <span className={`font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap ${onDark ? "text-white" : "text-slate-900"} ${style.text}`}>
+          harita <span className={onDark ? "text-cyan-300" : "text-cyan-700"}>avcısı</span>
         </span>
         {/* İngilizce arayüzde adın altında küçük İngilizce karşılığı; marka Türkçe kalır. */}
-        {subtitle && <span className={`font-bold tracking-[0.2em] whitespace-nowrap text-slate-400 uppercase ${style.subtitle}`}>{subtitle}</span>}
+        {subtitle && <span className={`font-bold tracking-[0.2em] whitespace-nowrap uppercase ${onDark ? "text-cyan-100/60" : "text-slate-400"} ${style.subtitle}`}>{subtitle}</span>}
       </span>
     </Tag>
   );

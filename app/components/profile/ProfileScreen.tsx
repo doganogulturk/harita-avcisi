@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AccountMenu } from "../AccountMenu";
 import { BottomSheet } from "../BottomSheet";
 import { DuelAvatar } from "../duel/DuelParts";
-import { Logo } from "../Logo";
+import { HomeButton } from "../HomeButton";
 import { PlayerAvatar } from "../PlayerBadge";
 import { BADGE_GROUPS, BADGES, useBadges, type BadgeInfo, type BadgeState } from "@/lib/badges";
 import { DUEL_RULES, duelModeLabel } from "@/lib/duel";
@@ -292,8 +290,7 @@ function ProfileContent({ profile }: { profile: Profile }) {
  * çıkışta ya da cihaz değişince kaybolacağı söylenir.
  */
 export function ProfileScreen() {
-  const router = useRouter();
-  const [player, setPlayer, isPlayerLoaded] = usePlayer();
+  const [player, , isPlayerLoaded] = usePlayer();
   const profile = useProfile(player);
   const badges = useBadges(player);
   const text = messages().profile;
@@ -304,19 +301,10 @@ export function ProfileScreen() {
     void getSupabaseClient()?.auth.getSession().then(({ data }) => setProvider(data.session?.user.app_metadata.provider ?? null));
   }, [player]);
 
-  const signOut = async () => {
-    await getSupabaseClient()?.auth.signOut();
-    setPlayer(null);
-    router.push("/");
-  };
-
   return (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
-      <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-        <Link aria-label={text.homeLink} href="/">
-          <Logo isHeading={false} />
-        </Link>
-        <AccountMenu onSignOut={() => void signOut()} player={player} />
+      <header className="flex shrink-0 items-center gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
+        <HomeButton href="/" label={text.homeLink} />
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 lg:px-8 lg:py-5">

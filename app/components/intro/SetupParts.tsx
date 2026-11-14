@@ -1,13 +1,21 @@
 "use client";
 
-import Image from "next/image";
 import { createContext, useContext } from "react";
-import { CornerTab } from "../CornerTab";
 import { SetupPreviewMap } from "../MapDemo";
-import { flagUrl, type GameMode, type QuestionPrompt } from "@/lib/game";
+import { BOARDS, type BoardId, type QuestionPrompt } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type WorldScope } from "@/lib/world-countries";
 import { GameIcon, type GameInfo } from "./games";
+import { ModeTiles, type ModeBoard } from "./ModeTiles";
+import { type IntroGame } from "@/lib/intro-preferences";
+
+/** Ayar ekranının büyük başlatma tuşu, oyunun renginde; altındaki kenar (--press-edge) tuşu basılabilir gösterir. */
+const START_BUTTON: Record<IntroGame, { color: string; edge: string }> = {
+  ranked: { color: "bg-emerald-500 text-white", edge: "#047857" },
+  practice: { color: "bg-amber-400 text-amber-950", edge: "#b45309" },
+  duel: { color: "bg-orange-500 text-white", edge: "#c2410c" },
+  room: { color: "bg-violet-600 text-white", edge: "#4c1d95" },
+};
 
 /** Seçili seçeneğin rengi oyunun rengini izler; SetupShell içindeki seçiciler buradan okur. */
 const SelectedClass = createContext("border-cyan-600 bg-cyan-600 text-white");
@@ -15,12 +23,9 @@ const SelectedClass = createContext("border-cyan-600 bg-cyan-600 text-white");
 type SetupShellProps = {
   /** Oyun (Yarış, Antrenman, Düello, Oda); başlık, simge, renkler ve künye ondan gelir. */
   game: GameInfo;
-  map: GameMode;
-  onMapChange: (map: GameMode) => void;
-  /** Soru tipi ya da mod (İsim / Bayrak / Başkent, İsim / Plaka). */
-  modes: { id: string; label: string }[];
-  mode: string;
-  onModeChange: (mode: string) => void;
+  /** Seçili mod (harita ve soru tipi birlikte: İller, Plakalar, Ülkeler, Bayraklar, Başkentler). */
+  board: BoardId;
+  onBoardChange: (board: ModeBoard) => void;
   /** Önizlemede sorulan soru tipi ve vurgulanan kapsam (kıta seçilmedikçe vurgu yok). */
   previewPrompt: QuestionPrompt;
   previewScope?: WorldScope;
@@ -41,11 +46,8 @@ type SetupShellProps = {
  */
 export function SetupShell({
   game,
-  map,
-  onMapChange,
-  modes,
-  mode,
-  onModeChange,
+  board,
+  onBoardChange,
   previewPrompt,
   previewScope = "all",
   onBack,
@@ -56,6 +58,7 @@ export function SetupShell({
   onAction,
   children,
 }: SetupShellProps) {
+  const map = BOARDS.find((candidate) => candidate.id === board)?.mode ?? "turkey";
   return (
     <SelectedClass.Provider value={game.theme.selected}>
       {/* Dikey ekranda (telefon ya da tablet) harita kartı ve ayarlar alt alta durur; ayarlar uzunsa ekran kayar, harita ezilmez. */}
@@ -84,34 +87,39 @@ export function SetupShell({
             </div>
           </div>
 
-          {/* Alçak (yatay telefon) ekranda harita ve soru tipi yan yana; önizlemeye yer kalsın. */}
-          <div className="flex shrink-0 flex-col gap-2 short:grid short:grid-cols-2 short:gap-1.5">
-            <TabSelector
-              label={messages().setup.map}
-              onChange={onMapChange}
-              options={MAP_IDS.map((id) => ({ id, label: messages().setup.maps[id], icon: <MapIcon map={id} /> }))}
-              value={map}
-            />
-            <TabSelector label={messages().setup.promptType} onChange={onModeChange} options={modes} size="sm" value={mode} />
+          {/* Harita ve soru tipi tek seçimde: beş küçük mod karosu. */}
+          <div className="shrink-0">
+            <ModeTiles isCompact onPick={onBoardChange} selected={board} />
           </div>
 
           {/* Harita dar ekranlarda üstte kalır; ezilmemesi için kendi asgari yüksekliği var. Soru tipinin ne demek olduğu
               haritanın sol alt köşesinde (denizde) kısa bir not olarak durur. */}
-          <div className="relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden short:min-h-[6rem] side:min-h-0">
+          <div className="map-sea relative flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden rounded-2xl p-2 short:min-h-[6rem] side:min-h-0">
             <SetupPreviewMap mode={map} prompt={previewPrompt} scope={previewScope} />
-            <p className="pointer-events-none absolute bottom-0 left-0 max-w-[85%] rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-sm lg:px-3 lg:py-1 lg:text-sm">
+            <p className="pointer-events-none absolute bottom-2 left-2 max-w-[85%] rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-sm lg:px-3 lg:py-1 lg:text-sm">
               {(messages().setup.notes[map] as Partial<Record<QuestionPrompt, string>>)[previewPrompt] ?? ""}
             </p>
           </div>
         </div>
 
-        {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Eylem tuşu giriş kartlarındaki gibi
-            panelin sağ üst köşesinden içeri kıvrılan sekmedir. */}
+        {/* Yatay telefonda ekranın büyük kısmı ayarlara ayrılır, seçiciler rahat sığar. Büyük başlatma tuşu panelin en
+            üstünde durur: dikey telefonda da kaydırmadan görünür. */}
         <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white side:w-[44%] side:lg:w-[24rem] side:xl:w-[26rem]">
-          <div className="flex shrink-0 items-start justify-between gap-3">
-            <p className="pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2.5 short:pl-3 lg:pt-5 lg:pl-7">{messages().setup.settings}</p>
-            <CornerTab colorClass={game.theme.badge} disabled={isActionDisabled} fillClass={game.theme.badgeFill} label={actionLabel} onClick={onAction} />
+          <div className="shrink-0 px-3 pt-3 pb-1.5 short:px-2.5 short:pt-2.5 lg:px-5 lg:pt-5">
+            <button
+              className={`press flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl py-3 font-display text-2xl font-bold uppercase tracking-wide focus-visible:ring-4 focus-visible:ring-cyan-200 focus-visible:outline-none disabled:cursor-wait disabled:opacity-60 short:py-2 short:text-xl lg:py-4 lg:text-3xl ${START_BUTTON[game.id].color}`}
+              disabled={isActionDisabled}
+              onClick={onAction}
+              style={{ "--press-edge": START_BUTTON[game.id].edge } as React.CSSProperties}
+              type="button"
+            >
+              <svg aria-hidden="true" className="h-6 w-6 lg:h-8 lg:w-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2Z" />
+              </svg>
+              {actionLabel}
+            </button>
           </div>
+          <p className="shrink-0 pt-3 pl-4 text-xs font-bold tracking-[0.15em] text-slate-400 uppercase short:pt-2 short:pl-3 lg:pt-5 lg:pl-7">{messages().setup.settings}</p>
 
           <div className="flex min-h-0 flex-1 flex-col px-4 pt-3 pb-4 short:px-3 short:pt-2 short:pb-3 lg:px-7 lg:pt-4 lg:pb-7">
             {/* Ayarlar taşarsa kendi içinde kayar. */}
@@ -140,66 +148,6 @@ function BackButton({ onClick }: { onClick: () => void }) {
         <path d="M19 12H5M11 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>
-  );
-}
-
-const MAP_IDS: GameMode[] = ["turkey", "world"];
-
-function MapIcon({ map }: { map: GameMode }) {
-  if (map === "turkey") {
-    return <Image alt="" className="h-4 w-auto rounded-[2px] shadow-sm" height={16} src={flagUrl("tr")} unoptimized width={21} />;
-  }
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
-    </svg>
-  );
-}
-
-const TAB_SIZES = {
-  md: "py-1.5 font-display text-base short:py-1 short:text-sm lg:py-2 lg:text-lg",
-  sm: "py-1.5 text-sm short:py-1 short:text-xs lg:py-2 lg:text-base",
-};
-
-/** Eşit parçalı seçici: harita ve soru tipi. Seçili parça beyaz kartla öne çıkar. */
-function TabSelector<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-  size = "md",
-}: {
-  label: string;
-  options: { id: T; label: string; icon?: React.ReactNode }[];
-  value: T;
-  onChange: (value: T) => void;
-  size?: keyof typeof TAB_SIZES;
-}) {
-  return (
-    <div
-      aria-label={label}
-      className="grid shrink-0 gap-1 rounded-2xl bg-slate-100 p-1"
-      role="radiogroup"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
-    >
-      {options.map((option) => (
-        <button
-          aria-checked={value === option.id}
-          className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-1 font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none ${TAB_SIZES[size]} ${
-            value === option.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
-          }`}
-          key={option.id}
-          onClick={() => onChange(option.id)}
-          role="radio"
-          type="button"
-        >
-          {/* Alçak ekranda seçiciler yan yana daralır; simge yazıya yer bırakır. */}
-          {option.icon && <span className="flex shrink-0 short:hidden">{option.icon}</span>}
-          <span className="truncate">{option.label}</span>
-        </button>
-      ))}
-    </div>
   );
 }
 

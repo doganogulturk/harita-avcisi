@@ -25,10 +25,11 @@ meydan okuması** var.
 - **Türkçe ve İngilizce:** Oyun cihazın diliyle açılır, hesap menüsünden değiştirilebilir. Ülke ve başkent adları,
   rozetler, paylaşım metinleri, sunucu mesajları ve yasal sayfalar da iki dilde (KVKK metninin İngilizcesi bilgi amaçlı
   çeviri; esas metin Türkçe).
-- **Sade ana ekran:** Yarış kartı, altında ince bir Antrenman şeridi ve Arkadaşlarımla kartı; oyun kartın alt köşesindeki
-  sekmeyle (Yarışa başla, Antrenman yap; Arkadaşlarımla kartında Düello ve Oda yan yana) tek dokunuşla açılır. Davet kodu doğrudan Arkadaşlarımla kartına yazılır; kodun düello mu oda
-  mı olduğunu oyun kendisi bulur. Ayar ekranında oyun, harita ve soru tipi alt alta durur; altında seçimlere göre
-  haritada canlı bir önizleme döner ("🏛️ Kanberra hangi ülke?" → Avustralya yeşil yanar).
+- **Oyun gibi açılan ana ekran:** Koyu deniz zemininde büyük yeşil **OYNA** tuşu, altında liderler ve Antrenman, Düello,
+  Oda için üç renkli karo; tuşlar basılabilir oyun tuşları. Davet kodu "Kodun var mı?" satırına dokununca açılan alana yazılır;
+  kodun düello mu oda mı olduğunu oyun kendisi bulur. Yarış ve Antrenman'da beş mod (İller, Plakalar, Ülkeler,
+  Bayraklar, Başkentler) renkli karolardır; karoya dokununca tur hemen başlar. Düello ve Oda'da aynı karolarla mod seçilir,
+  yanında seçime göre haritada canlı bir önizleme döner ("🏛️ Kanberra hangi ülke?" → Avustralya yeşil yanar).
 - **Başkentler:** Ekrana başkent gelir, sen ülkesini bulursun; cevaptan sonra ülkenin adı da yazar. 174 ülke (başkenti
   tartışmalı olanlar ve bağlı topraklar yok), Türkçe yazımla (Pekin, Moskova, Varşova).
 - **Günün meydan okuması:** Her gün beş mod için herkese aynı 10 soru, günde bir hak, günlük sıralama, gün serisi ve
@@ -38,6 +39,11 @@ meydan okuması** var.
 - **Profil:** Yarış özeti, rozetler, düello galibiyet ve mağlubiyetleri (kiminle, hangi modda, ne zaman), sıralamalardaki
   yerin ve son turların. Profili yalnızca sen görürsün.
 - **Adil sıralama:** Yarışın soruları sunucuda seçilir ve skor bu sorulara göre doğrulanır; süreyi de sunucu ölçer.
+- **Oyun hissi:** Harita denizde kum renginde; üstte koyu oyun göstergesi, beyaz soru kartı, kalın süre çubuğu (son 10
+  saniyede yanıp söner, tıklar), kaçıncı soruda olduğunu gösteren soru akışı çubuğu ve 🔥 seri rozeti. Yanlış cevapta
+  dokunulan yerin adı haritanın altında çarpıyla yazar. Doğru cevapta dokunulan yerden "+1" uçar. Kısa ses efektleri (doğru,
+  yanlış, seri, bitiş; ses dosyası yok, Web Audio ile üretilir) hesap menüsünden kapatılabilir. Sonuçta 1–3 yıldız,
+  kusursuz turda konfeti.
 - **Öğreten harita:** Yanlış cevapta tıklanan yerin adı yazar; doğru yer küçükse (Malta, Dominika) harita oraya
   yakınlaşır. Tur sonunda soru soru döküm görünür.
 - **Telefonda dikey ve yatay:** Bütün ekranlar ve oyunlar dikeyde de oynanır. Dikeyde ilk oyundan önce yan çevirmeyi

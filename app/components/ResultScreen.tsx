@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Leaderboard } from "./Leaderboard";
-import { Logo } from "./Logo";
 import { MostMissed } from "./MostMissed";
 import { NewBadges } from "./NewBadges";
-import { AccountMenu } from "./AccountMenu";
 import { RoundReview } from "./RoundReview";
+import { RoundCelebration } from "./RoundCelebration";
 import { boardOf, dailyShareText, useDailyLeaderboards, useDailyStatus } from "@/lib/daily";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { ShareScoreButton } from "./ShareScoreButton";
@@ -55,7 +54,6 @@ type ResultScreenProps = {
   /** Oynanan oyunun (Yarış ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
   onChooseAnother: () => void;
   onHome: () => void;
-  onSignOut: () => void;
 };
 
 /** Giriş ekranındaki kartlarla aynı çerçeve. */
@@ -77,26 +75,14 @@ const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 upp
  * Yatay telefonda da iki sütundur. Dikey telefonda her şey tek sütunda alt alta gelir ve sayfa kayar.
  */
 function ResultShell({
-  player,
-  onSignOut,
-  onHome,
   aside,
   children,
 }: {
-  player: Player | null;
-  onSignOut: () => void;
-  onHome: () => void;
   aside: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-3 short:gap-2 short:py-2 md:overflow-hidden lg:gap-5 lg:px-8 lg:py-5">
-      <header className="flex shrink-0 items-center justify-between gap-3">
-        <button aria-label={messages().menu.home} className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={onHome} type="button">
-          <Logo isHeading={false} />
-        </button>
-        <AccountMenu onSignOut={onSignOut} player={player} />
-      </header>
       {/* Dikey telefonda tek sütun içerikle genişlemez (minmax(0,1fr)); uzun yer adı sayfayı ekrandan taşırmaz. */}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:min-h-0 md:flex-1 md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         {aside}
@@ -128,7 +114,7 @@ function SummaryHeading({ eyebrow, title }: { eyebrow: string; title: string }) 
 
 /** Paylaş tuşunun yanında yarım genişlikte duran asıl tuş: yazısı ve iç boşluğu daha küçük. */
 const COMPACT_PRIMARY_CLASS =
-  "flex w-full items-center justify-center gap-1.5 rounded-2xl bg-cyan-600 px-3 py-3 text-base font-bold whitespace-nowrap text-white shadow-lg shadow-cyan-600/20 transition-all duration-200 hover:gap-2.5 hover:bg-cyan-500 active:scale-[0.98] focus-visible:ring-4 focus-visible:ring-cyan-200 focus-visible:outline-none short:py-2.5";
+  "press flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-emerald-500 px-3 py-3 text-base font-bold whitespace-nowrap text-white [--press-edge:#047857] focus-visible:ring-4 focus-visible:ring-emerald-200 focus-visible:outline-none short:py-2.5";
 
 function PrimaryButton({ label, onClick, isCompact = false }: { label: string; onClick: () => void; isCompact?: boolean }) {
   return (
@@ -203,7 +189,6 @@ export function ResultScreen({
   onPlay,
   onChooseAnother,
   onHome,
-  onSignOut,
 }: ResultScreenProps) {
   if (choice.daily) {
     return (
@@ -214,7 +199,6 @@ export function ResultScreen({
         durationMs={durationMs}
         onHome={onHome}
         onRetrySave={onRetrySave}
-        onSignOut={onSignOut}
         player={player}
         questionCount={questionCount}
         saveResult={saveResult}
@@ -236,7 +220,6 @@ export function ResultScreen({
         onChooseAnother={onChooseAnother}
         onHome={onHome}
         onPlay={onPlay}
-        onSignOut={onSignOut}
         player={player}
         score={score}
       />
@@ -252,9 +235,9 @@ export function ResultScreen({
 
   return (
     <ResultShell
-      onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
+            <RoundCelebration score={score} total={questionCount} />
             <SummaryHeading eyebrow={choiceLabel(choice)} title={text.roundDone} />
 
             {/* Skor solda, en uzun seri ve süre sağında alt alta. */}
@@ -294,8 +277,6 @@ export function ResultScreen({
             </div>
           </aside>
       }
-      onSignOut={onSignOut}
-      player={player}
     >
       <section className={RESULT_CARD}>
         <Leaderboard
@@ -332,7 +313,6 @@ type PracticeResultProps = {
   onPlay: (choice: PlayChoice) => void;
   onChooseAnother: () => void;
   onHome: () => void;
-  onSignOut: () => void;
 };
 
 /**
@@ -352,7 +332,6 @@ function PracticeResult({
   onPlay,
   onChooseAnother,
   onHome,
-  onSignOut,
 }: PracticeResultProps) {
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
   // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın 179 ülkelik sıralamasına düşer).
@@ -361,9 +340,9 @@ function PracticeResult({
 
   return (
     <ResultShell
-      onHome={onHome}
       aside={
           <aside className={SUMMARY_CARD}>
+            <RoundCelebration score={score} total={answeredCount} />
             <SummaryHeading eyebrow={choiceLabel(choice)} title={text.practiceDone} />
 
             <div className={SCORE_ROW}>
@@ -405,8 +384,6 @@ function PracticeResult({
             </div>
           </aside>
       }
-      onSignOut={onSignOut}
-      player={player}
     >
       <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
     </ResultShell>
@@ -424,7 +401,6 @@ type DailyResultProps = {
   saveResult: SaveResult | null;
   onRetrySave: () => void;
   onHome: () => void;
-  onSignOut: () => void;
 };
 
 /**
@@ -432,7 +408,7 @@ type DailyResultProps = {
  * tuşu; sağda günün sıralaması. Meydan okuma günde bir kez oynandığı için "Tekrar oyna" yoktur; ana menüde diğer
  * meydan okumalar beklenir. Sıra ve seri, sonuç kaydedildikten sonra sunucudan gelir.
  */
-function DailyResult({ player, choice, score, questionCount, bestStreak, durationMs, answerRecords, saveResult, onRetrySave, onHome, onSignOut }: DailyResultProps) {
+function DailyResult({ player, choice, score, questionCount, bestStreak, durationMs, answerRecords, saveResult, onRetrySave, onHome }: DailyResultProps) {
   const boardId = boardIdFor(choice);
   const [shownBoard, setShownBoard] = useState<BoardId>(boardId);
   const status = useDailyStatus(player, saveResult);
@@ -443,9 +419,9 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
 
   return (
     <ResultShell
-      onHome={onHome}
       aside={
         <aside className={SUMMARY_CARD}>
+          <RoundCelebration score={score} total={questionCount} />
           <SummaryHeading eyebrow={choiceLabel(choice)} title={text.dailyDone} />
 
           <div className={SCORE_ROW}>
@@ -473,8 +449,6 @@ function DailyResult({ player, choice, score, questionCount, bestStreak, duratio
           </div>
         </aside>
       }
-      onSignOut={onSignOut}
-      player={player}
     >
       <section className={RESULT_CARD}>
         <Leaderboard

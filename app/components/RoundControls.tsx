@@ -13,7 +13,7 @@ type RoundControlsProps = {
 
 /** İki kontrol tek bir çerçeveyi paylaşır; aralarındaki çizgi ayırıcıdır. */
 const SEGMENT_CLASS =
-  "hit-area-y flex h-7 items-center text-slate-600 transition hover:bg-slate-100 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-inset focus-visible:outline-none lg:h-8";
+  "hit-area-y flex h-7 items-center text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-inset focus-visible:outline-none lg:h-8";
 
 const ITEM_CLASS =
   "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none disabled:text-slate-400 disabled:hover:bg-transparent";
@@ -46,7 +46,7 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
   }, [isOpen]);
 
   return (
-    <div className="flex shrink-0 items-center rounded-full border border-slate-200">
+    <div className="flex shrink-0 items-center rounded-full border border-white/25">
       <button
         aria-label={messages().game.restartRound}
         className={`${SEGMENT_CLASS} w-7 justify-center rounded-l-full lg:w-8`}
@@ -63,7 +63,7 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
         <button
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          className={`${SEGMENT_CLASS} gap-1.5 rounded-r-full border-l border-slate-200 px-2.5 text-xs font-bold lg:px-3 lg:text-sm`}
+          className={`${SEGMENT_CLASS} gap-1.5 rounded-r-full border-l border-white/25 px-2.5 text-xs font-bold lg:px-3 lg:text-sm`}
           onClick={() => setIsOpen((open) => !open)}
           type="button"
         >

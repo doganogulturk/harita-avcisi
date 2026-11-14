@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GameMap, nextQuestionCountdown, streakCelebration, wrongPickNotice } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
+import { DarkSystemBars } from "./components/NativeSystemBars";
 import { IntroScreen } from "./components/IntroScreen";
 import { PlayTips } from "./components/PlayTips";
 import { ResultScreen } from "./components/ResultScreen";
@@ -320,7 +321,8 @@ export default function Home() {
   const countdown = nextQuestionCountdown(answerState, round.remainingQuestionSeconds, !isPractice && questionIndex === questions.length - 1);
 
   return (
-    <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
+    <main className="safe-area sea-backdrop flex h-[100dvh] flex-col text-slate-900">
+      <DarkSystemBars />
       {/* Her ekran kendi kenar boşluklarını yönetir ve ekranın tamamını kullanır. */}
       <div className="flex min-h-0 w-full flex-1 flex-col">
         {phase === "ready" ? (
@@ -363,18 +365,16 @@ export default function Home() {
             onChooseAnother={chooseAnother}
             onHome={goHome}
             onPlay={play}
-            onSignOut={signOut}
             playedBoardId={playedBoardId}
             player={player}
             questionCount={questions.length}
             score={score}
           />
         ) : (
-          <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <GameTopBar
               celebration={celebration}
               countdown={countdown}
-              wrongPick={wrongPick}
               answers={answers}
               answerState={answerState}
               choice={choice}

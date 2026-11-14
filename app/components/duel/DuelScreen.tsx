@@ -3,8 +3,7 @@
 import { messages } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Logo } from "../Logo";
-import { AccountMenu } from "../AccountMenu";
+import { HomeButton } from "../HomeButton";
 import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
 import { duelPath, type DuelSettings } from "@/lib/duel";
@@ -62,18 +61,9 @@ export function DuelScreen({ code }: { code: string }) {
   // Android geri tuşu oyun sırasında çıkış tuşuyla aynı işi yapar (onay sorar); lobide ve sonuçta geçmişte geri gidilir.
   useBackHandler(exitDuel, BACK_PRIORITY.screen, state?.status === "playing");
 
-  const signOut = async () => {
-    await getSupabaseClient()?.auth.signOut();
-    setPlayer(null);
-    goHome();
-  };
-
   const header = (
-    <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-      <button aria-label={messages().duel.homeLink} onClick={goHome} type="button">
-        <Logo isHeading={false} />
-      </button>
-      <AccountMenu onSignOut={signOut} player={player} />
+    <header className="flex shrink-0 items-center gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
+      <HomeButton label={messages().duel.homeLink} onClick={goHome} />
     </header>
   );
 

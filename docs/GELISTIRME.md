@@ -5,41 +5,53 @@ Oyunun ayrıntılı kuralları, kurulum, Supabase veri modeli ve mobil uygulama 
 
 ## Oyun
 
-Giriş ekranı iki adımlıdır. İlk adımda **Yarış** kartı, altında başlıksız ince bir **Antrenman** şeridi
-ve **Arkadaşlarımla** kartı (Düello ve Oda) durur. Geniş ekranda sol sütunda Yarış ve Antrenman, sağda iki satır boyunca
-Arkadaşlarımla; dikey telefonda üçü alt alta. Antrenman şeridinde solda tek satırlık bir not ("Süre yok. İstediğin kadar oyna."), sağ
-altta **Antrenman yap** sekmesi vardır; şerit 29rem'den darsa (telefonlarda) not kendi satırına, sekme onun altına geçer. Kartlar renkli çerçeveli, altında kalın renkli gölgeli, zemininde silik nokta deseni olan oyun kartlarıdır;
-başlığın yanında kartın simgesi renkli bir karoda durur. Kartın kendisine dokunmak bir şey yapmaz. Yarış kartında
-sağ alt köşede dolu renkli tek bir **Yarışa başla** sekmesi durur; Arkadaşlarımla kartında iki oyun kartın
-sol ve sağ alt köşesinden içeri kıvrılan ve kartın ortasında buluşan büyük sekmelerdir (`CornerTab`, `stretch`). Her biri
-kendi oyununun renginde (Yarış camgöbeği, Antrenman sarı, Düello turuncu, Oda mor), dış köşede dolu ve ortaya doğru
-şeffaflaşan bir gradyenle, oyunun simgesi ve adıyla durur. Sekme doğrudan o oyunun ayar ekranını açar; ara adım yoktur.
-Kartın canlı kısmı başlıkla sekmeler arasındaki boşlukta dikeyde ortalanır: Yarış kartında **👑 Liderler** panosu
-(Türkiye'nin ve Dünya'nın birincisi; harita simgesi, altın halkalı ve taçlı profil resmi, altın rozette skor ve süre) ve
-**Sıralamayı gör** bağlantısı; Arkadaşlarımla kartında hep açık duran kod alanı. Davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için
-kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa kartta yazar.
-Dikey telefonda kartlar alt alta durur ve ekranı doldurur ama içeriklerinden kısa olamaz; ekran yetmezse liste kayar.
+Ana ekran, oyun ve sonuç ekranı koyu bir deniz zemininde durur (`.sea-backdrop`); tuşlar altındaki kalın kenarla
+basılabilir oyun tuşlarıdır (`.press`, kenar rengi `--press-edge`), basınca kenarın içine iner. Bu sayfa açıkken iOS
+uygulamasında durum çubuğu yazıları açık renklidir, tarayıcı çubuğu deniz rengine boyanır (`DarkSystemBars`); düello, oda
+ve profil sayfaları açık zeminlidir.
+
+Giriş ekranı iki adımlıdır (`intro/ModeGrid.tsx`). İlk adımda en üstte büyük, yeşil ve hafifçe nabız gibi atan
+**OYNA** tuşu durur; altında yarışın kuralı tek satırda ("10 soru · 120 sn · sıralamaya gir"). OYNA yarışın mod ekranını
+açar. Altında **👑 Liderler** panosu (Türkiye'nin ve Dünya'nın birincisi; harita simgesi, altın halkalı ve taçlı profil
+resmi, altın rozette skor ve süre) ve **Sıralamayı gör** bağlantısı. **Diğer oyunlar** başlığının altında üç renkli
+karo yan yana durur: **Antrenman** (sarı), **Düello** (turuncu), **Oda** (mor); karo o oyunun ayar ekranını açar. En altta
+**🔑 Kodun var mı? Katıl →** satırı durur; dokununca kod alanı açılır: davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu
+için kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa alanın altında yazar.
+Geniş ve yatay ekranda iki sütundur: solda OYNA ve liderler, sağda karolar ve kod alanı.
+Ekran yetmezse (küçük telefon) liste kayar.
 400 pikselden dar ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Zeminde
-silik enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur,
-kartlar en fazla 36rem yüksekliğe uzar ve yazıları büyür. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
+silik enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur
+ve yazılar büyür. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
 kaplamaz; başlığın sağındaki hesap menüsündedir (`AccountMenu`): profil resmine (giriş yoksa kişi simgesine) dokununca
-açılır, içinde oyuncunun adı, tanıtımı yeniden açan **Nasıl oynanır?**, yasal sayfalar ve **Çıkış yap** durur. Aynı menü
-sonuç, düello ve oda ekranlarının başlığında da vardır; dikey telefonda da çıkış yapılabilir.
+açılır, içinde oyuncunun adı, tanıtımı yeniden açan **Nasıl oynanır?**, dil seçimi, ses efektlerini açıp kapatan
+**Ses açık / kapalı**, yasal sayfalar ve **Çıkış yap** durur. Logo ve hesap
+menüsü yalnızca ana ekranın başlığındadır: mod ve kurulum ekranlarında ← tuşu, sonuç ekranında **Ana menü** bağlantısı,
+düello ve oda lobisinde ve profilde sol üstteki ev tuşu (`HomeButton`) ana menüye döner. Yasal sayfalar logolu
+başlığını korur.
 
-İkinci adım dört oyunda da aynı düzendedir (`intro/SetupParts.tsx`). Solda üstte yuvarlak **←** tuşu ve ana ekranda
-seçilen oyunun adı ve simgesi (Yarış, Antrenman, Düello ya da Oda), altında iki seçici: harita (**Türkiye | Dünya**) ve
-soru tipi (Türkiye'de İsim / Plaka, dünyada İsim / Bayrak / Başkent). En altta bu seçimlerle
-dönen canlı önizleme durur: haritada soru çıkar ("🏛️ Kanberra hangi ülke?"), bir saniye sonra doğru yer yeşil yanar,
-sonraki soruya geçilir. Seçim değişince döngü o seçimin sorusuyla baştan başlar; antrenmanda seçilen kıta vurgulanır ve
-yalnızca o kıtadan sorulur. Önizleme, küçük haritada da görünsün diye büyük ve tanınır yerlerden sorar; hareket azaltma
-açıksa durur. "Nasıl oynanır?" demosuyla aynı bileşendir (`MapDemo.tsx`). Soru tipinin ne demek olduğu ("Başkent gelir,
-ülkesini bul") haritanın sol alt köşesinde kısa bir not olarak durur.
+İkinci adımda harita ve soru tipi ayrı ayrı seçilmez: beş mod tek seçimdir ve renkli karolarla gösterilir
+(`intro/ModeTiles.tsx`): **İller**, **Plakalar** (Türkiye), **Ülkeler**, **Bayraklar**, **Başkentler** (Dünya).
 
-Sağdaki panelin başlığı **Ayarlar**dır, eylem tuşu (**Başla**, **Düelloyu kur**, **Odayı kur**) panelin sağ üst köşesinden
-içeri kıvrılan sekmedir (`CornerTab`). Yarışta seçilecek ayar yoktur: panel soru tipinin ne olduğunu, kaç yerden
-sorulduğunu ve o sıralamanın birincisini söyler. Antrenmanda (dünyada) kapsam, düelloda kural, odada ad, tur sayısı, süre
-ve kişi sınırı vardır. Alçak (yatay telefon) ekranda harita ve soru tipi seçicileri yan yana durur, simgeleri gizlenir;
-ayarların etiketi solda, seçici sağda olur. Dikey telefonda harita kartı ekranın boş kalan yerini alır. Başlıktaki logo
+**Yarış ve Antrenman** (`intro/SoloSetup.tsx`) ayar paneli olmayan tek ekrandır: üstte **←** tuşu ve oyunun adı, altında
+iki bölüm: **Türkiye** (İller, Plakalar) ve **Dünya** (Ülkeler, Bayraklar, Başkentler); her bölümün başında bayrak ya da
+dünya simgesiyle bir başlık satırı. Karoya dokununca tur hemen başlar; seçilen mod hatırlanır. Dikey telefonda bölümler
+alt alta, karolar tam genişlikte büyük satırlardır (solda görsel, ortada ad ve kaç yerden sorulduğu, sağda yarışta o
+sıralamanın birincisi: üstte adı, altında puanı ve süresi). Alçak ve geniş ekranda iki bölüm yan yana durur (Dünya daha
+geniş sütunda), karolar kart olur: görsel üstte, ad ve sayı altta, birinci en altta. Harita henüz yüklenmediyse karo
+"hazırlanıyor", yarışta bağlantı yoksa "bağlantı yok" der ve kapalıdır. Antrenmanda Dünya bölümünün başlığının altında
+kıta seçimi durur (Tümü, Afrika, Amerika, Asya, Avrupa); dünya karolarının sayısı seçilen kıtaya göre değişir.
+
+**Düello ve Oda** (`intro/SetupParts.tsx`, `SetupShell`): solda üstte **←** ve oyunun adı, altında aynı beş mod küçük
+karolar olarak (seçili olan parlak, diğerleri soluk) ve bu seçimle dönen canlı önizleme: haritada soru çıkar ("🏛️ Kanberra
+hangi ülke?"), bir saniye sonra doğru yer yeşil yanar, sonraki soruya geçilir. Önizleme, küçük haritada da görünsün diye
+büyük ve tanınır yerlerden sorar; hareket azaltma açıksa durur. "Nasıl oynanır?" demosuyla aynı bileşendir
+(`MapDemo.tsx`). Soru tipinin ne demek olduğu ("Başkent gelir, ülkesini bul") haritanın sol alt köşesinde kısa bir not
+olarak durur.
+
+Önizleme haritası oyun haritası gibi denizde kum rengidir. Sağdaki panelin en üstünde oyunun renginde büyük, basılabilir
+eylem tuşu (**Düelloyu kur**, **Odayı kur**), altında **Ayarlar**: düelloda kural, odada ad, tur sayısı, süre ve kişi
+sınırı. Alçak (yatay telefon) ekranda beş mod karosu tek satırdır, görselleri gizlenir; ayarların etiketi solda, seçici
+sağda olur. Dikey telefonda harita kartı ekranın boş kalan yerini alır. Başlıktaki logo
 her adımdan ilk adıma döner. İkinci adım tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez); telefonda geri
 hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda hatırlanır.
 
@@ -217,7 +229,21 @@ ekranın en-boy oranındadır: açılışta harita tam sığar, yakınlaşınca 
 
 Dikey telefonda oyunun üst barı iki satırdır: üstte çıkış / bitir, doğru sayısı, kalan süre ve yeni tur; altında tam
 genişlikte soru şeridi (ad, büyük bayrak ya da plaka; cevaptan sonra seri ve sonraki soruya geri sayım). Düellodaki
-şeritle aynı düzendir.
+şeritle aynı düzendir. Üst bar koyu deniz renginde bir oyun göstergesidir; soru beyaz, altı kalın kenarlı bir kartta
+durur. Son 10 saniyede her saniye kısa bir tık sesi gelir. İki doğrudan itibaren puanın yanında 🔥 seri rozeti durur (3'te turuncu, 5'te kırmızı).
+Yarışta, günün meydan okumasında ve oda turunda üst barda iki akış satırı alt alta durur. Soru akışı: turun soruları
+kadar bölüm (cevaplananlar yeşil ya da kırmızı, beklenen soru beyaz ve hafifçe parlar, gelecekler soluk), solunda o ana
+kadarki doğru ve sorulan soru sayısı ("1/2"; tur 0/0 ile başlar). Süre akışı: kalan süre yazısı ve eriyen çubuk; çubuk
+yeşilden sarıya, son 10 saniyede kırmızıya döner ve yanıp söner. İki satırın yazıları eşit genişlikte, çubukları aynı
+hizadan başlar. Dikey telefonda soru kartının üstünde, geniş ekranda üst barın altında tam genişliktedir; üst barda
+ayrıca puan ve süre yazmaz (antrenmanda "doğru/cevaplanan" üst barda kalır). Harita denizde kum rengidir (`.map-sea`); doğru cevapta dokunulan yerden "+1" uçar.
+Yanlış cevapta oyuncunun dokunduğu yerin adı sorudan ayrı, haritanın alt ortasında kırmızı bir etikette çarpıyla ve
+"Senin cevabın" başlığıyla yazar; haritada kırmızı yanan yerle eşleşir.
+
+**Ses.** Doğru, yanlış, seri, son saniyeler ve tur sonu için kısa efektler (`lib/sound.ts`). Ses dosyası yoktur, notalar
+Web Audio ile o an üretilir. Tarayıcılar sesi ancak dokunuşla açılan bir ses bağlamında çaldığı için bağlam ilk dokunuşta
+açılır. Hesap menüsünden kapatılır, seçim tarayıcıda hatırlanır. Sonuç ekranının başında puan oranına göre 0–3 yıldız
+(kusursuz 3, %70 2, %40 1) ve övgü durur; en az 5 soruluk kusursuz turda fanfar ve konfeti (`RoundCelebration.tsx`).
 
 **Yön.** Tüm ekranlar ve oyunlar (antrenman, yarış, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
 zorunlu değildir. Harita dikeyde yaklaşık yarı boyuta indiği için haritanın sol altında kapatılabilir bir "Yan
@@ -381,12 +407,14 @@ app/
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
     GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
     ResultScreen.tsx    Tam ekran sonuç: skor ve yanında seri / süre, tekrar oyna + paylaş, başka tur seç, en çok yanlış yapılanlar, sıralama; antrenman özeti
-    Logo.tsx            Nişangah rozetli oyun adı (giriş ve sonuç ekranlarının başlığı)
+    Logo.tsx            Nişangah rozetli oyun adı (ana ekranın ve yasal sayfaların başlığı)
+    HomeButton.tsx      Lobi ve profilde ana menüye dönen ev tuşu
     MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
     Leaderboard.tsx     Sekmeli sıralama listesi
     LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
-    PlayButton.tsx      Rozetli oyna tuşu
+    PlayButton.tsx      Rozetli oyna tuşu; ekranın asıl tuşunun (basılabilir yeşil) sınıfı
+    RoundCelebration.tsx  Sonuç ekranındaki yıldızlar, övgü, bitiş sesi ve konfeti
     duel/               Düello: lobi, oyun, sonuç ve ortak parçalar (DuelScreen hepsini yönetir)
     room/               Oda: lobi, oda panosu (sıralama, kürsü), odadaki tur (RoomScreen yönetir)
     SignInPanel.tsx     Düello ve oda için giriş adımı (Google / misafir)

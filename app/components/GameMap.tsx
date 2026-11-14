@@ -3,6 +3,7 @@
 import { messages } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { vibrate } from "@/lib/haptics";
+import { playSound, primeSound } from "@/lib/sound";
 import { canLockLandscape, keepLandscapeLock, lockLandscape, releaseLandscapeLock } from "@/lib/orientation";
 import { useMapZoom } from "@/lib/hooks/useMapZoom";
 import {
@@ -43,7 +44,7 @@ type GameMapProps = {
   countdown?: string | null;
   /** Yanlış cevapta oyuncunun tıkladığı yerin adı, ör. "Kayseri" (wrongPickNotice). */
   wrongPick?: string | null;
-  /** Bildirimler dikey telefonda üst barda gösteriliyorsa (GameTopBar) haritanın üstünde dar ekranda gizlenir. */
+  /** Bildirimler (seri, geri sayım) dikey telefonda üst barda gösteriliyorsa (GameTopBar) haritanın üstünde dar ekranda gizlenir. */
   areNoticesInHeaderWhenNarrow?: boolean;
   onSelect: (locationId: string) => void;
 };
@@ -166,6 +167,13 @@ export function GameMap({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPointerType = useRef("mouse");
+  // Son dokunuşun haritadaki yeri (kapsayıcıya göre); doğru cevabın "+1"i oradan uçar. Klavyeyle seçilirse üst orta.
+  const lastTapPoint = useRef<{ x: number; y: number } | null>(null);
+  const [pointPop, setPointPop] = useState<{ x: number; y: number; key: number } | null>(null);
+
+  useEffect(() => {
+    primeSound();
+  }, []);
   const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, wasDragged, panHandlers } = useMapZoom(
     containerRef,
     mapMarkup,
@@ -208,12 +216,29 @@ export function GameMap({
     });
   }, [answerState, ensureVisible, mapMarkup, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
 
-  // Oyuncu cevap verdiği anda kısa bir titreşim (Android). Düelloda oyuncu cevaplamadan biten soruda titremez.
+  // Oyuncu cevap verdiği anda kısa bir titreşim ve ses; doğruysa dokunduğu yerden "+1" uçar. Düelloda oyuncu
+  // cevaplamadan biten soruda tepki yok.
   const previousAnswerState = useRef<AnswerState>(null);
   useEffect(() => {
-    if (answerState && !previousAnswerState.current && selectedLocation) vibrate(answerState === "correct" ? "correct" : "incorrect");
+    if (answerState && !previousAnswerState.current && selectedLocation) {
+      const isCorrect = answerState === "correct";
+      vibrate(isCorrect ? "correct" : "incorrect");
+      playSound(isCorrect ? "correct" : "incorrect");
+      if (isCorrect) {
+        const container = containerRef.current;
+        const point = lastTapPoint.current ?? (container ? { x: container.clientWidth / 2, y: container.clientHeight * 0.35 } : null);
+        if (point) setPointPop({ ...point, key: Date.now() });
+      }
+    }
     previousAnswerState.current = answerState;
   }, [answerState, selectedLocation]);
+
+  // Seri kutlaması belirdiğinde kısa bir fanfar (cevap sesinin hemen ardından).
+  useEffect(() => {
+    if (!celebration) return;
+    const timer = window.setTimeout(() => playSound("streak"), 180);
+    return () => window.clearTimeout(timer);
+  }, [celebration]);
 
   const selectFromEvent = (target: EventTarget) => {
     const location = (target as Element).closest<SVGElement>(LOCATION_SELECTOR[mode]);
@@ -222,20 +247,26 @@ export function GameMap({
 
   if (!mapMarkup) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50 text-center text-sm text-slate-400">
+      <div className="map-sea flex min-h-0 flex-1 items-center justify-center text-center text-sm font-semibold text-sky-900/60">
         {mapError ?? messages().game.mapLoading}
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-slate-50">
+    <div className="map-sea relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
       <div
         className={`map ${isInteractive ? "map-interactive" : "pointer-events-none opacity-70"}`}
         dangerouslySetInnerHTML={{ __html: mapMarkup }}
         id="game-map"
         onClick={(event) => {
           if (wasDragged()) return;
+          const bounds = containerRef.current?.parentElement?.getBoundingClientRect();
+          // "+1" ekranın kenarında kırpılmasın: kenara yakın dokunuşta biraz içeriden uçar.
+          lastTapPoint.current =
+            bounds && event.detail > 0
+              ? { x: Math.min(Math.max(event.clientX - bounds.left, 32), bounds.width - 32), y: Math.max(event.clientY - bounds.top, 56) }
+              : null;
           const locationId =
             selectFromEvent(event.target) ??
             (lastPointerType.current === "mouse" ? undefined : locationNear(event.currentTarget, mode, event.clientX, event.clientY));
@@ -257,9 +288,9 @@ export function GameMap({
         }}
       />
 
-      {/* Haritanın üst ortası: seri kutlaması, altında yan yana yanlışta tıklanan yerin adı ve sonraki soruya geri sayım.
-          Dikey telefonda bunlar üst barın soru şeridindedir. Dokunmalar haritaya geçer. */}
-      {(celebration || countdown || wrongPick) && (
+      {/* Haritanın üst ortası: seri kutlaması, altında sonraki soruya geri sayım. Dikey telefonda bunlar üst barın soru
+          şeridindedir. Dokunmalar haritaya geçer. */}
+      {(celebration || countdown) && (
         <div
           aria-live="polite"
           className={`pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-center gap-2 lg:top-5 ${areNoticesInHeaderWhenNarrow ? "max-sm:hidden" : ""}`}
@@ -273,11 +304,6 @@ export function GameMap({
             </p>
           )}
           <div className="flex flex-wrap items-center justify-center gap-2 empty:hidden">
-            {wrongPick && (
-              <p className="rounded-full border border-rose-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-rose-600 shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
-                {wrongPick}
-              </p>
-            )}
             {countdown && (
               <p className="rounded-full border border-cyan-200 bg-white/90 px-3.5 py-1 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums shadow-sm backdrop-blur lg:px-4 lg:py-1.5 lg:text-sm">
                 {countdown}
@@ -285,6 +311,36 @@ export function GameMap({
             )}
           </div>
         </div>
+      )}
+
+      {/* Yanlış cevap: oyuncunun dokunduğu yerin adı sorudan ayrı, haritanın altında kırmızı bir etikette ve çarpıyla;
+          haritada kırmızı yanan yerle eşleşir. Dikey telefonda yön ipucunun üstünde durur. */}
+      {wrongPick && (
+        <div aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center px-16 portrait-phone:bottom-14 lg:bottom-6">
+          <p className="badge-pop flex max-w-full min-w-0 items-center gap-2 rounded-2xl border-2 border-rose-300 bg-rose-500 py-1.5 pr-4 pl-1.5 text-white shadow-lg shadow-rose-900/25 lg:gap-3 lg:py-2 lg:pr-5 lg:pl-2">
+            <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white text-rose-600 lg:h-9 lg:w-9">
+              <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={3.5} viewBox="0 0 24 24">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="text-[10px] font-bold tracking-[0.12em] text-rose-100 uppercase lg:text-xs">{messages().game.yourPick}</span>
+              <span className="truncate font-display text-lg font-bold lg:text-2xl">{wrongPick}</span>
+            </span>
+          </p>
+        </div>
+      )}
+
+      {pointPop && (
+        <span
+          aria-hidden="true"
+          className="point-float pointer-events-none absolute z-20 font-display text-3xl font-bold text-emerald-50 lg:text-4xl"
+          key={pointPop.key}
+          onAnimationEnd={() => setPointPop(null)}
+          style={{ left: pointPop.x, top: pointPop.y }}
+        >
+          +1
+        </span>
       )}
 
       <RotateHint />

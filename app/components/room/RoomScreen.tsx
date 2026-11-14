@@ -3,8 +3,7 @@
 import { messages } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { Logo } from "../Logo";
-import { AccountMenu } from "../AccountMenu";
+import { HomeButton } from "../HomeButton";
 import { PlayTips } from "../PlayTips";
 import { SignInPanel } from "../SignInPanel";
 import { readPlayTipsSeen, setPlayTipsSeen } from "@/lib/intro-preferences";
@@ -76,11 +75,8 @@ export function RoomScreen({ code }: { code: string }) {
 
   const shell = (children: React.ReactNode) => (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
-      <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-        <button aria-label={messages().room.homeLink} onClick={goHome} type="button">
-          <Logo isHeading={false} />
-        </button>
-        <AccountMenu onSignOut={signOut} player={player} />
+      <header className="flex shrink-0 items-center gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
+        <HomeButton label={messages().room.homeLink} onClick={goHome} />
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 lg:overflow-hidden lg:px-8 lg:py-5">{children}</div>
       {tipsRound !== null && (

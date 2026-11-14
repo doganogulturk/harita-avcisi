@@ -7,12 +7,15 @@ import { LEGAL_PAGES } from "./legal/LegalPage";
 import { PlayerAvatar } from "./PlayerBadge";
 import { flagUrl, type Player } from "@/lib/game";
 import { messages, setLocale, useLocale } from "@/lib/i18n";
+import { setSoundEnabled, useSoundEnabled } from "@/lib/sound";
 
 type AccountMenuProps = {
   player: Player | null;
   onSignOut: () => void;
   /** Verilirse menünün başında "Nasıl oynanır?" durur (giriş ekranı; tanıtımı yeniden açar). */
   onShowGuide?: () => void;
+  /** Koyu deniz zemininde (ana ekran, sonuç): geniş ekrandaki ad açık renkli yazılır. */
+  onDark?: boolean;
 };
 
 /** Dil seçenekleri: yuvarlak bayrak ve kısa ad. İngilizce için Birleşik Krallık bayrağı. */
@@ -28,10 +31,11 @@ const ITEM_CLASS = "block w-full rounded-lg px-3 py-2 text-left text-sm font-sem
  * oyuncunun adı, Profilim, "Nasıl oynanır?", yasal sayfalar ve Çıkış yap durur. Ayrı bir bilgi tuşu ve dikey telefonda görünmeyen
  * çıkış bağlantısı yerine tek ve her ekranda aynı yer.
  */
-export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps) {
+export function AccountMenu({ player, onSignOut, onShowGuide, onDark = false }: AccountMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const t = messages();
   const locale = useLocale();
+  const isSoundOn = useSoundEnabled();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,7 +67,7 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
         {player ? (
           <>
             {/* Geniş ekranda ad da görünür; dar ekranda yalnızca profil resmi. */}
-            <span className="hidden max-w-[12rem] truncate text-sm font-bold text-slate-700 sm:block">{player.name}</span>
+            <span className={`hidden max-w-[12rem] truncate text-sm font-bold sm:block ${onDark ? "text-white" : "text-slate-700"}`}>{player.name}</span>
             <PlayerAvatar player={player} />
           </>
         ) : (
@@ -135,6 +139,24 @@ export function AccountMenu({ player, onSignOut, onShowGuide }: AccountMenuProps
               </button>
             ))}
           </div>
+          {/* Ses efektleri: dokununca açılır ya da kapanır; menü açık kalır, açılınca kısa bir ses duyulur. */}
+          <button
+            aria-pressed={isSoundOn}
+            className={`${ITEM_CLASS} flex items-center justify-between text-slate-700 hover:bg-slate-100 focus-visible:bg-slate-100`}
+            onClick={() => setSoundEnabled(!isSoundOn)}
+            type="button"
+          >
+            <span className="flex items-center gap-2">
+              <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+                {isSoundOn ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="m16 9 5 5M21 9l-5 5" />}
+              </svg>
+              {isSoundOn ? t.menu.soundOn : t.menu.soundOff}
+            </span>
+            <span className={`relative h-5 w-9 rounded-full transition ${isSoundOn ? "bg-emerald-500" : "bg-slate-300"}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${isSoundOn ? "left-4.5" : "left-0.5"}`} />
+            </span>
+          </button>
           {LEGAL_PAGES.map((page) => (
             <Link className={`${ITEM_CLASS} text-slate-700 hover:bg-slate-100 focus-visible:bg-slate-100`} href={page.href} key={page.href}>
               {page.label}

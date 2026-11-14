@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
 import { variantFor } from "@/lib/duel";
-import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
+import { type GameMode, type Player } from "@/lib/game";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { messages } from "@/lib/i18n";
 import { createRoom } from "@/lib/hooks/useRoom";
 import { ROOM_DURATIONS, ROOM_NAME_MAX, ROOM_PLAYER_PRESETS, ROOM_ROUND_COUNTS, roomPath, type RoomSettings } from "@/lib/room";
-import { modeOptions, previewPromptFor } from "./DuelSetup";
+import { boardIdOf, previewPromptFor } from "./DuelSetup";
 import { formatMinutes, gameInfo } from "./games";
 import { Field, Segmented, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
@@ -89,15 +89,15 @@ export function RoomSetup({ map, player, supabaseConfigured, onMapChange, onBack
       error={error}
       game={gameInfo("room")}
       isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
-      map={map}
-      mode={variant}
-      modes={modeOptions(map)}
-      onModeChange={(next) => update({ variant: next as BoardVariant })}
+      board={boardIdOf(map, variant)}
+      onBoardChange={(board) => {
+        onMapChange(board.mode);
+        update({ variant: board.variant });
+      }}
       previewPrompt={previewPromptFor(variant)}
       note={setup.room.note}
       onAction={() => (player ? void create() : validationError ? setError(validationError) : setIsAuthStep(true))}
       onBack={onBack}
-      onMapChange={onMapChange}
     >
       <Field htmlFor="room-name" label={setup.room.name}>
         <input

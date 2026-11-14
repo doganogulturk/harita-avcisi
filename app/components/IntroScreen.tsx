@@ -19,7 +19,7 @@ import { SoloSetup } from "./intro/SoloSetup";
 import { messages } from "@/lib/i18n";
 import { isAppleSignInAvailable, startAppleSignIn } from "@/lib/auth";
 import { joinPathFor } from "@/lib/join-code";
-import { boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type LeaderboardEntry, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
+import { BOARDS, boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type LeaderboardEntry, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
 import {
   setGuideSeen,
   setIntroMap,
@@ -30,7 +30,6 @@ import {
   useWorldScope,
   type IntroGame,
 } from "@/lib/intro-preferences";
-import { type WorldScope } from "@/lib/world-countries";
 
 /** Tek başıma kartında birincisi gösterilen sıralamalar. */
 const HIGHLIGHT_BOARDS: { id: BoardId; map: GameMode }[] = [
@@ -93,8 +92,8 @@ const INTRO_DONE_MS = INTRO_CARD_DELAY_MS + INTRO_CARD_STEP_MS + 700;
  */
 function IntroCurtain() {
   return (
-    <div aria-hidden="true" className="intro-curtain fixed inset-0 z-40 flex items-center justify-center bg-slate-50 px-6">
-      <Logo isHeading={false} size="curtain" />
+    <div aria-hidden="true" className="intro-curtain sea-backdrop fixed inset-0 z-40 flex items-center justify-center px-6">
+      <Logo isHeading={false} onDark size="curtain" />
     </div>
   );
 }
@@ -158,8 +157,6 @@ export function IntroScreen({
   };
 
   const kind: PlayKind = selectedGame === "practice" ? "practice" : "ranked";
-  // Kıtaların kendi sıralaması yok; yarış her zaman 179 ülkenin tamamından sorulur.
-  const scope: WorldScope = kind === "ranked" ? "all" : storedScope;
 
   const choiceFor = (mode: GameMode, playKind: PlayKind): PlayChoice =>
     mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, storedScope, prompt);
@@ -196,10 +193,6 @@ export function IntroScreen({
   };
 
 
-  const start = () => {
-    onPlay(choiceFor(map, kind));
-  };
-
   // Günün meydan okuması: başlıktaki rozet ve alttan açılan sayfa aynı durumu kullanır.
   const dailyStatus = useDailyStatus(player, null);
   const [dailySheet, setDailySheet] = useState<{ board: BoardId | null } | null>(null);
@@ -209,8 +202,8 @@ export function IntroScreen({
     if (dailyNotice) setDailySheet((current) => current ?? { board: null });
   }, [dailyNotice]);
 
-  // Tek başıma kartında Türkiye'nin ve Dünya'nın (isimle) birincisi, yarış panelinde seçili sıralamanın birincisi;
-  // yüklenmeyen satır gösterilmez.
+  // Ana ekranın liderler panosunda Türkiye'nin ve Dünya'nın (isimle) birincisi, yarışın mod karolarında her sıralamanın
+  // birincisi; yüklenmeyen satır gösterilmez.
   const leaders = useLeaders(supabaseConfigured);
   const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
   const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, map: boardMap }) => {
@@ -219,7 +212,6 @@ export function IntroScreen({
       ? [cardLeader(boardMap, leader)]
       : [];
   });
-  const boardLeader = leaders[rankedBoardId];
 
   const content = () => {
     if (pendingChoice && !player) {
@@ -268,22 +260,18 @@ export function IntroScreen({
     if (selectedGame) {
       return (
         <SoloSetup
-          isReady={readyModes.includes(map)}
-          needsSignIn={kind === "ranked" && !player}
           kind={kind}
-          leader={
-            boardLeader
-              ? cardLeader(map, boardLeader)
-              : undefined
-          }
-          map={map}
+          leaders={Object.fromEntries(
+            BOARDS.flatMap((board) => {
+              const leader = leaders[board.id];
+              return leader ? [[board.id, cardLeader(board.mode, leader)]] : [];
+            }),
+          )}
+          needsSignIn={kind === "ranked" && !player}
           onBack={goBack}
-         
-          onMapChange={setIntroMap}
-          onStart={start}
-          prompt={prompt}
-          scope={scope}
-          turkeyPrompt={turkeyPrompt}
+          onPlay={onPlay}
+          readyModes={readyModes}
+          scope={storedScope}
         />
       );
     }
@@ -310,37 +298,40 @@ export function IntroScreen({
       {/* Zemin: silik enlem-boylam çizgileri ve dünya haritası; menü bir harita oyununun içinde durur. Büyük ekranda
           kartların çevresinde kalan boşluğu doldurur, kartların altında yalnızca kenarlardan görünür. */}
       <div aria-hidden="true" className="intro-backdrop pointer-events-none absolute inset-0 -z-10">
-        <span className="map-silhouette absolute inset-x-[4%] inset-y-[10%] bg-cyan-700 opacity-[0.05]" />
+        <span className="map-silhouette absolute inset-x-[4%] inset-y-[10%] bg-cyan-200 opacity-[0.07]" />
       </div>
       {/* Çok geniş ekranda kartlar şişmesin: içerik ortada en fazla 80rem genişlikte durur. */}
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3 short:gap-2 lg:gap-5">
-        <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
-          <h1 className="min-w-0">
-            <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title={messages().menu.home} type="button">
-              <Logo isHeading={false} />
-            </button>
-          </h1>
-          <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
-            {/* Giriş yapmamış oyuncunun başlığında "Giriş yap" da durur; telefonda (480 pikselden dar) logoya yer kalsın diye
-                rozet gizlenir. Günlük meydan okuma zaten giriş ister. */}
-            {supabaseConfigured && selectedGame === null && !pendingChoice && (
-              <span className={player ? "contents" : "contents max-[30rem]:hidden"}>
-                <DailyBadge onOpen={() => setDailySheet({ board: null })} player={player} status={dailyStatus} />
-              </span>
-            )}
-            {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
-            {!player && supabaseConfigured && !pendingChoice && (
-              <button
-                className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold whitespace-nowrap text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none max-[25rem]:px-3 lg:px-4 lg:py-2"
-                onClick={() => setIsSignInOpen(true)}
-                type="button"
-              >
-                {messages().home.signIn}
+        {/* Logo ve hesap menüsü yalnızca ana ekranda; mod ve kurulum ekranlarında ← tuşu ana ekrana döner. */}
+        {selectedGame === null && !pendingChoice && (
+          <header className="flex shrink-0 items-center justify-between gap-3 max-[25rem]:gap-2">
+            <h1 className="min-w-0">
+              <button className="rounded-2xl transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none" onClick={goHome} title={messages().menu.home} type="button">
+                <Logo isHeading={false} onDark />
               </button>
-            )}
-            <AccountMenu onShowGuide={() => setIsGuideRequested(true)} onSignOut={onSignOut} player={player} />
-          </div>
-        </header>
+            </h1>
+            <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
+              {/* Giriş yapmamış oyuncunun başlığında "Giriş yap" da durur; telefonda (480 pikselden dar) logoya yer kalsın diye
+                  rozet gizlenir. Günlük meydan okuma zaten giriş ister. */}
+              {supabaseConfigured && (
+                <span className={player ? "contents" : "contents max-[30rem]:hidden"}>
+                  <DailyBadge onOpen={() => setDailySheet({ board: null })} player={player} status={dailyStatus} />
+                </span>
+              )}
+              {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
+              {!player && supabaseConfigured && (
+                <button
+                  className="hit-area rounded-full border border-cyan-200 bg-white px-3.5 py-1.5 text-sm font-bold whitespace-nowrap text-cyan-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none max-[25rem]:px-3 lg:px-4 lg:py-2"
+                  onClick={() => setIsSignInOpen(true)}
+                  type="button"
+                >
+                  {messages().home.signIn}
+                </button>
+              )}
+              <AccountMenu onDark onShowGuide={() => setIsGuideRequested(true)} onSignOut={onSignOut} player={player} />
+            </div>
+          </header>
+        )}
 
         <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
       </div>

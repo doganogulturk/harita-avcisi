@@ -85,8 +85,9 @@ body {
 
 .map g[data-plakakodu] path,
 .map [data-country-code] {
-  fill: #e2e8f0;
-  stroke: #94a3b8;
+  /* Kara kum rengi, deniz (kapsayıcının zemini, .map-sea) mavi: harita boş bir şekil değil, keşfedilen bir dünya. */
+  fill: #fdf3d3;
+  stroke: #b08a4f;
   stroke-width: 0.75;
   /* Yakınlaşınca sınır çizgileri ekranda aynı kalınlıkta kalsın. */
   vector-effect: non-scaling-stroke;
@@ -104,15 +105,15 @@ body {
 @media (hover: hover) {
   .map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):hover path,
   .map [data-country-code]:not(.map-correct):not(.map-incorrect):hover {
-    fill: #67e8f9;
-    stroke: #0891b2;
+    fill: #fde68a;
+    stroke: #b45309;
   }
 }
 
 .map g[data-plakakodu]:not(.map-correct):not(.map-incorrect):focus-visible path,
 .map [data-country-code]:not(.map-correct):not(.map-incorrect):focus-visible {
-  fill: #67e8f9;
-  stroke: #0891b2;
+  fill: #fde68a;
+  stroke: #b45309;
 }
 
 /* Haritada dokunulan yerde iOS/Android'in gri dokunma parlaması ve uzun basınca açılan menü çıkmasın. */
@@ -125,16 +126,16 @@ body {
 /* Haritada olup oyunda karşılığı olmayan bölgeler (dünya haritasında); stil verilmezse SVG varsayılanıyla siyah dolar.
    Türkiye haritasında Kıbrıs vardı, hiç sorulmadığı için haritadan çıkarıldı. */
 .map path[id^="_"] {
-  fill: #f1f5f9;
-  stroke: #cbd5e1;
+  fill: #ece4cf;
+  stroke: #c9b994;
   stroke-width: 0.75;
   vector-effect: non-scaling-stroke;
 }
 
 /* Kıta antrenmanında seçilen kıtanın dışında kalan ülkeler: yön bulmak için görünür, ama tıklanamaz. */
 .map .map-inactive {
-  fill: #f8fafc;
-  stroke: #cbd5e1;
+  fill: #e3eaf0;
+  stroke: #a9b8c6;
   cursor: default;
   pointer-events: none;
 }
@@ -362,88 +363,6 @@ body {
   animation: shimmer 3.2s ease-in-out var(--shimmer-delay, 0s) infinite;
 }
 
-/* Giriş ekranındaki oyun kartları: fareyle üzerine gelince kartın renginde bir ışık bir kez süzülür. */
-.card-sweep {
-  isolation: isolate;
-  /* hidden değil clip: köşedeki silik simge kartın dışına taşar; hidden kartı kaydırılabilir bırakır ve kod alanına
-     odaklanınca tarayıcı içeriği yukarı kaydırabilir. clip kırpar ama kaydırmaya izin vermez. */
-  overflow: clip;
-}
-
-.card-sweep::before {
-  content: "";
-  position: absolute;
-  inset: -20% auto -20% 0;
-  z-index: -1;
-  width: 45%;
-  background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
-  transform: translateX(-160%) skewX(-20deg);
-  pointer-events: none;
-}
-
-.card-sweep:hover::before {
-  transform: translateX(330%) skewX(-20deg);
-  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Oyun kartlarının eylem tuşu: fareyle tuşun üzerine gelince yüzeyinden bir ışık bir kez geçer. */
-.pill-shine {
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.pill-shine::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: -1;
-  width: 40%;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
-  transform: translateX(-160%) skewX(-20deg);
-  pointer-events: none;
-}
-
-.pill-shine:hover::before {
-  transform: translateX(360%) skewX(-20deg);
-  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Köşe sekmelerini ve karoyu kabın kenarlarına bağlayan içbükey kıvrım (CornerTab.tsx, Fillet). SVG dolu köşesi sağ
-   üsttedir; sol alttaki sekme için ters çevrilir, sol üstteki karo için aynalanır. */
-.corner-fillet {
-  --fillet: 1rem;
-  position: absolute;
-  width: var(--fillet);
-  height: var(--fillet);
-  pointer-events: none;
-}
-
-.corner-fillet-sm {
-  --fillet: 0.75rem;
-}
-
-.corner-fillet-bl {
-  rotate: 180deg;
-}
-
-.corner-fillet-tl {
-  scale: -1 1;
-}
-
-.corner-fillet-br {
-  scale: 1 -1;
-}
-
-@media (min-width: 64rem) {
-  .corner-fillet {
-    --fillet: 1.5rem;
-  }
-
-  .corner-fillet-sm {
-    --fillet: 1rem;
-  }
-}
-
 /* Başlığın iki yanındaki parlayan noktalar. */
 @keyframes glow-pulse {
   50% {
@@ -461,11 +380,6 @@ body {
   .shimmer::before,
   .glow-dot {
     animation: none;
-  }
-
-  .card-sweep:hover::before,
-  .pill-shine:hover::before {
-    transition: none;
   }
 }
 
@@ -486,8 +400,8 @@ body {
 .map-preview [data-country-code],
 .map-preview g[data-plakakodu] path,
 .map-preview path[id^="_"] {
-  fill: #e8edf3;
-  stroke: #cbd5e1;
+  fill: #fdf3d3;
+  stroke: #c4a36b;
   stroke-width: 0.6;
   vector-effect: non-scaling-stroke;
   transition: fill 320ms ease, stroke 320ms ease;
@@ -499,8 +413,8 @@ body {
 
 .map-preview .scope-active,
 .map-preview g.scope-active path {
-  fill: #cffafe;
-  stroke: #0891b2;
+  fill: #fcd34d;
+  stroke: #b45309;
 }
 
 /* Önizlemenin soru döngüsünde doğru yer. */
@@ -861,5 +775,158 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .badge-pop {
     animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * Oyun görünümü: koyu deniz zemini, deniz mavisi harita zemini, kalın "basılabilir" tuşlar, sayaç, +1 ve konfeti.
+ * --------------------------------------------------------------------------------------------------------------- */
+
+/* Ana ekranın ve sonuç ekranının zemini: derin deniz; üstünde silik enlem-boylam ızgarası (.intro-backdrop). */
+.sea-backdrop {
+  background-color: #0b3a5b;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgb(34 211 238 / 0.22), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgb(14 165 233 / 0.18), transparent 70%);
+}
+
+/* Oyun haritasının zemini: sığ deniz, ortası biraz daha açık; üstünde silik dalga noktaları. */
+.map-sea {
+  background-color: #8ccfee;
+  background-image:
+    radial-gradient(rgb(255 255 255 / 0.22) 1px, transparent 1.5px),
+    radial-gradient(ellipse at center, #b5e3f7 0%, #8ccfee 70%);
+  background-size:
+    18px 18px,
+    100% 100%;
+}
+
+/* Basılabilir tuş: altında koyu bir kenar durur, basınca tuş o kenarın içine iner. Renk sınıfı ayrıca verilir
+   (bg-* zemin, --press-edge kenar rengi). */
+.press {
+  --press-depth: 5px;
+  position: relative;
+  box-shadow: 0 var(--press-depth) 0 0 var(--press-edge, rgb(0 0 0 / 0.25));
+  transition:
+    transform 90ms ease-out,
+    box-shadow 90ms ease-out,
+    filter 150ms ease;
+}
+
+.press:hover {
+  filter: brightness(1.06);
+}
+
+.press:active:not(:disabled) {
+  transform: translateY(var(--press-depth));
+  box-shadow: 0 0 0 0 var(--press-edge, rgb(0 0 0 / 0.25));
+}
+
+.press-sm {
+  --press-depth: 4px;
+}
+
+/* OYNA tuşu: hafifçe nabız gibi atar, oyuncuyu çağırır. */
+@keyframes play-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+.play-breathe:not(:active) {
+  animation: play-breathe 2.4s ease-in-out infinite;
+}
+
+/* Son 10 saniye: süre çubuğu yanıp söner. */
+@keyframes time-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.time-pulse {
+  animation: time-pulse 0.5s ease-in-out infinite;
+}
+
+/* Doğru cevapta dokunulan yerden yukarı uçan "+1". */
+@keyframes point-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -80%) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -260%) scale(1);
+  }
+}
+
+.point-float {
+  animation: point-float 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow:
+    0 2px 0 #047857,
+    0 0 12px rgb(255 255 255 / 0.8);
+}
+
+/* Sonuç ekranındaki yıldızlar sırayla dönerek yerine oturur. */
+@keyframes star-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-60deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.25) rotate(8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.star-in {
+  animation: star-in 520ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--star-delay, 0ms) both;
+}
+
+/* Konfeti: her parça kendi yatay kaymasıyla (--drift) ve dönüşüyle düşer. */
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -10vh, 0) rotate(0);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translate3d(var(--drift, 0), 105vh, 0) rotate(var(--spin, 540deg));
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  animation: confetti-fall var(--fall, 2.6s) cubic-bezier(0.3, 0.6, 0.5, 1) var(--delay, 0s) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-breathe:not(:active),
+  .time-pulse,
+  .point-float,
+  .star-in {
+    animation: none;
+  }
+
+  .confetti-piece {
+    display: none;
+  }
+
+  .press,
+  .press:active:not(:disabled) {
+    transition: none;
   }
 }

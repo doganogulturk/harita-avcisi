@@ -40,20 +40,20 @@ export function PlayerAvatar({ player, size = "md" }: { player: Player; size?: k
   );
 }
 
-/** Oyun üst barında (geniş ekran) oyuncunun resmi, adı ve çıkış bağlantısı. Ekran başlıklarında AccountMenu kullanılır. */
+/** Oyun üst barında (geniş ekran, koyu zemin) oyuncunun resmi, adı ve çıkış bağlantısı. Ekran başlıklarında AccountMenu kullanılır. */
 export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }: PlayerBadgeProps) {
   if (!player) return null;
 
   const avatar = <PlayerAvatar player={player} size={size} />;
 
-  const linkClass = `font-semibold text-slate-400 underline-offset-2 transition hover:underline ${size === "sm" ? "text-[10px] lg:text-xs" : "text-xs"}`;
+  const linkClass = `font-semibold text-white/50 underline-offset-2 transition hover:underline ${size === "sm" ? "text-[10px] lg:text-xs" : "text-xs"}`;
 
   const details = (
     <div className={`hidden min-w-0 sm:block ${align === "right" ? "text-right" : ""}`}>
-      <p className={`max-w-[12rem] truncate font-bold text-slate-700 ${size === "sm" ? "text-xs lg:text-sm" : "text-sm"}`} title={player.name}>
+      <p className={`max-w-[12rem] truncate font-bold text-white ${size === "sm" ? "text-xs lg:text-sm" : "text-sm"}`} title={player.name}>
         {player.name}
       </p>
-      <button className={`${linkClass} hover:text-slate-600`} onClick={onSignOut} type="button">
+      <button className={`${linkClass} hover:text-white/80`} onClick={onSignOut} type="button">
         Çıkış yap
       </button>
     </div>

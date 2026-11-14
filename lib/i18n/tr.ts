@@ -33,6 +33,8 @@ export const tr = {
     guide: "Nasıl oynanır?",
     signOut: "Çıkış yap",
     home: "Ana menü",
+    soundOn: "Ses açık",
+    soundOff: "Ses kapalı",
   },
   legalLinks: {
     privacy: "Gizlilik",
@@ -116,6 +118,13 @@ export const tr = {
     pendingSignedIn: "Giriş tamam —",
     pendingNote: (seconds: number) => `Başla dediğin anda ${seconds} saniyelik süre işlemeye başlar.`,
     otherGame: "Başka bir oyun seç",
+    /** Ana ekranın büyük tuşu; yarışın ayar ekranını açar. */
+    play: "Oyna",
+    playHint: (questions: number, seconds: number) => `${questions} soru · ${seconds} sn · sıralamaya gir`,
+    tagline: "Haritayı ne kadar iyi biliyorsun?",
+    /** Ana ekrandaki oyun karolarının alt satırı. */
+    tileNotes: { practice: "Süre yok", duel: "1'e 1", room: "Grupla" },
+    moreGames: "Diğer oyunlar",
   },
   setup: {
     backToGames: "Oyun seçimine dön",
@@ -142,6 +151,25 @@ export const tr = {
     offline: "Bağlantı yok",
     preparing: "Harita hazırlanıyor...",
     signInAndStart: "Giriş yap ve başla",
+    /** Mod karoları: haritanın adı, modun adı ve kaç yerden sorulduğu. */
+    tiles: {
+      turkey: "İller",
+      "turkey-plates": "Plakalar",
+      "world-hard": "Ülkeler",
+      "world-flags": "Bayraklar",
+      "world-capitals": "Başkentler",
+    },
+    tileCounts: {
+      turkey: (count: number) => `${count} il`,
+      "turkey-plates": (count: number) => `${count} plaka`,
+      "world-hard": (count: number) => `${count} ülke`,
+      "world-flags": (count: number) => `${count} bayrak`,
+      "world-capitals": (count: number) => `${count} başkent`,
+    },
+    pickMode: "Bir mod seç, hemen başla",
+    pickModeFor: "Mod",
+    signInFirst: "Başlarken giriş yapacaksın; skorun sıralamaya işlensin.",
+    worldScope: "Dünya kapsamı",
     creating: "Kuruluyor…",
     signInAndCreate: "Giriş yap ve kur",
     duel: {
@@ -201,6 +229,7 @@ export const tr = {
     restartPractice: "Antrenmanı yeniden başlat",
     restart: "Yeniden başlat",
     progress: "Soru ilerlemesi",
+    yourPick: "Senin cevabın",
     timeLeft: "Kalan süre",
     flagAlt: "Sorulan ülkenin bayrağı",
     flagQuestion: "Bu bayrak hangi ülkenin?",
@@ -242,6 +271,9 @@ export const tr = {
       `Günün meydan okuması${streak > 0 ? ` · ${streak} günlük seri` : ""}${hasOpen ? " · oynanmamış meydan okuma var" : ""}`,
   },
   result: {
+    /** Yıldızın üstündeki övgü: 0, 1, 2 ve 3 yıldız. */
+    cheers: ["Tekrar dene!", "İyi deneme!", "Harika tur!", "Kusursuz!"],
+    stars: (count: number) => `${count} yıldız`,
     roundDone: "Tur tamamlandı",
     practiceDone: "Antrenman bitti",
     dailyDone: "Meydan okuma tamam",

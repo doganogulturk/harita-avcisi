@@ -2,11 +2,10 @@
 
 import Image from "next/image";
 import { type FormEvent, useState } from "react";
-import { flagUrl, type GameMode } from "@/lib/game";
+import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
-import { CornerTab } from "../CornerTab";
-import { gameInfo, GameIcon, HOME_CARDS, type HomeCardInfo } from "./games";
+import { gameInfo, GameIcon } from "./games";
 
 type ModeGridProps = {
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
@@ -24,149 +23,77 @@ type ModeGridProps = {
 export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
 
 /**
- * Adım 1: Yarış kartı, altında ince Antrenman şeridi ve Arkadaşlarımla kartı (dikey telefonda alt alta). Geniş ekranda sol
- * sütunda Yarış ve Antrenman, sağda iki satır boyunca Arkadaşlarımla durur. Oyunun sekmesi kartın sağ alt köşesinden içeri
- * kıvrılır (Arkadaşlarımla kartında iki sekme: Düello, Oda); sekme o oyunun ayar ekranını açar, ara adım yoktur. Kartın
- * kendisi bir çerçevedir, dokunmak bir şey yapmaz. Ekran yetmezse (küçük telefon) liste kayar, yazılar üst üste binmez.
- * Kaydırma alanının kenar boşluğu, kartın gölgesi kırpılmasın diye. İki sütunda yükseklik sınırlı: dikey iPad gibi uzun
- * ekranlarda kartlar ekran boyunca uzayıp içleri boş kalmasın, ortada dursun.
+ * Adım 1, oyun menüsü: büyük OYNA tuşu (yarışın ayar ekranı), altında liderler panosu; yanında ya da altında diğer üç
+ * oyunun renkli karoları (Antrenman, Düello, Oda) ve davet kodu alanı. Dikey telefonda hepsi alt alta, geniş ve yatay
+ * ekranda iki sütun. Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
  */
 export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
+  const { home } = messages();
+  const delay = (step: number) => ({ "--intro-delay": `${introDelayMs + introStepMs * step}ms` }) as React.CSSProperties;
+
   return (
-    <div className="-mx-1.5 -mb-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 grid-cols-1 grid-rows-[minmax(min-content,1fr)_min-content_minmax(min-content,1fr)] gap-3 overflow-y-auto px-1.5 pt-1 pb-1.5 sm:max-h-[36rem] sm:grid-cols-2 sm:grid-rows-[minmax(min-content,1fr)_min-content] lg:max-h-[48rem] lg:gap-5">
-      {HOME_CARDS.map((card, index) =>
-        card.id === "practice" ? (
-          <PracticeCard card={card} delayMs={introDelayMs + introStepMs * index} key={card.id} onSelect={onSelect} />
-        ) : (
-          <HomeCard
-            card={card}
-            delayMs={introDelayMs + introStepMs * index}
-            key={card.id}
-            onSelect={onSelect}
-            {...(card.id === "ranked" ? { leaders: rankedLeaders, onShowLeaderboard } : { onJoin })}
-          />
-        ),
-      )}
+    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-5 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
+      <div className="intro-focus flex min-w-0 flex-col items-center gap-4 short:gap-2 lg:gap-6" style={delay(0)}>
+        <p className="text-center text-sm font-bold text-cyan-100/80 short:hidden lg:text-lg">{home.tagline}</p>
+        <PlayHero onClick={() => onSelect("ranked")} />
+        <LeadersBoard leaders={rankedLeaders} onShowLeaderboard={onShowLeaderboard} />
+      </div>
+
+      <div className="intro-focus flex min-w-0 flex-col gap-3 short:gap-2 lg:gap-4" style={delay(1)}>
+        <p className="text-[11px] font-bold tracking-[0.15em] text-cyan-100/60 uppercase lg:text-xs">{home.moreGames}</p>
+        <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
+          {TILES.map((tile) => (
+            <GameTile key={tile.id} onClick={() => onSelect(tile.id)} tile={tile} />
+          ))}
+        </div>
+        <JoinForm onJoin={onJoin} outlineClass={gameInfo("duel").theme.outline} submitClass={gameInfo("duel").theme.badge} />
+      </div>
     </div>
   );
 }
 
-type HomeCardProps = {
-  card: HomeCardInfo;
-  delayMs: number;
-  onSelect: (game: IntroGame) => void;
-  leaders?: CardLeader[];
-  onShowLeaderboard?: () => void;
-  onJoin?: (code: string) => Promise<string | null>;
-};
-
-function HomeCard({ card, delayMs, onSelect, leaders = [], onShowLeaderboard, onJoin }: HomeCardProps) {
-  const { theme } = card;
-  const isPair = card.games.length > 1;
-
+/** Ana ekranın asıl tuşu: büyük, yeşil, hafifçe nabız gibi atan OYNA; altında yarışın kuralı tek satırda. */
+function PlayHero({ onClick }: { onClick: () => void }) {
+  const { home } = messages();
   return (
-    <section
-      aria-label={card.title}
-      className={`intro-focus relative mb-1.5 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border-2 p-(--card-pad) [--card-pad:1rem] short:[--card-pad:0.75rem] sm:[--card-pad:1.5rem] lg:[--card-pad:2.25rem] ${isPair ? "sm:col-start-2 sm:row-span-2 sm:row-start-1" : ""} ${theme.surface} ${theme.depth}`}
-      style={{ "--intro-delay": `${delayMs}ms` } as React.CSSProperties}
+    <button
+      className="press play-breathe flex w-full max-w-md cursor-pointer flex-col items-center rounded-3xl border-2 border-emerald-300/60 bg-emerald-500 px-6 pt-4 pb-3.5 text-white [--press-depth:7px] [--press-edge:#047857] focus-visible:ring-4 focus-visible:ring-emerald-200 focus-visible:outline-none short:pt-2.5 short:pb-2 lg:pt-6 lg:pb-5"
+      onClick={onClick}
+      type="button"
     >
-      {/* Zeminde silik nokta deseni (harita ızgarası gibi); kart düz bir kutu değil, bir oyun kartı gibi durur. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
-      />
-      {/* Kartın simgesi sağ üst köşede büyük ve silik durur; kartı uzaktan tanınır kılar. */}
-      <GameIcon
-        className={`pointer-events-none absolute -top-6 -right-6 h-36 w-36 opacity-[0.08] short:h-24 short:w-24 sm:h-48 sm:w-48 lg:h-64 lg:w-64 ${theme.watermark}`}
-        game={card.id}
-      />
-
-      <div className="relative min-w-0">
-        <div className="flex items-center gap-3 lg:gap-4">
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm short:h-9 short:w-9 short:rounded-xl lg:h-16 lg:w-16 ${theme.badge}`}>
-            <GameIcon className="h-6 w-6 short:h-5 short:w-5 lg:h-9 lg:w-9" game={card.id} />
-          </span>
-          <h2 className="min-w-0 font-display text-3xl leading-none font-bold text-slate-900 short:text-2xl sm:text-4xl lg:text-6xl">{card.title}</h2>
-        </div>
-        <p className="mt-2 line-clamp-2 text-sm text-slate-500 short:mt-1 short:text-xs max-[25rem]:text-xs lg:mt-4 lg:max-w-lg lg:text-lg">{card.description}</p>
-      </div>
-
-      {/* Kartın canlı kısmı (liderler panosu ya da davet kodu) başlıkla sekmeler arasında kalan yerde dikeyde ortalanır. */}
-      <div className="relative flex min-h-0 flex-1 flex-col justify-center py-3 short:py-1.5 lg:py-5">
-        {onShowLeaderboard && <LeadersBoard leaders={leaders} onShowLeaderboard={onShowLeaderboard} />}
-        {onJoin && <JoinForm onJoin={onJoin} outlineClass={theme.outline} submitClass={theme.badge} />}
-      </div>
-
-      {/* Oyunlar kartın alt köşelerinden içeri kıvrılan büyük sekmelerdir; dokununca o oyunun ayar ekranı açılır. Arkadaşlarımla
-          kartında iki sekme kartın ortasında buluşur: her biri kendi oyununun renginde, dış köşede dolu ve ortaya doğru
-          şeffaflaşarak. Yarış kartında tek sekme sağ altta dolu renkte durur. Bu boşluk sekmelerin yeridir. */}
-      <div aria-hidden="true" className="h-11 shrink-0 short:h-8 lg:h-16" />
-      {card.games.map((id, index) => {
-        const game = gameInfo(id);
-        const icon = <GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game={id} />;
-        if (!isPair) {
-          return (
-            <div className="absolute right-0 bottom-0 z-10" key={id}>
-              <CornerTab colorClass={game.theme.badge} corner="bottom-right" fillClass={game.theme.badgeFill} icon={icon} label={messages().home.tabs[id]} onClick={() => onSelect(id)} size="lg" />
-            </div>
-          );
-        }
-        return (
-          <div className={`absolute bottom-0 z-10 w-1/2 ${index === 0 ? "left-0" : "right-0"}`} key={id}>
-            <CornerTab
-              colorClass={`${index === 0 ? "bg-gradient-to-r" : "bg-gradient-to-l"} ${game.theme.fade}`}
-              corner={index === 0 ? "bottom-left" : "bottom-right"}
-              fillClass={game.theme.badgeFill}
-              icon={icon}
-              label={messages().home.tabs[id]}
-              onClick={() => onSelect(id)}
-              size="lg"
-              stretch
-            />
-          </div>
-        );
-      })}
-    </section>
+      <span className="flex items-center gap-3 font-display text-5xl leading-none font-bold tracking-wide uppercase drop-shadow-[0_2px_0_rgb(4_120_87)] short:text-3xl lg:text-7xl">
+        <svg aria-hidden="true" className="h-9 w-9 short:h-6 short:w-6 lg:h-14 lg:w-14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2Z" />
+        </svg>
+        {home.play}
+      </span>
+      <span className="mt-2 text-xs font-bold text-emerald-50/90 short:mt-1 lg:text-base">{home.playHint(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS)}</span>
+    </button>
   );
 }
 
-/**
- * Antrenman: Yarış kartının altında başlıksız ince bir şerit; tek satırlık not ve sağ altta köşeden içeri kıvrılan
- * "Antrenman yap" sekmesi. Şerit genişse (29rem ve üstü) not sekmenin solunda durur; darsa (telefon) not kendi satırında,
- * sekme altında sağdadır, böylece not hiçbir genişlikte kırpılmaz. Sekmenin üstündeki kıvrım sığsın diye üstünde boşluk
- * bırakılır.
- */
-function PracticeCard({ card, delayMs, onSelect }: { card: HomeCardInfo; delayMs: number; onSelect: (game: IntroGame) => void }) {
-  const { theme } = card;
+type Tile = { id: Exclude<IntroGame, "ranked">; color: string; edge: string };
+
+/** Diğer oyunların karoları; her biri oyunun kendi renginde. */
+const TILES: Tile[] = [
+  { id: "practice", color: "bg-amber-400 text-amber-950 border-amber-200/70", edge: "#b45309" },
+  { id: "duel", color: "bg-orange-500 text-white border-orange-300/60", edge: "#c2410c" },
+  { id: "room", color: "bg-violet-600 text-white border-violet-300/50", edge: "#4c1d95" },
+];
+
+function GameTile({ tile, onClick }: { tile: Tile; onClick: () => void }) {
+  const { home } = messages();
   return (
-    <section
-      aria-label={card.title}
-      className={`intro-focus @container relative mb-1.5 min-w-0 overflow-hidden rounded-3xl border-2 ${theme.surface} ${theme.depth}`}
-      style={{ "--intro-delay": `${delayMs}ms` } as React.CSSProperties}
+    <button
+      className={`press press-sm flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 px-1.5 py-3 max-[22.5rem]:px-1 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none short:py-2 lg:gap-2 lg:rounded-3xl lg:py-6 ${tile.color}`}
+      onClick={onClick}
+      style={{ "--press-edge": tile.edge } as React.CSSProperties}
+      type="button"
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{ backgroundImage: `radial-gradient(${theme.dots} 1px, transparent 1.5px)`, backgroundSize: "16px 16px" }}
-      />
-      <div className="relative flex flex-col items-end @min-[29rem]:flex-row">
-        <p className="min-w-0 self-stretch line-clamp-2 px-4 pt-3 text-sm text-slate-500 short:pt-2 short:text-xs sm:px-6 lg:px-9 lg:text-base @min-[29rem]:flex-1 @min-[29rem]:self-center @min-[29rem]:py-3 @min-[29rem]:pr-2 short:@min-[29rem]:py-2 lg:@min-[29rem]:py-4">
-          {messages().home.practiceNote}
-        </p>
-        <div className="shrink-0 pt-2 @min-[29rem]:pt-4 lg:@min-[29rem]:pt-6">
-          <CornerTab
-            colorClass={theme.badge}
-            corner="bottom-right"
-            fillClass={theme.badgeFill}
-            icon={<GameIcon className="h-5 w-5 short:h-4 short:w-4 lg:h-7 lg:w-7" game="practice" />}
-            label={messages().home.tabs.practice}
-            onClick={() => onSelect("practice")}
-            size="lg"
-          />
-        </div>
-      </div>
-    </section>
+      <GameIcon className="h-7 w-7 short:h-5 short:w-5 lg:h-10 lg:w-10" game={tile.id} />
+      <span className="max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-[13px] lg:text-2xl">{gameInfo(tile.id).title}</span>
+      <span className="max-w-full truncate text-[11px] font-semibold opacity-80 short:hidden lg:text-sm">{home.tileNotes[tile.id]}</span>
+    </button>
   );
 }
 
@@ -192,7 +119,7 @@ function MapBadge({ map }: { map: GameMode }) {
 function LeadersBoard({ leaders, onShowLeaderboard }: { leaders: CardLeader[]; onShowLeaderboard: () => void }) {
   const { home, boards } = messages();
   return (
-    <div className="max-w-md rounded-2xl bg-white/85 p-2.5 shadow-sm ring-1 ring-amber-200 short:p-2 lg:p-4">
+    <div className="w-full max-w-md rounded-2xl bg-white/95 p-2.5 shadow-sm ring-1 ring-amber-200 short:p-2 lg:p-4">
       <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-amber-700 uppercase lg:text-xs">
         <span aria-hidden="true">👑</span>
         {home.leaders}
@@ -245,8 +172,12 @@ function LeadersBoard({ leaders, onShowLeaderboard }: { leaders: CardLeader[]; o
   );
 }
 
-/** Davetle gelen oyuncunun girişi: kod hep açık durur, ek dokunuş gerekmez. Kod düelloya mı odaya mı ait, sunucu söyler. */
+/**
+ * Davetle gelen oyuncunun girişi: ana ekranda yalnızca "🔑 Kodun var mı?" satırı durur; dokununca kod alanı ve Katıl tuşu
+ * açılır, alana odaklanılır. Kod düelloya mı odaya mı ait, sunucu söyler.
+ */
 function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string) => Promise<string | null>; outlineClass: string; submitClass: string }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -261,10 +192,26 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
     setError(joinError);
   };
 
+  if (!isOpen) {
+    return (
+      <button
+        aria-expanded={false}
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/25 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-white/50 hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:py-1.5 lg:py-3.5 lg:text-base"
+        onClick={() => setIsOpen(true)}
+        type="button"
+      >
+        <span aria-hidden="true">🔑</span>
+        {messages().home.haveCode}
+        <span className="text-orange-300">{messages().home.join}</span>
+        <span aria-hidden="true" className="text-orange-300">→</span>
+      </button>
+    );
+  }
+
   return (
     // Liderler panosuyla aynı ince çerçeveli kutu; başlığı da onunki gibi.
     <form
-      className="flex max-w-md min-w-0 flex-wrap items-center gap-1.5 rounded-2xl bg-white/85 p-2.5 shadow-sm ring-1 ring-orange-200 short:p-2 lg:gap-2 lg:p-4"
+      className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-2xl bg-white/95 p-2.5 shadow-sm ring-1 ring-orange-200 short:p-2 lg:gap-2 lg:p-4"
       onSubmit={(event) => void join(event)}
     >
       <label className="flex w-full items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-orange-700 uppercase lg:text-xs" htmlFor="join-code">
@@ -272,6 +219,8 @@ function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string
         {messages().home.haveCode}
       </label>
       <input
+        // Satıra dokunarak açıldı; oyuncu hemen yazabilsin.
+        autoFocus
         autoCapitalize="characters"
         autoComplete="off"
         autoCorrect="off"

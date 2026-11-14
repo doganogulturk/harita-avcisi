@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SignInPanel } from "../SignInPanel";
-import { DUEL_MODES, DUEL_RULES, duelChoice, duelPath, variantFor, type DuelRule } from "@/lib/duel";
-import { type BoardVariant, type GameMode, type Player, type QuestionPrompt } from "@/lib/game";
+import { DUEL_RULES, duelChoice, duelPath, variantFor, type DuelRule } from "@/lib/duel";
+import { BOARDS, type BoardId, type BoardVariant, type GameMode, type Player, type QuestionPrompt } from "@/lib/game";
 import { createDuel } from "@/lib/hooks/useDuel";
 import { useIsOnline } from "@/lib/hooks/useIsOnline";
 import { messages } from "@/lib/i18n";
@@ -13,12 +13,9 @@ import { gameInfo } from "./games";
 import { Field, SetupShell } from "./SetupParts";
 import { BACK_PRIORITY, useBackHandler } from "@/lib/hooks/useBackHandler";
 
-/** Kurulumdaki mod seçenekleri; yer adıyla sorulan mod tek oyunculu oyundaki gibi "İsim" diye yazılır. */
-export function modeOptions(map: GameMode): { id: BoardVariant; label: string }[] {
-  return (DUEL_MODES.find((group) => group.mode === map)?.options ?? []).map((option) => ({
-    id: option.variant,
-    label: option.variant === "normal" || option.variant === "hard" ? messages().setup.prompts.name : option.label,
-  }));
+/** Harita ve moddan mod karosunun kimliği (dünyada adla sorulan mod "hard"). */
+export function boardIdOf(map: GameMode, variant: BoardVariant): BoardId {
+  return BOARDS.find((board) => board.mode === map && board.variant === variant)?.id ?? (map === "turkey" ? "turkey" : "world-hard");
 }
 
 /** Önizlemede sorulan soru tipi: modun soruda gösterdiği şey. */
@@ -84,14 +81,14 @@ export function DuelSetup({ map, player, supabaseConfigured, onMapChange, onBack
       error={error}
       game={gameInfo("duel")}
       isActionDisabled={isBusy || !supabaseConfigured || !isOnline}
-      map={map}
-      mode={variant}
-      modes={modeOptions(map)}
+      board={boardIdOf(map, variant)}
       note={messages().setup.duel.note}
       onAction={() => (player ? void create() : setIsAuthStep(true))}
       onBack={onBack}
-      onMapChange={onMapChange}
-      onModeChange={(next) => save(next as BoardVariant, rule)}
+      onBoardChange={(board) => {
+        onMapChange(board.mode);
+        setDuelSettingsKey(`${board.mode}|${board.variant}|${rule}`);
+      }}
       previewPrompt={previewPromptFor(variant)}
     >
       {/* Alçak ekranda kurallar yan yana, açıklamaları gizli; seçili kuralın açıklaması altta not olarak kalır. Sütun

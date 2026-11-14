@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { useEffect } from "react";
+import { playSound } from "@/lib/sound";
 import { PlayerBadge } from "./PlayerBadge";
 import { RoundControls } from "./RoundControls";
 import {
@@ -43,8 +45,6 @@ type GameTopBarProps = {
    */
   celebration?: string | null;
   countdown?: string | null;
-  /** Yanlış cevapta tıklanan yerin adı (GameMap'teki wrongPickNotice); dikey telefonda soru şeridinde, geri sayımın yanında. */
-  wrongPick?: string | null;
 };
 
 const PLATE_SIZES = {
@@ -79,7 +79,7 @@ function ExitButton({ onClick, title = messages().game.exitTitle }: { onClick: (
   return (
     <button
       aria-label={messages().game.exitAria}
-      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
+      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/80 transition hover:border-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:h-9 lg:w-9"
       onClick={onClick}
       title={title}
       type="button"
@@ -157,7 +157,7 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
   }
   return (
     <h1
-      className={`text-center leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
+      className={`text-center font-display leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-2xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
     >
       {question && questionName(question)}
     </h1>
@@ -165,13 +165,126 @@ function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { c
 }
 
 const NARROW_BUTTON =
-  "hit-area flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none";
+  "hit-area flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-bold text-white/85 transition hover:border-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none";
+
+/** Arka arkaya doğru cevap sayısı (sondan); seri rozeti bunu gösterir. */
+function currentStreak(answers: AnswerState[]) {
+  let streak = 0;
+  for (let index = answers.length - 1; index >= 0 && answers[index] === "correct"; index -= 1) streak += 1;
+  return streak;
+}
+
+/** Üst bardaki seri rozeti: iki doğrudan itibaren görünür, seri uzadıkça kızışır. */
+function StreakChip({ streak }: { streak: number }) {
+  if (streak < 2) return null;
+  const tone = streak >= 5 ? "bg-rose-500 text-white" : streak >= 3 ? "bg-orange-500 text-white" : "bg-amber-400 text-amber-950";
+  return (
+    <span
+      className={`score-bump flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums lg:px-2.5 lg:text-sm ${tone}`}
+      key={streak}
+      title={messages().game.streak(streak)}
+    >
+      <span aria-hidden="true">🔥</span>
+      {streak}x
+    </span>
+  );
+}
+
+/** Akış satırlarının solundaki yazı; iki satırın çubukları aynı hizadan başlasın diye eşit genişlikte. */
+const METER_LABEL = "flex w-[4.5rem] shrink-0 items-center gap-1 text-sm font-bold whitespace-nowrap tabular-nums lg:w-24 lg:text-lg";
 
 /**
- * Oyun sırasındaki üst bar. Yatay ekranda haritaya azami alan bırakmak için tek satırdır. Dikey telefonda yukarıda yer
- * bol olduğu için iki satırdır: üstte solda turdan çık / antrenmanı bitir, tam ortada soru, sağda yeni tur; altta solda
- * doğru sayısı, ortada bildirimler (seri, sonraki soru), sağda kalan süre. İki düzen aynı anda çizilir, ekran
- * genişliğine göre biri gizlenir (gizlenen ekran okuyucuya da görünmez).
+ * Turun iki akışı alt alta: soru akışı ve süre akışı. Soru akışında turun soruları kadar bölüm vardır; cevaplananlar
+ * yeşil ya da kırmızı, beklenen soru beyaz ve hafifçe parlar, gelecekler soluk. Solunda o ana kadarki doğru ve sorulan
+ * soru sayısı ("1/2"; tur 0/0 ile başlar). Süre akışında kalan süre yazısı ve eriyen çubuk; son 10 saniyede kırmızıya
+ * döner ve yanıp söner. Turun nerede olduğunu bir bakışta söyler; üst barda ayrıca puan ve süre yazmaz.
+ */
+function RoundMeters({
+  answers,
+  answerState,
+  questionCount,
+  score,
+  remainingGameSeconds,
+}: {
+  answers: AnswerState[];
+  answerState: AnswerState;
+  questionCount: number;
+  score: number;
+  remainingGameSeconds: number;
+}) {
+  const { game } = messages();
+  return (
+    <div className="flex flex-col gap-1.5 lg:gap-2">
+      <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+        <span className={`${METER_LABEL} text-white`} title={game.correctOfAnswered}>
+          <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-emerald-400 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span>
+            <ScoreValue score={score} />
+            <span className="text-white/45">/{answers.length}</span>
+          </span>
+        </span>
+        <div
+          aria-label={game.progress}
+          aria-valuemax={questionCount}
+          aria-valuemin={0}
+          aria-valuenow={answers.length}
+          className="flex min-w-0 flex-1 items-center gap-1"
+          role="progressbar"
+        >
+          {Array.from({ length: questionCount }, (_, index) => {
+            const answer = answers[index];
+            // Cevap gösterilirken sıradaki soru henüz gelmedi; beyaz bölüm yalnızca soru beklerken yanar.
+            const isCurrent = !answer && !answerState && index === answers.length;
+            return (
+              <span
+                className={`h-2 min-w-1.5 flex-1 rounded-full transition-colors lg:h-2.5 ${
+                  answer === "correct" ? "bg-emerald-400" : answer === "incorrect" ? "bg-rose-400" : isCurrent ? "time-pulse bg-white" : "bg-white/20"
+                }`}
+                key={index}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+        <span className={`${METER_LABEL} ${timeTone(remainingGameSeconds, ["text-rose-300", "text-amber-300", "text-white"])}`} title={game.timeLeft}>
+          <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l2.5 2M9 2h6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {formatTime(remainingGameSeconds)}
+        </span>
+        <div
+          aria-label={game.timeLeft}
+          aria-valuemax={GAME_DURATION_SECONDS}
+          aria-valuemin={0}
+          aria-valuenow={remainingGameSeconds}
+          className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/15 lg:h-2.5"
+          role="progressbar"
+        >
+          <div
+            className={`h-full rounded-full transition-[width] duration-300 ease-linear ${timeTone(remainingGameSeconds, ["time-pulse bg-rose-500", "bg-amber-400", "bg-emerald-400"])}`}
+            style={{ width: `${(remainingGameSeconds / GAME_DURATION_SECONDS) * 100}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Oyun sırasında üst bar: koyu deniz zemini; soru beyaz, basılabilir bir kartta durur. */
+const HUD_CLASS = "shrink-0 bg-[#0b3a5b] text-white";
+/** Sorunun durduğu beyaz kart; altındaki kalın kenarla oyun kartı gibi durur. */
+const QUESTION_CARD = "rounded-2xl border-b-4 border-slate-300 bg-white text-slate-900";
+
+/**
+ * Oyun sırasındaki üst bar. Dikey telefonda üstte solda turdan çık / antrenmanı bitir, ortada seri rozeti, sağda yeni
+ * tur; altında (yarışta) soru ve süre akışı, en altta soru kartı. Yatay ekranda üstte tek satır (çıkış, soru, seri ve
+ * yeni tur), altında tam genişlikte soru ve süre akışı. İki düzen aynı anda çizilir, ekran genişliğine göre biri gizlenir
+ * (gizlenen ekran okuyucuya da görünmez).
  */
 export function GameTopBar({
   player,
@@ -190,13 +303,17 @@ export function GameTopBar({
   onSignOut,
   celebration = null,
   countdown = null,
-  wrongPick = null,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
-  const timeClass = timeTone(remainingGameSeconds, ["text-rose-600", "text-amber-600", "text-slate-600"]);
+  const streak = currentStreak(answers);
+
+  // Son on saniyede her saniye kısa bir tık; süre baskısı hissedilsin.
+  useEffect(() => {
+    if (!isPractice && remainingGameSeconds > 0 && remainingGameSeconds <= 10) playSound("tick");
+  }, [isPractice, remainingGameSeconds]);
 
   return (
-    <header className="shrink-0 border-b border-slate-200 bg-white">
+    <header className={HUD_CLASS}>
       {/* Dikey telefon. Üstte solda turdan çık / antrenmanı bitir, ortada doğru sayısı ve kalan süre, sağda yeni tur. Altta
           tam genişlikte soru şeridi: soru (ad, bayrak ya da plaka) ve cevaptan sonraki bildirimler (seri, sonraki soru).
           Düellodaki şeritle aynı düzen; soru yanlardaki tuşlarla yer paylaşmadığı için uzun adlar ve bayrak rahat sığar. */}
@@ -220,25 +337,20 @@ export function GameTopBar({
             )}
           </div>
 
+          {/* Ortada seri rozeti; antrenmanda doğru / cevaplanan da burada (yarışta puan ve süre akış satırlarındadır). */}
           <div className="flex items-center gap-3">
-            <p className="flex items-center gap-1 text-sm font-bold text-slate-900 tabular-nums" title={messages().game.correct}>
-              <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>
-                <ScoreValue score={score} />
-                <span className="text-slate-400">/{isPractice ? answers.length : questionCount}</span>
-              </span>
-            </p>
-            {!isPractice && (
-              <p className={`flex items-center gap-1 text-sm font-bold tabular-nums ${timeClass}`}>
-                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
-                  <circle cx="12" cy="13" r="8" />
-                  <path d="M12 9v4l2.5 2M9 2h6" strokeLinecap="round" strokeLinejoin="round" />
+            {isPractice && (
+              <p className="flex items-center gap-1 text-sm font-bold text-white tabular-nums" title={messages().game.correctOfAnswered}>
+                <svg aria-hidden="true" className="h-3.5 w-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {formatTime(remainingGameSeconds)}
+                <span>
+                  <ScoreValue score={score} />
+                  <span className="text-white/45">/{answers.length}</span>
+                </span>
               </p>
             )}
+            <StreakChip streak={streak} />
           </div>
 
           <div className="flex min-w-0 justify-end">
@@ -253,23 +365,28 @@ export function GameTopBar({
                 <RoundControls choice={choice} isCompact onPlay={onPlay} />
               )
             ) : (
-              roundLabel && <span className="truncate rounded-full bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-800">{roundLabel}</span>
+              roundLabel && <span className="truncate rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-cyan-100">{roundLabel}</span>
             )}
           </div>
         </div>
 
-        <div className="mt-2 flex min-h-14 flex-col items-center justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+        {!isPractice && (
+          <div className="mt-2">
+            <RoundMeters answerState={answerState} answers={answers} questionCount={questionCount} remainingGameSeconds={remainingGameSeconds} score={score} />
+          </div>
+        )}
+
+        <div className={`mt-2 flex min-h-14 flex-col items-center justify-center px-3 py-1.5 ${QUESTION_CARD}`}>
           <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
             <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
           </div>
           <div aria-live="polite" className="mt-1 flex flex-wrap items-center justify-center gap-1.5 empty:mt-0">
-            {wrongPick && <span className="max-w-full truncate rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-rose-600">{wrongPick}</span>}
             {celebration && (
               <span className="streak-pop rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-amber-950" key={celebration}>
                 {celebration}
               </span>
             )}
-            {countdown && <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums">{countdown}</span>}
+            {countdown && <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-cyan-800 tabular-nums">{countdown}</span>}
           </div>
         </div>
       </div>
@@ -284,7 +401,7 @@ export function GameTopBar({
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-center gap-2 lg:gap-3">
+        <div className={`flex min-w-0 items-center justify-center gap-2 px-4 py-1 lg:gap-3 lg:px-6 lg:py-1.5 ${QUESTION_CARD}`}>
           <QuestionPrompt answerState={answerState} choice={choice} question={question} />
         </div>
 
@@ -293,12 +410,13 @@ export function GameTopBar({
             <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase lg:inline lg:text-xs">
               {choiceLabel(choice)}
             </span>
-            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl" title={messages().game.correctOfAnswered}>
+            <StreakChip streak={streak} />
+            <p className="shrink-0 text-sm font-bold text-white tabular-nums lg:text-xl" title={messages().game.correctOfAnswered}>
               <ScoreValue score={score} />
-              <span className="text-slate-400">/{answers.length}</span>
+              <span className="text-white/45">/{answers.length}</span>
             </p>
             <button
-              className="hit-area shrink-0 rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-sm"
+              className="hit-area shrink-0 rounded-full border border-white/25 px-3 py-1 text-xs font-bold text-white/85 transition hover:border-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-sm"
               onClick={onFinishPractice}
               type="button"
             >
@@ -307,47 +425,23 @@ export function GameTopBar({
           </div>
         ) : (
           <div className="flex items-center justify-end gap-3 lg:gap-5">
-            {/* Yalnızca geniş ekranda: yatay telefonda uzun soru adlarıyla çakışır, puan zaten "2/10" diye yazıyor. */}
-            <div aria-label={messages().game.progress} className="hidden shrink-0 items-center gap-1 lg:flex">
-              {Array.from({ length: questionCount }, (_, index) => (
-                <span
-                  className={`h-2 w-3 rounded-full lg:w-4 ${answers[index] === "correct" ? "bg-emerald-500" : answers[index] === "incorrect" ? "bg-rose-500" : "bg-slate-200"}`}
-                  key={index}
-                />
-              ))}
-            </div>
-
-            <p className="shrink-0 text-sm font-bold text-slate-900 tabular-nums lg:text-xl">
-              <ScoreValue score={score} />
-              <span className="text-slate-400">/{questionCount}</span>
-            </p>
-
-            <p className={`shrink-0 text-sm font-bold tabular-nums lg:text-xl ${timeClass}`}>{formatTime(remainingGameSeconds)}</p>
+            <StreakChip streak={streak} />
 
             {onPlay ? (
               <RoundControls choice={choice} onPlay={onPlay} />
             ) : (
               roundLabel && (
-                <span className="hidden shrink-0 rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-800 md:inline lg:text-sm">{roundLabel}</span>
+                <span className="hidden shrink-0 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-cyan-100 md:inline lg:text-sm">{roundLabel}</span>
               )
             )}
           </div>
         )}
       </div>
 
+      {/* Geniş ekranda soru ve süre akışı üst barın altında tam genişlikte; dikey telefonda soru kartının üstündedir. */}
       {!isPractice && (
-        <div
-          aria-label={messages().game.timeLeft}
-          aria-valuemax={GAME_DURATION_SECONDS}
-          aria-valuemin={0}
-          aria-valuenow={remainingGameSeconds}
-          className="h-1 w-full bg-slate-100"
-          role="progressbar"
-        >
-          <div
-            className={`h-full transition-[width] duration-300 ease-linear ${timeTone(remainingGameSeconds, ["bg-rose-500", "bg-amber-500", "bg-cyan-500"])}`}
-            style={{ width: `${(remainingGameSeconds / GAME_DURATION_SECONDS) * 100}%` }}
-          />
+        <div className="hidden px-3 pb-2.5 sm:block lg:px-5 lg:pb-3">
+          <RoundMeters answerState={answerState} answers={answers} questionCount={questionCount} remainingGameSeconds={remainingGameSeconds} score={score} />
         </div>
       )}
     </header>

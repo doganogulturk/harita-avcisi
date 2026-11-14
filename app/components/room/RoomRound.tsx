@@ -86,7 +86,6 @@ export function RoomRound({ state, player, round, roundId, questionIds, onDone, 
       <GameTopBar
         celebration={celebration}
         countdown={countdown}
-        wrongPick={wrongPick}
         answerState={play.answerState}
         answers={play.answers}
         choice={choice}

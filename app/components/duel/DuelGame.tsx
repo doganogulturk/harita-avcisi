@@ -108,7 +108,7 @@ function ExitButton({ onExit }: { onExit: () => void }) {
   return (
     <button
       aria-label={messages().duel.exit}
-      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 lg:h-9 lg:w-9"
+      className="hit-area flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/80 transition hover:border-rose-300 hover:bg-white/10 hover:text-rose-200 lg:h-9 lg:w-9"
       onClick={onExit}
       title={messages().duel.exitTitle}
       type="button"
@@ -235,7 +235,9 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-      <header className="shrink-0 border-b border-slate-200">
+      {/* Koyu deniz zemininde oyun göstergesi (tek kişilik oyundaki GameTopBar ile aynı dil): oyuncu kutuları ve soru beyaz
+          kartlarda. */}
+      <header className="shrink-0 bg-[#0b3a5b]">
         {/* Dikey telefon: üstte çıkış ve iki oyuncu, altta tam genişlikte soru şeridi. Tek satırda oyuncu kutuları soruyla
             üst üste biniyordu. */}
         <div className="px-3 pt-2 pb-2 sm:hidden">
@@ -252,7 +254,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
               />
             </div>
           </div>
-          <div className="mt-2 flex min-h-14 flex-col items-center justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+          <div className="mt-2 flex min-h-14 flex-col items-center justify-center rounded-2xl border-b-4 border-slate-300 bg-white px-3 py-1.5">
             {questionArea}
             {countdown && <p className="mt-0.5 text-xs font-bold text-cyan-800 tabular-nums">{countdown}</p>}
           </div>
@@ -265,7 +267,7 @@ export function DuelGame({ state, serverNow, onAnswer, onExit }: DuelGameProps) 
             <ScoreChip gained={isEnded ? (mine?.points ?? 0) : 0} player={me} status={answerStatus(state, mine, isEnded, true, isCountdown)} tone="me" />
           </div>
 
-          <div className="flex min-w-0 flex-col items-center">{questionArea}</div>
+          <div className="flex min-w-0 flex-col items-center rounded-2xl border-b-4 border-slate-300 bg-white px-4 py-1 lg:px-6 lg:py-1.5">{questionArea}</div>
 
           <div className="flex min-w-0 justify-end">
             <ScoreChip
