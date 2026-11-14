@@ -192,27 +192,23 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
-## Durum (1 Kasım 2026)
+## Durum (7 Kasım 2026)
 
-App Store Connect'te girildi (tarayıcıdan, 1 Kasım):
+**1.1.1 (yapı 2) App Store'da yayında:** <https://apps.apple.com/tr/app/id6828617508>. App Store Connect'te durumu
+"Ready for Distribution"; ücretsiz, 175 ülkede, 4+.
 
-- Sürüm 1.1.1, yapı 2 seçili; Türkçe ve İngilizce (U.K.) tanıtım metni, açıklama, anahtar kelimeler, destek ve
-  pazarlama adresleri; telif; inceleme notu ve iletişim bilgisi; "Sign-in required" kapalı; yayın elle (Manually
-  release).
-- App Information: Türkçe ve İngilizce ad ve alt başlık; kategori Games → Trivia, ikincil Education.
-- Yaş derecelendirmesi: bütün sorular Hayır/Yok (kullanıcı içeriği dahil) → **4+**.
-- Fiyat ücretsiz, 175 ülkede.
-- App Privacy: gizlilik politikası adresi (iki dilde).
-- TestFlight'ta yapı 2 kullanıcının iPhone'unda denendi, sorun yok.
+Mağaza kaydı:
 
-Hesap sahibi tarafından (1 Kasım): ekran görüntüleri (TR/EN, iPhone ve iPad), App Privacy beyanı (Ad, E-posta,
-Kullanıcı Kimliği, Oyun İçeriği; kullanıcıya bağlı, izleme yok, App Functionality), Content Rights, Digital Services
-Act. **1 Kasım 2026'da incelemeye gönderildi** (Waiting for Review). Yayın elle: onaydan sonra "Release This Version"
-ile yayına alınır.
+- Türkçe (birincil) ve İngilizce (U.K.) metinler ve ekran görüntüleri; kategori Games → Trivia, ikincil Education.
+- Yaş derecelendirmesi: bütün sorular Hayır/Yok (kullanıcı içeriği dahil).
+- App Privacy: Ad, E-posta, Kullanıcı Kimliği, Oyun İçeriği; kullanıcıya bağlı, izleme yok, App Functionality.
+- Yayın elle (Manually release): onaylanan sürüm "Release This Version" ile yayına alınır.
 
-Sıradaki:
+İnceleme geçmişi: 1 Kasım'da gönderildi. 2 Kasım'da Apple, hesabın inceleme geçmişi az olduğu için Kural 2.1 kapsamında
+ek bilgi istedi (gerçek cihazda ekran kaydı, amaç ve hedef kitle, özelliklere erişim, dış hizmetler, bölge farkları,
+lisanslı içerik). 3 Kasım'da cevaplandı, aynı bilgiler App Review Information → Notes alanına da yazıldı (sonraki
+sürümlerde orada duruyor). Ardından onaylandı.
 
-1. İnceleme sonucu (genelde 1–2 gün). Ret gelirse gerekçesi App Store Connect → Resolution Center'da; olası
-   konular README'deki "App Store incelemesinde istenirse" başlığında.
-2. Onaydan sonra yayın tarihi seçilir; Android'in üretime geçişiyle aynı haftaya denk getirilmez.
-3. README'de "Nerede oynanır" ve yol haritası App Store'a çıkınca güncellenir.
+Sonraki sürümlerde: yapı numarasını artırıp yükleme ([GELISTIRME.md](GELISTIRME.md) → "App Store sürümü"), App Store
+Connect'te yeni sürüm ve sürüm notları, gerekirse ekran görüntüleri. Notes'taki bilgileri değişen özelliklere göre
+güncel tutmak gerekir.

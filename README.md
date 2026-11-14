@@ -50,7 +50,8 @@ meydan okuması** var.
 - **Web:** Tarayıcıdan, kurulum gerekmeden. Ana ekrana uygulama olarak da eklenebilir.
 - **Android:** Google Play'de kapalı testte, sürüm 1.1.0 (yukarıdaki özelliklerin hepsiyle). Mağaza sayfası Türkçe ve
   İngilizce.
-- **iOS (iPhone ve iPad):** Sürüm 1.1.1, 1 Kasım 2026'da App Store incelemesine gönderildi.
+- **iOS (iPhone ve iPad):** [App Store'da](https://apps.apple.com/tr/app/id6828617508), sürüm 1.1.1. Mağaza sayfası Türkçe
+  ve İngilizce.
 
 Google hesabınla (iOS uygulamasında Apple hesabınla da) ya da misafir olarak giriş yapabilirsin; antrenman için giriş
 gerekmez.
@@ -59,10 +60,8 @@ gerekmez.
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **App Store'a çıkış:** 1.1.1 incelemede (1 Kasım 2026). Onaydan sonra yayın elle başlatılır; Android'in üretime
-   geçişiyle aynı haftaya denk getirilmez. Ayrıntılar: [docs/APP-STORE.md](docs/APP-STORE.md) → "Durum".
-2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
-3. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
+1. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+2. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
    üretim erişimi başvurusu).
 
 Teknik işler:
@@ -73,7 +72,7 @@ Teknik işler:
   turlarda geçerli olur; güncellemeyen eski sürüm yarış skoru kaydedemez.
 - Ana sayfa bileşeninin (`app/page.tsx`) sadeleştirilmesi.
 
-App Store incelemesinde istenirse:
+App Store incelemesinden istenmeden geçti; sonraki bir incelemede istenirse:
 
 - Sıralamada görünen adlar için bildirme ve gizleme (Kural 1.2; oyuncular yalnızca ad yazıyor, sohbet yok).
 - Apple ile giren oyuncu hesabını silince Apple'daki bağlantının da kaldırılması (Sign in with Apple REST API; Apple'dan
