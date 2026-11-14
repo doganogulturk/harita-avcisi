@@ -56,6 +56,16 @@ Yarışın soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.2.0)**
+
+```
+• Yepyeni, oyun gibi görünüm: büyük OYNA tuşu, renkli mod kartları
+• Mod seçimi tek dokunuş: İller, Plakalar, Ülkeler, Bayraklar, Başkentler
+• Oyun sırasında soru ve süre akışı, seri rozeti, doğru cevapta +1
+• Yanlış cevapta dokunduğun yer haritanın altında net görünür
+• Ses efektleri (menüden kapatılabilir), sonuçta yıldızlar ve konfeti
+```
+
 **Sürüm notları (1.1.1)**
 
 ```
@@ -125,6 +135,16 @@ Race questions are picked on the server, and scores and times are verified there
 • Play in portrait or landscape; in landscape the map is twice as big
 • Sign in with Google or as a guest; practice needs no account
 • No ads, no tracking
+```
+
+**Release notes (1.2.0)**
+
+```
+• A brand-new, game-like look: big PLAY button, colourful mode cards
+• One tap to pick a mode: Provinces, Plates, Countries, Flags, Capitals
+• Question and time tracks while playing, streak badge, +1 on correct answers
+• On a wrong answer, the place you tapped is shown clearly below the map
+• Sound effects (can be turned off in the menu), stars and confetti on results
 ```
 
 **Release notes (1.1.1)**

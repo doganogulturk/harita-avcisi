@@ -192,6 +192,32 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
+## Sürüm 1.2.0 (yapı 3)
+
+Yeni, oyun gibi arayüz. App Store Connect'te yeni sürüm 1.2.0 açılır, yapı 3 seçilir ve "What's New in This Version"
+alanına iki dilde aşağıdaki metin girilir. Ekran görüntüleri eski arayüzü gösteriyor; yenileri çekilene kadar
+eskileri kalabilir ama mağaza sayfası uygulamayla uyuşmaz.
+
+Türkçe:
+
+```
+• Yepyeni, oyun gibi görünüm: büyük OYNA tuşu, renkli mod kartları
+• Mod seçimi tek dokunuş: İller, Plakalar, Ülkeler, Bayraklar, Başkentler
+• Oyun sırasında soru ve süre akışı, seri rozeti, doğru cevapta +1
+• Yanlış cevapta dokunduğun yer haritanın altında net görünür
+• Ses efektleri (menüden kapatılabilir), sonuçta yıldızlar ve konfeti
+```
+
+İngilizce (U.K.):
+
+```
+• A brand-new, game-like look: big PLAY button, colourful mode cards
+• One tap to pick a mode: Provinces, Plates, Countries, Flags, Capitals
+• Question and time tracks while playing, streak badge, +1 on correct answers
+• On a wrong answer, the place you tapped is shown clearly below the map
+• Sound effects (can be turned off in the menu), stars and confetti on results
+```
+
 ## Durum (7 Kasım 2026)
 
 **1.1.1 (yapı 2) App Store'da yayında:** <https://apps.apple.com/tr/app/id6828617508>. App Store Connect'te durumu
