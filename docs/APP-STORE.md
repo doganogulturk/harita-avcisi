@@ -194,7 +194,9 @@ yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına
 
 ## Sürüm 1.3.0 (yapı 4)
 
-İlçeler ("Haritayı tamamla") oyunu, il kartları ve açılış animasyonu. Yapı 4, 15 Kasım 2026'da Xcode'dan yüklendi.
+İlçeler ("Haritayı tamamla") oyunu, il kartları ve açılış animasyonu. Yapı 4, 15 Kasım 2026'da Xcode'dan yüklendi ve
+**aynı gün incelemeye gönderildi** (Waiting for Review). iPhone ve iPad, TR ve EN için 8'er yeni ekran görüntüsü
+yüklendi (dosya adlarına `iphone-tr-` gibi ön ek verildi ki Asset Library'de karışmasın).
 Ekran görüntüleri yenilendi (`node scripts/capture-store-screenshots.mjs`, 8 ekran; il kartları ve ilçe oyunu dahil).
 App Review Notes'un "How to access the features" bölümüne İlçeler eklenir: ana ekranda "İlçeler" karosu → bir il seç;
 giriş gerekmez, sunucuya bir şey yazılmaz. Yayın otomatik.
