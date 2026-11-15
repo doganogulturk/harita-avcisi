@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: "Harita Avcısı'nın kullanım koşulları, oyun kuralları ve kaynak lisansları.",
 };
 
-/** Haritalar, bayraklar ve yazı tipinin kaynakları; iki dilde aynı tablo. */
-function SourcesTable({ headers, rows }: { headers: [string, string, string]; rows: [string, string, string, string] }) {
+/** Haritalar, ilçe sınırları, bayraklar ve yazı tipinin kaynakları; iki dilde aynı tablo. */
+function SourcesTable({ headers, rows }: { headers: [string, string, string]; rows: [string, string, string, string, string] }) {
   return (
     <table>
       <thead>
@@ -49,6 +49,19 @@ function SourcesTable({ headers, rows }: { headers: [string, string, string]; ro
             </a>
           </td>
           <td>MIT</td>
+        </tr>
+        <tr>
+          <td>{rows[4]}</td>
+          <td>
+            <a href="https://data.humdata.org/dataset/cod-ab-tur" rel="noreferrer" target="_blank">
+              OCHA, Harita Genel Komutanlığı (HDX, cod-ab-tur)
+            </a>
+          </td>
+          <td>
+            <a href="https://creativecommons.org/licenses/by/3.0/igo/" rel="noreferrer" target="_blank">
+              CC BY-IGO
+            </a>
+          </td>
         </tr>
         <tr>
           <td>{rows[3]}</td>
@@ -112,7 +125,7 @@ const TURKISH = (
       Oyunun tasarımı ve kodu {DATA_CONTROLLER}&apos;e aittir. Haritalar, bayraklar ve yazı tipi aşağıdaki açık
       lisanslı kaynaklardan alınmıştır:
     </p>
-    <SourcesTable headers={["Varlık", "Kaynak", "Lisans"]} rows={["Türkiye haritası", "Dünya haritası", "Bayraklar", "Başlık yazı tipi"]} />
+    <SourcesTable headers={["Varlık", "Kaynak", "Lisans"]} rows={["Türkiye haritası", "Dünya haritası", "Bayraklar", "Başlık yazı tipi", "İlçe sınırları (sadeleştirildi)"]} />
     <p>
       Haritalar oyun amacıyla kullanılır; gösterilen sınırlar resmî sınırları ya da herhangi bir siyasi görüşü temsil
       etmez.
@@ -186,7 +199,7 @@ const ENGLISH = (
       The game&apos;s design and code belong to {DATA_CONTROLLER}. The maps, flags and font come from the following
       openly licensed sources:
     </p>
-    <SourcesTable headers={["Asset", "Source", "License"]} rows={["Map of Türkiye", "World map", "Flags", "Heading font"]} />
+    <SourcesTable headers={["Asset", "Source", "License"]} rows={["Map of Türkiye", "World map", "Flags", "Heading font", "District boundaries (simplified)"]} />
     <p>
       The maps are used for the purposes of the game; the borders shown don&apos;t represent official borders or any
       political position.

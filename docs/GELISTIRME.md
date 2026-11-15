@@ -55,7 +55,11 @@ sağda olur. Dikey telefonda harita kartı ekranın boş kalan yerini alır. Ba�
 her adımdan ilk adıma döner. İkinci adım tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez); telefonda geri
 hareketi siteden çıkmaz, oyun seçimine döner. Tüm seçimler tarayıcıda hatırlanır.
 
-İlk ziyarette açılış animasyonundan sonra bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
+Sayfa açılınca deniz zemininde kısa (~2,4 sn) bir açılış animasyonu oynar: arkada silik bir Türkiye haritası belirir
+(`public/maps/turkey-outline.svg`, ~10 KB, `npm run maps:districts` üretir); büyük nişangah simgesi haritanın batısından
+gelip üzerinde hedef arar gibi kayar, İç Anadolu'ya kilitlenir ve etrafından bir halka yayılır; hemen altında "harita
+avcısı" açılır (alt alta, `Logo size="curtain"`), ekranın en
+altında küçük ve soluk "doğan oğultürk" imzası gelir, sonra katman çekilir (`IntroCurtain`). İlk ziyarette açılış animasyonundan sonra bir tanıtım açılır (`intro/Guide.tsx`): nasıl oynanır (gerçek
 Türkiye ve dünya haritalarında isim, plaka, bayrak ve başkent soruları; sorulan yer yeşil yanar), dokunmatik cihazda **Telefonda**
 (yan çevir ve iki parmakla yakınlaştır animasyonları), tek başına ve arkadaşlarla oynanan oyunlar, arkadaşlarla oynamak. Kaydırarak, ok tuşlarıyla ya da alttaki
 tuşlarla gezilir; **Geç** her ekranda durur. Son ekranın asıl tuşu **Başlayalım** ana ekrandaki oyun seçimine döner; giriş
@@ -199,6 +203,35 @@ oynanan gün), düellolar (oynanan, galibiyet, beraberlik, mağlubiyet), her sı
 ve kural, tarih, skor; hükmen biten düello işaretlenir. Misafir hesapta verinin çıkışta ya da cihaz
 değişince kaybolacağı yazar. Antrenman kaydedilmediği için profilde yoktur; oda turları yarış turu sayılır. Veri tek bir
 sunucu fonksiyonundan gelir (`my_profile`). Alttan açılan sayfa sıralamayla ortaktır (`BottomSheet.tsx`).
+
+### İlçeler (Haritayı tamamla)
+
+Ana ekrandaki **İlçeler** karosu (köşesinde "Yeni") `/ilceler` sayfasını açar (`components/districts/DistrictScreen.tsx`).
+Önce il seçilir (`components/districts/ProvincePicker.tsx`). Her il bir oyun kartıdır (telefonda tek sütun, genişledikçe
+2–5 sütun): saydam, denizin üstünde cam gibi; ortasında ilin beyaz silüeti durur. Dört köşede etiketler vardır: sol
+üstte plaka, sağ üstte bölgenin renginde coğrafi bölge (`lib/turkish-regions.ts`, yedi bölge; renk yalnızca burada), sol
+altta ilin adı (uzun adlar
+kademeli küçülür, hiçbir genişlikte kırpılmaz), sağ altta ilçe sayısı. Etiketlerin iç köşesi yuvarlaktır; iki yanındaki
+içbükey kıvrımlar (`CornerLabel`) onları kartın kenarlarına bağlar. Üstte arama (ad ya da plaka) ve sıralama: **A–Z**,
+**Plaka**, **Bölge** (bölge başlıklarıyla gruplu; bölgeler arayüz dilindeki adlarına göre alfabetik, il sayısı başlığın
+en sağında; bölge başlıkta yazdığı için kartlarda bölge etiketi gizlenir) ve **İlçe sayısı** (azdan çoğa); seçilen sıralama tarayıcıda hatırlanır.
+Silüetler `public/maps/districts/provinces.json`'da (plaka → [viewBox, yol], ~23 KB), bir kez indirilir. Sonra o ilin bütün ilçeleri haritada boş (kum
+rengi) gelir; alttaki listede (yatay ve geniş ekranda sağda) ilçe adları Türkçe alfabe sırasıyla durur. Oyuncu haritadan bir
+ilçeye ve listeden bir ada dokunur; sırası serbesttir (önce ad da seçilebilir). Eşleşme doğruysa ilçe yeşile döner, adı
+haritaya ilçenin içine sığacak boyda yazılır (çok küçük ilçede yazılmaz, yakınlaşınca okunur) ve ad listeden düşer.
+Yanlışsa ilçe ve ad bir an kırmızı yanar, süreye 5 saniye eklenir. Üst barda yerleşen ilçe akışı (✓ 9/25), süre (cezalar
+dahil), seri rozeti ve hata sayısı durur; süre ilk dokunuşta başlar. 12'den çok ad kalınca listenin üstünde arama kutusu
+çıkar. Bütün ilçeler yerleşince sonuç kartı: yıldızlar (hatasız 3; puan, ilçe sayısından hata sayısı düşülerek
+`RoundCelebration`'daki oranla), süre, hata, **Tekrar oyna** ve **Başka il**. Tur kaydedilmez; kişisel rekorlar ve il
+koleksiyonu sıradaki adımda.
+
+Haritalar ve adlar `npm run maps:districts` (`scripts/build-district-maps.mjs`) ile üretilir: resmî sınırları HDX'ten
+indirir (`.cache/`, depoya girmez), verideki bozuk Türkçe adları (ı yerine i, fazladan nokta) Wikipedia'nın "Districts of
+Turkey" il tablolarıyla il bazında eşleştirip düzeltir, her il için sınırları mapshaper ile komşular arasında boşluk
+bırakmadan sadeleştirir (%6) ve `public/maps/districts/<plaka>.svg` ile `lib/districts-data.ts`'i yazar. Her ilçe
+`<path id="TUR006007" data-lx data-ly>` olur; kod "TUR" + plaka + sıra, `data-lx/ly` adın yazılacağı iç nokta. Eşleşmeyen
+ad ya da haritada eksik ilçe kalırsa betik durur. Toplam ~630 KB; il seçilince yalnızca o ilin dosyası indirilir. Aynı
+betik il sınırlarını %1 sadeleştirip kartların silüet dosyasını da yazar.
 
 ### Rozetler
 
@@ -458,6 +491,7 @@ Tüm varlıklar projeyle birlikte sunulur; çalışma zamanında dış bir CDN'e
 | --- | --- | --- |
 | `maps/turkey.svg` | [dnomak/svg-turkiye-haritasi](https://github.com/dnomak/svg-turkiye-haritasi) | MIT |
 | `maps/world.svg` | [flekschas/simple-world-map](https://github.com/flekschas/simple-world-map) | CC BY-SA 3.0 |
+| `maps/districts/<plaka>.svg` | [HDX cod-ab-tur](https://data.humdata.org/dataset/cod-ab-tur) (BM OCHA, kaynak Harita Genel Komutanlığı), sadeleştirildi | CC BY-IGO |
 | `flags/*.svg` | [lipis/flag-icons](https://github.com/lipis/flag-icons) 7.5.0 | MIT |
 | Başlık yazı tipi | [Stack Sans Notch](https://fonts.google.com/specimen/Stack+Sans+Notch), `next/font` ile derlemede gömülür | OFL 1.1 |
 

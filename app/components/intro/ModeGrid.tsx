@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
@@ -41,10 +42,12 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
 
       <div className="intro-focus flex min-w-0 flex-col gap-3 short:gap-2 lg:gap-4" style={delay(1)}>
         <p className="text-[11px] font-bold tracking-[0.15em] text-cyan-100/60 uppercase lg:text-xs">{home.moreGames}</p>
-        <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
+        {/* Dört karo: telefonda ve yan sütunda 2×2, geniş ekranda tek satır. */}
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4">
           {TILES.map((tile) => (
             <GameTile key={tile.id} onClick={() => onSelect(tile.id)} tile={tile} />
           ))}
+          <DistrictsTile />
         </div>
         <JoinForm onJoin={onJoin} outlineClass={gameInfo("duel").theme.outline} submitClass={gameInfo("duel").theme.badge} />
       </div>
@@ -81,19 +84,43 @@ const TILES: Tile[] = [
   { id: "room", color: "bg-violet-600 text-white border-violet-300/50", edge: "#4c1d95" },
 ];
 
+/** Karonun görünüşü: dar sütunda (2×2) simge solda, ad ve not sağda; geniş ekranda simge üstte. */
+const TILE_CLASS =
+  "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 py-2.5 text-left max-[22.5rem]:gap-1.5 max-[22.5rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none short:py-1.5 lg:flex-col lg:justify-center lg:gap-2 lg:rounded-3xl lg:px-2 lg:py-6 lg:text-center";
+
+function TileText({ title, note }: { title: string; note: string }) {
+  return (
+    <span className="flex min-w-0 flex-col lg:items-center">
+      <span className="max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-sm lg:text-2xl">{title}</span>
+      <span className="max-w-full truncate text-[11px] font-semibold opacity-80 short:hidden lg:text-sm">{note}</span>
+    </span>
+  );
+}
+
 function GameTile({ tile, onClick }: { tile: Tile; onClick: () => void }) {
   const { home } = messages();
   return (
-    <button
-      className={`press press-sm flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 px-1.5 py-3 max-[22.5rem]:px-1 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none short:py-2 lg:gap-2 lg:rounded-3xl lg:py-6 ${tile.color}`}
-      onClick={onClick}
-      style={{ "--press-edge": tile.edge } as React.CSSProperties}
-      type="button"
-    >
-      <GameIcon className="h-7 w-7 short:h-5 short:w-5 lg:h-10 lg:w-10" game={tile.id} />
-      <span className="max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-[13px] lg:text-2xl">{gameInfo(tile.id).title}</span>
-      <span className="max-w-full truncate text-[11px] font-semibold opacity-80 short:hidden lg:text-sm">{home.tileNotes[tile.id]}</span>
+    <button className={`${TILE_CLASS} ${tile.color}`} onClick={onClick} style={{ "--press-edge": tile.edge } as React.CSSProperties} type="button">
+      <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" game={tile.id} />
+      <TileText note={home.tileNotes[tile.id]} title={gameInfo(tile.id).title} />
     </button>
+  );
+}
+
+/** İlçeler: ayrı sayfada (/ilceler) "Haritayı tamamla"; köşesinde "Yeni" rozeti. */
+function DistrictsTile() {
+  const { districts } = messages();
+  return (
+    <Link className={`${TILE_CLASS} border-teal-200/60 bg-teal-500 text-white [--press-edge:#115e59]`} href="/ilceler">
+      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+        <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z" />
+        <path d="M9 4v13.5M15 6.5V20" />
+      </svg>
+      <TileText note={districts.tileNote} title={districts.title} />
+      <span className="absolute -top-2 -right-1.5 rotate-6 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase shadow ring-2 ring-[#0b3a5b]">
+        {districts.badgeNew}
+      </span>
+    </Link>
   );
 }
 

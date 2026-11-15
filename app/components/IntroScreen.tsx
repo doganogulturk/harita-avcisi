@@ -77,9 +77,9 @@ let hasPlayedIntro = false;
 const INTRO_STEP_KEY = "introStep";
 
 /** Açılış katmanının çekilip bittiği an (globals.css'teki intro-curtain gecikmesi + süresi). */
-const INTRO_CURTAIN_MS = 1820;
+const INTRO_CURTAIN_MS = 2370;
 /** Seçim ekranı, katman çekilirken netleşmeye başlar. */
-const INTRO_CONTENT_DELAY_MS = 1400;
+const INTRO_CONTENT_DELAY_MS = 1950;
 /** İlk kartın gecikmesi; sonraki kartlar birer adım arayla gelir. */
 const INTRO_CARD_DELAY_MS = INTRO_CONTENT_DELAY_MS + 80;
 const INTRO_CARD_STEP_MS = 90;
@@ -92,8 +92,23 @@ const INTRO_DONE_MS = INTRO_CARD_DELAY_MS + INTRO_CARD_STEP_MS + 700;
  */
 function IntroCurtain() {
   return (
-    <div aria-hidden="true" className="intro-curtain sea-backdrop fixed inset-0 z-40 flex items-center justify-center px-6">
-      <Logo isHeading={false} onDark size="curtain" />
+    <div aria-hidden="true" className="intro-curtain sea-backdrop fixed inset-0 z-40 flex items-center justify-center overflow-hidden px-6">
+      {/* Silik Türkiye haritası: nişangahın kilitlendiği nokta (İç Anadolu, haritanın ~%44 / %47'si) simgenin altına gelir.
+          Simge ad grubunun üstünde olduğu için ekran ortasının biraz yukarısındadır (--badge-lift). */}
+      <span
+        className="intro-map map-outline pointer-events-none absolute top-1/2 left-1/2 aspect-[1000/422] w-[min(86vw,760px)] bg-cyan-200/[0.13] [--badge-lift:34px] short:[--badge-lift:21px] lg:[--badge-lift:50px]"
+        style={{ translate: "-44% calc(-47% - var(--badge-lift))" }}
+      />
+      <div className="relative">
+        <Logo isHeading={false} onDark size="curtain" />
+      </div>
+      {/* Geliştiricinin imzası: ekranın en altında, küçük ve soluk; ad belirdikten az sonra gelir. */}
+      <span
+        className="intro-focus absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+2rem)] text-center font-display text-lg font-bold tracking-[-0.02em] text-cyan-100/60 short:bottom-[calc(env(safe-area-inset-bottom)+1rem)] short:text-base lg:text-2xl"
+        style={{ "--intro-delay": "1300ms" } as React.CSSProperties}
+      >
+        doğan oğultürk
+      </span>
     </div>
   );
 }

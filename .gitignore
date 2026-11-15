@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Android sürüm paketleri (npm run android:release)
 /release/
+
+# İlçe haritası üretiminin indirdiği ham veri (scripts/build-district-maps.mjs)
+/.cache/

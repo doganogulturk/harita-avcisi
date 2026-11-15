@@ -30,6 +30,8 @@ meydan okuması** var.
   kodun düello mu oda mı olduğunu oyun kendisi bulur. Yarış ve Antrenman'da beş mod (İller, Plakalar, Ülkeler,
   Bayraklar, Başkentler) renkli karolardır; karoya dokununca tur hemen başlar. Düello ve Oda'da aynı karolarla mod seçilir,
   yanında seçime göre haritada canlı bir önizleme döner ("🏛️ Kanberra hangi ülke?" → Avustralya yeşil yanar).
+- **İlçeler (Haritayı tamamla):** Bir il seç; bütün ilçeleri haritada boş gelir. Haritadan bir ilçeye, listeden adına
+  dokun, doğruysa ilçe yeşile döner ve adı haritaya yazılır. 81 il, 973 ilçe; yanlış eşleşme süreye 5 saniye ekler.
 - **Başkentler:** Ekrana başkent gelir, sen ülkesini bulursun; cevaptan sonra ülkenin adı da yazar. 174 ülke (başkenti
   tartışmalı olanlar ve bağlı topraklar yok), Türkçe yazımla (Pekin, Moskova, Varşova).
 - **Günün meydan okuması:** Her gün beş mod için herkese aynı 10 soru, günde bir hak, günlük sıralama, gün serisi ve
@@ -66,8 +68,10 @@ gerekmez.
 
 Sıradaki işler, öncelik sırasıyla:
 
-1. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
-2. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
+1. **İlçeler:** kişisel rekorlar ve il koleksiyonu (profilde tamamlanan iller), sonra aynı oyun tipiyle ülkelerin
+   eyaletleri.
+2. **Yeni içerik:** Türkiye'de bölgeler ve komşu iller (il haritasıyla).
+3. **Android'in herkese açılması:** kapalı testten üretim kanalına geçiş (Google Play'in kapalı test koşulu tamamlanınca
    üretim erişimi başvurusu).
 
 Teknik işler:

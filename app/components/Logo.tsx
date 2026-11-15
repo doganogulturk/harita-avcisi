@@ -11,10 +11,11 @@ const LOGO_SIZES = {
     text: "text-3xl short:text-2xl max-[25rem]:text-2xl lg:text-4xl",
     subtitle: "mt-0.5 text-[9px] short:text-[8px] lg:text-[11px]",
   },
+  /** Açılış ekranı: simge büyük ve üstte, ad hemen altında, ortalı. */
   curtain: {
-    row: "gap-4 lg:gap-6",
-    badge: "h-16 w-16 rounded-3xl short:h-12 short:w-12 short:rounded-2xl lg:h-24 lg:w-24",
-    icon: "h-10 w-10 short:h-8 short:w-8 lg:h-14 lg:w-14",
+    row: "flex-col gap-5 short:gap-3 lg:gap-7",
+    badge: "h-28 w-28 rounded-[2rem] short:h-16 short:w-16 short:rounded-2xl lg:h-36 lg:w-36 lg:rounded-[2.5rem]",
+    icon: "h-16 w-16 short:h-10 short:w-10 lg:h-20 lg:w-20",
     text: "text-5xl short:text-3xl lg:text-7xl",
     subtitle: "mt-1.5 text-sm short:text-xs lg:text-xl",
   },
@@ -50,7 +51,7 @@ export function Logo({
           <circle cx="12" cy="12" fill="currentColor" r="1.5" stroke="none" />
         </svg>
       </span>
-      <span className="intro-reveal flex flex-col">
+      <span className={`intro-reveal flex flex-col ${size === "curtain" ? "items-center" : ""}`}>
         <span className={`font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap ${onDark ? "text-white" : "text-slate-900"} ${style.text}`}>
           harita <span className={onDark ? "text-cyan-300" : "text-cyan-700"}>avcısı</span>
         </span>
