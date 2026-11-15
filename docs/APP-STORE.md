@@ -194,8 +194,10 @@ yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına
 
 ## Sürüm 1.2.0 (yapı 3)
 
-Yeni, oyun gibi arayüz. App Store Connect'te yeni sürüm 1.2.0 açılır, yapı 3 seçilir ve "What's New in This Version"
-alanına iki dilde aşağıdaki metin girilir. Ekran görüntüleri eski arayüzü gösteriyor; yenileri çekilene kadar
+Yeni, oyun gibi arayüz. **14 Kasım 2026'da incelemeye gönderildi.** App Store Connect'te sürüm 1.2.0 açıldı, yapı 3
+seçildi, "What's New in This Version" alanına iki dilde aşağıdaki metin girildi; App Review Notes'un 3. bölümü ("How to
+access the features") yeni arayüze göre yeniden yazıldı. Yayın bu sürümde **otomatik** (Automatically release this
+version, aşamalı yayın kapalı): onaylanınca kendiliğinden herkese çıkar. Ekran görüntüleri eski arayüzü gösteriyor; yenileri çekilene kadar
 eskileri kalabilir ama mağaza sayfası uygulamayla uyuşmaz.
 
 Türkçe:
