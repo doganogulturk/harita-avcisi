@@ -97,6 +97,12 @@ export const en: Messages = {
       description: "Duel a friend live, or play a few rounds with a group in a room. Send the code and see who's best.",
     },
   },
+  friends: {
+    host: "Host a game",
+    join: "Join with a code",
+    live: "Live · 2 players",
+    async: (min: number, max: number) => `Everyone plays in their own time · ${min}–${max} players`,
+  },
   home: {
     leaders: "Leaders",
     tabs: { ranked: "Start a race", practice: "Practice", duel: "Create duel", room: "Create room" },
@@ -115,7 +121,7 @@ export const en: Messages = {
     play: "Play",
     playHint: (questions: number, seconds: number) => `${questions} questions · ${seconds} s · get ranked`,
     tagline: "How well do you know the map?",
-    tileNotes: { practice: "No timer", duel: "1 vs 1", room: "With a group" },
+    tileNotes: { practice: "No timer", friends: "Host or join" },
     moreGames: "More games",
   },
   setup: {

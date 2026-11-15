@@ -11,6 +11,7 @@ import { LeaderboardPanel } from "./LeaderboardPanel";
 import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
+import { FriendsSetup } from "./intro/FriendsSetup";
 import { DailyBadge, DailySheet } from "./intro/DailyChallenge";
 import { useDailyStatus } from "@/lib/daily";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
@@ -267,6 +268,21 @@ export function IntroScreen({
       );
     }
 
+    if (selectedGame === "friends") {
+      return (
+        <FriendsSetup
+          onBack={goBack}
+          onJoin={async (code) => {
+            const path = await joinPathFor(code);
+            if (!path) return messages().home.codeNotFound;
+            router.push(path);
+            return null;
+          }}
+          onPick={selectGame}
+        />
+      );
+    }
+
     if (selectedGame === "duel" || selectedGame === "room") {
       const Setup = selectedGame === "duel" ? DuelSetup : RoomSetup;
       return <Setup map={map} onBack={goBack} onMapChange={setIntroMap} player={player} supabaseConfigured={supabaseConfigured} />;
@@ -296,12 +312,6 @@ export function IntroScreen({
         rankedLeaders={rankedLeaders}
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
-        onJoin={async (code) => {
-          const path = await joinPathFor(code);
-          if (!path) return messages().home.codeNotFound;
-          router.push(path);
-          return null;
-        }}
         onSelect={selectGame}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />

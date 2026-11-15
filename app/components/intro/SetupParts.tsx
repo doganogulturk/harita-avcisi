@@ -13,6 +13,7 @@ import { type IntroGame } from "@/lib/intro-preferences";
 const START_BUTTON: Record<IntroGame, { color: string; edge: string }> = {
   ranked: { color: "bg-emerald-500 text-white", edge: "#047857" },
   practice: { color: "bg-amber-400 text-amber-950", edge: "#b45309" },
+  friends: { color: "bg-orange-500 text-white", edge: "#c2410c" },
   duel: { color: "bg-orange-500 text-white", edge: "#c2410c" },
   room: { color: "bg-violet-600 text-white", edge: "#4c1d95" },
 };

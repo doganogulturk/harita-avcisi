@@ -44,8 +44,11 @@ function createPreference<T extends string>(key: string, isValid: (value: string
   return [() => useSyncExternalStore(subscribe, read, () => fallback), write] as const;
 }
 
-/** Dört oyun; giriş ekranının ilk adımında üç kartta durur: Yarış, Antrenman ve arkadaşlarımla (Düello, Oda). */
-export type IntroGame = "ranked" | "practice" | "duel" | "room";
+/**
+ * Giriş ekranının oyunları: Yarış, Antrenman, Düello ve Oda. "friends" ikisinin ortak kapısıdır: Düello ya da Oda
+ * kurulur, ya da kodla katılınır.
+ */
+export type IntroGame = "ranked" | "practice" | "friends" | "duel" | "room";
 export type IntroGroup = "solo" | "friends";
 
 const MAPS: GameMode[] = ["turkey", "world"];

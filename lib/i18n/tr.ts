@@ -97,9 +97,15 @@ export const tr = {
         `Yarışta ${questions} soru, ${seconds} saniye ve sıralama; antrenmanda süre yok, istediğin kıtayı çalış.`,
     },
     friends: {
-      title: "Arkadaşlarımla",
+      title: "Arkadaşlarla",
       description: "Düelloda bir arkadaşınla aynı anda, odada bir grupla birkaç tur. Kodu gönder, kim daha iyi görün.",
     },
+  },
+  friends: {
+    host: "Oyun kur",
+    join: "Kodla katıl",
+    live: "Aynı anda · 2 kişi",
+    async: (min: number, max: number) => `Herkes kendi zamanında · ${min}–${max} kişi`,
   },
   home: {
     leaders: "Liderler",
@@ -123,7 +129,7 @@ export const tr = {
     playHint: (questions: number, seconds: number) => `${questions} soru · ${seconds} sn · sıralamaya gir`,
     tagline: "Haritayı ne kadar iyi biliyorsun?",
     /** Ana ekrandaki oyun karolarının alt satırı. */
-    tileNotes: { practice: "Süre yok", duel: "1'e 1", room: "Grupla" },
+    tileNotes: { practice: "Süre yok", friends: "Kur ya da katıl" },
     moreGames: "Diğer oyunlar",
   },
   setup: {

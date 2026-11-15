@@ -2,11 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
 import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type IntroGame } from "@/lib/intro-preferences";
-import { gameInfo, GameIcon } from "./games";
+import { gameInfo, GameIcon, groupInfo } from "./games";
 
 type ModeGridProps = {
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
@@ -15,8 +14,6 @@ type ModeGridProps = {
   introStepMs: number;
   onSelect: (game: IntroGame) => void;
   onShowLeaderboard: () => void;
-  /** Arkadaşlarımla kartındaki kod alanı: kod bir düelloya ya da odaya götürür. Hata varsa metnini döndürür. */
-  onJoin: (code: string) => Promise<string | null>;
   /** Yarış kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
   rankedLeaders?: CardLeader[];
 };
@@ -25,11 +22,10 @@ export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null
 
 /**
  * Adım 1, oyun menüsü: büyük OYNA tuşu (yarışın ayar ekranı), altında liderler panosu; yanında ya da altında diğer
- * oyunların renkli karoları ve davet kodu alanı. Karolar üç satırda gruplanır: tek başına (Antrenman), arkadaşlarla
- * (Düello, Oda), haritayı tamamla (İller, İlçeler). Dikey telefonda hepsi alt alta, geniş ve yatay
- * ekranda iki sütun. Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
+ * oyunların renkli karoları, iki satırda: Antrenman ve Arkadaşlarla (Düello, Oda ve kodla katılma); Haritayı tamamla
+ * oyunları (Ülkeler, İller, İlçeler). Dikey telefonda hepsi alt alta, geniş ve yatay ekranda iki sütun. Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
  */
-export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
+export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, rankedLeaders = [] }: ModeGridProps) {
   const { home } = messages();
   const delay = (step: number) => ({ "--intro-delay": `${introDelayMs + introStepMs * step}ms` }) as React.CSSProperties;
 
@@ -43,8 +39,8 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
 
       <div className="intro-focus flex min-w-0 flex-col gap-3 short:gap-2 lg:gap-4" style={delay(1)}>
         <p className="text-[11px] font-bold tracking-[0.15em] text-cyan-100/60 uppercase lg:text-xs">{home.moreGames}</p>
-        {/* Üç satır: Antrenman tam genişlikte; Düello ve Oda; Haritayı tamamla oyunları (Ülkeler, İller, İlçeler) büyükten
-            küçüğe. Altı sütunlu ızgara: üçlü satırın karoları dar, simge adın üstünde. */}
+        {/* İki satır: Antrenman ve Arkadaşlarla (Düello, Oda ve kodla katılma tek kapıda); Haritayı tamamla oyunları
+            (Ülkeler, İller, İlçeler) büyükten küçüğe. Altı sütunlu ızgara: üçlü satırın karoları dar, simge adın üstünde. */}
         <div className="grid grid-cols-6 gap-2 lg:gap-4">
           {TILES.map((tile) => (
             <GameTile key={tile.id} onClick={() => onSelect(tile.id)} tile={tile} />
@@ -53,7 +49,6 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
           <MapTile href="/iller" isNew kind="provinces" />
           <MapTile href="/ilceler" kind="districts" />
         </div>
-        <JoinForm onJoin={onJoin} outlineClass={gameInfo("duel").theme.outline} submitClass={gameInfo("duel").theme.badge} />
       </div>
     </div>
   );
@@ -79,20 +74,18 @@ function PlayHero({ onClick }: { onClick: () => void }) {
   );
 }
 
-type Tile = { id: Exclude<IntroGame, "ranked">; color: string; edge: string };
+type Tile = { id: Extract<IntroGame, "practice" | "friends">; color: string; edge: string };
 
 /** Diğer oyunların karoları; her biri oyunun kendi renginde. */
 const TILES: Tile[] = [
   { id: "practice", color: "bg-amber-400 text-amber-950 border-amber-200/70", edge: "#b45309" },
-  { id: "duel", color: "bg-orange-500 text-white border-orange-300/60", edge: "#c2410c" },
-  { id: "room", color: "bg-violet-600 text-white border-violet-300/50", edge: "#4c1d95" },
+  { id: "friends", color: "bg-orange-500 text-white border-orange-300/60", edge: "#c2410c" },
 ];
 
-/** Karonun görünüşü: simge solda, ad ve not sağda. Dikey boşluk ayrı: tam genişlikteki Antrenman daha alçaktır. */
+/** Karonun görünüşü: simge solda, ad ve not sağda. */
 const TILE_CLASS =
   "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 text-left max-[22.5rem]:gap-1.5 max-[22.5rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none lg:gap-3.5 lg:rounded-3xl lg:px-4 xl:px-5";
 const TILE_PADDING = "col-span-3 py-2.5 short:py-1.5 lg:py-5";
-const WIDE_TILE_PADDING = "col-span-6 py-1.5 short:py-1 lg:py-3";
 /** Üçlü satırın karosu: simge üstte, ad altında; not yalnızca geniş ekranda (dar karoda kırpılırdı). */
 const STACKED_TILE = "col-span-2 flex-col justify-center gap-0.5! px-1.5! py-1.5 text-center short:flex-row short:gap-1.5! short:py-1.5 lg:gap-1.5! lg:py-4";
 
@@ -107,12 +100,11 @@ function TileText({ title, note, isStacked = false }: { title: string; note: str
 
 function GameTile({ tile, onClick }: { tile: Tile; onClick: () => void }) {
   const { home } = messages();
-  // Antrenman satırda tek başınadır: tam genişlikte ve daha alçak.
-  const padding = tile.id === "practice" ? WIDE_TILE_PADDING : TILE_PADDING;
+  const title = tile.id === "friends" ? groupInfo("friends").title : gameInfo(tile.id).title;
   return (
-    <button className={`${TILE_CLASS} ${padding} ${tile.color}`} onClick={onClick} style={{ "--press-edge": tile.edge } as React.CSSProperties} type="button">
+    <button className={`${TILE_CLASS} ${TILE_PADDING} ${tile.color}`} onClick={onClick} style={{ "--press-edge": tile.edge } as React.CSSProperties} type="button">
       <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" game={tile.id} />
-      <TileText note={home.tileNotes[tile.id]} title={gameInfo(tile.id).title} />
+      <TileText note={home.tileNotes[tile.id]} title={title} />
     </button>
   );
 }
@@ -238,82 +230,6 @@ function LeadersBoard({ leaders, onShowLeaderboard }: { leaders: CardLeader[]; o
   );
 }
 
-/**
- * Davetle gelen oyuncunun girişi: ana ekranda yalnızca "🔑 Kodun var mı?" satırı durur; dokununca kod alanı ve Katıl tuşu
- * açılır, alana odaklanılır. Kod düelloya mı odaya mı ait, sunucu söyler.
- */
-function JoinForm({ onJoin, outlineClass, submitClass }: { onJoin: (code: string) => Promise<string | null>; outlineClass: string; submitClass: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
-
-  const join = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const normalized = code.trim().toUpperCase();
-    if (normalized.length !== 6) return setError(messages().home.codeLength);
-    setIsBusy(true);
-    const joinError = await onJoin(normalized);
-    setIsBusy(false);
-    setError(joinError);
-  };
-
-  if (!isOpen) {
-    return (
-      <button
-        aria-expanded={false}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/25 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-white/50 hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none short:py-1.5 lg:py-3.5 lg:text-base"
-        onClick={() => setIsOpen(true)}
-        type="button"
-      >
-        <span aria-hidden="true">🔑</span>
-        {messages().home.haveCode}
-        <span className="text-orange-300">{messages().home.join}</span>
-        <span aria-hidden="true" className="text-orange-300">→</span>
-      </button>
-    );
-  }
-
-  return (
-    // Liderler panosuyla aynı ince çerçeveli kutu; başlığı da onunki gibi.
-    <form
-      className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-2xl bg-white/95 p-2.5 shadow-sm ring-1 ring-orange-200 short:p-2 lg:gap-2 lg:p-4"
-      onSubmit={(event) => void join(event)}
-    >
-      <label className="flex w-full items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-orange-700 uppercase lg:text-xs" htmlFor="join-code">
-        <span aria-hidden="true">🔑</span>
-        {messages().home.haveCode}
-      </label>
-      <input
-        // Satıra dokunarak açıldı; oyuncu hemen yazabilsin.
-        autoFocus
-        autoCapitalize="characters"
-        autoComplete="off"
-        autoCorrect="off"
-        className={`h-10 w-32 min-w-0 rounded-full border-2 bg-white px-3 text-center font-mono text-sm font-bold tracking-[0.2em] text-slate-900 uppercase outline-none focus:ring-2 short:h-8 lg:h-12 lg:w-44 lg:text-base ${outlineClass}`}
-        enterKeyHint="go"
-        id="join-code"
-        aria-label={messages().home.codeLabel}
-        maxLength={6}
-        onChange={(event) => {
-          setCode(event.target.value);
-          setError(null);
-        }}
-        placeholder="KOD123"
-        spellCheck={false}
-        value={code}
-      />
-      <button
-        className={`hit-area h-10 rounded-full px-5 text-sm font-bold shadow-sm transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60 short:h-8 short:px-4 lg:h-12 lg:px-6 lg:text-base ${submitClass}`}
-        disabled={isBusy}
-        type="submit"
-      >
-        {isBusy ? "…" : messages().home.join}
-      </button>
-      {error && <span className="w-full text-xs font-semibold text-rose-600">{error}</span>}
-    </form>
-  );
-}
 
 function TrophyIcon() {
   return (
