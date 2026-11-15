@@ -56,6 +56,16 @@ Yarışın soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.3.0)**
+
+```
+• Yeni oyun: İlçeler — Haritayı tamamla. 81 ilin 973 ilçesini haritaya yerleştir
+• İl kartları: silüetiyle her il; ada, plakaya, bölgeye ya da ilçe sayısına göre sırala
+• Yanlış eşleştirme +5 sn; turun sonunda yıldızlar
+• Açılışta yeni animasyon: nişangâh hedefi buluyor
+• Küçük ekranlarda mod kartlarında daha iyi yerleşim
+```
+
 **Sürüm notları (1.2.0)**
 
 ```
@@ -135,6 +145,16 @@ Race questions are picked on the server, and scores and times are verified there
 • Play in portrait or landscape; in landscape the map is twice as big
 • Sign in with Google or as a guest; practice needs no account
 • No ads, no tracking
+```
+
+**Release notes (1.3.0)**
+
+```
+• New game: Districts — Fill in the map. Place all 973 districts of Turkey's 81 provinces
+• Province cards: each with its silhouette; sort by name, plate, region or district count
+• A wrong match adds 5 s; stars at the end of the round
+• New launch animation: the crosshair finds its target
+• Better layout of mode cards on small screens
 ```
 
 **Release notes (1.2.0)**

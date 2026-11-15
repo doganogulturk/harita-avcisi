@@ -146,7 +146,7 @@ export function ModeTiles({ onPick, ids, gridClass, countFor, leaderFor, selecte
               <TileVisual id={board.id} isCompact={false} />
             </span>
             <span className="flex min-w-0 flex-1 flex-col justify-center self-stretch short:flex-none lg:flex-1 lg:justify-end">
-              <span className="max-w-full truncate font-display text-2xl leading-tight font-bold max-[22.5rem]:text-xl short:text-lg lg:text-3xl 2xl:text-4xl">
+              <span className="max-w-full truncate font-display text-2xl leading-tight font-bold max-[25rem]:text-xl short:text-lg lg:text-3xl 2xl:text-4xl">
                 {setup.tiles[board.id]}
               </span>
               {count !== undefined && (
@@ -157,7 +157,7 @@ export function ModeTiles({ onPick, ids, gridClass, countFor, leaderFor, selecte
               <span className="shrink-0 truncate rounded-xl bg-black/20 px-2.5 py-1 text-xs font-semibold lg:text-sm">{disabledReason}</span>
             )}
             {leader && (
-              <span className="flex max-w-[44%] min-w-0 shrink-0 flex-col items-start rounded-xl bg-black/20 px-2.5 py-1.5 short:max-w-full short:py-1 lg:max-w-full lg:px-3 lg:py-2">
+              <span className="flex max-w-[40%] min-w-0 shrink-0 flex-col items-start rounded-xl bg-black/20 px-2.5 py-1.5 short:max-w-full short:py-1 lg:max-w-full lg:px-3 lg:py-2">
                 <span className="flex max-w-full min-w-0 items-center gap-1 text-xs font-bold lg:text-sm">
                   <span aria-hidden="true">🏆</span>
                   <span className="min-w-0 truncate">{leader.name}</span>
