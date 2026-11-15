@@ -1015,10 +1015,11 @@ body {
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
- * İlçe oyunu (Haritayı tamamla, app/components/districts): ilin ilçeleri kum renginde boş gelir; seçilen sarı,
- * yerleşen yeşil ve adı üstünde, yanlış eşleştirme bir an kırmızı sarsılır.
+ * Haritayı tamamla (app/components/map-puzzle; İller ve İlçeler): parçalar kum renginde boş gelir; seçilen sarı,
+ * yerleşen yeşil ve adı üstünde, yanlış eşleştirme bir an kırmızı sarsılır. Kimliksiz parçalar (bölge haritasında komşu
+ * iller) yön bulmak içindir: soluk ve dokunulmaz.
  * --------------------------------------------------------------------------------------------------------------- */
-.district-map path {
+.puzzle-map path {
   fill: #fdf3d3;
   stroke: #b08a4f;
   stroke-width: 0.9;
@@ -1028,25 +1029,33 @@ body {
 }
 
 @media (hover: hover) {
-  .district-map path:not(.district-done):not(.district-selected):hover {
+  .puzzle-map path[id]:not(.piece-done):not(.piece-selected):hover {
     fill: #fef9e7;
     stroke: #92400e;
   }
 }
 
-.district-map path.district-selected {
+.puzzle-map path.ctx {
+  fill: #cfe3ea;
+  stroke: #9dbfcc;
+  stroke-width: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.puzzle-map path.piece-selected {
   fill: #fde68a;
   stroke: #b45309;
   stroke-width: 2.5;
 }
 
-.district-map path.district-done {
+.puzzle-map path.piece-done {
   fill: #34d399;
   stroke: #047857;
   cursor: default;
 }
 
-.district-map path.district-wrong {
+.puzzle-map path.piece-wrong {
   fill: #fb7185;
   stroke: #be123c;
   transform-box: fill-box;
@@ -1054,13 +1063,13 @@ body {
   animation: map-shake 380ms ease-in-out;
 }
 
-.district-map path.district-pop {
+.puzzle-map path.piece-pop {
   transform-box: fill-box;
   transform-origin: center;
   animation: map-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.district-map text {
+.puzzle-map text {
   pointer-events: none;
   font-family: var(--font-display);
   font-weight: 700;
@@ -1072,8 +1081,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .district-map path.district-wrong,
-  .district-map path.district-pop {
+  .puzzle-map path.piece-wrong,
+  .puzzle-map path.piece-pop {
     animation: none;
   }
 }

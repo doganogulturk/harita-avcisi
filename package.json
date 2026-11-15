@@ -12,7 +12,8 @@
     "android": "next build && cap sync android && cap open android",
     "android:release": "node scripts/android-release.mjs",
     "test": "vitest run",
-    "maps:districts": "node scripts/build-district-maps.mjs"
+    "maps:districts": "node scripts/build-district-maps.mjs",
+    "maps:provinces": "node scripts/build-province-maps.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

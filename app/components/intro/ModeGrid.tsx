@@ -24,8 +24,9 @@ type ModeGridProps = {
 export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
 
 /**
- * Adım 1, oyun menüsü: büyük OYNA tuşu (yarışın ayar ekranı), altında liderler panosu; yanında ya da altında diğer üç
- * oyunun renkli karoları (Antrenman, Düello, Oda) ve davet kodu alanı. Dikey telefonda hepsi alt alta, geniş ve yatay
+ * Adım 1, oyun menüsü: büyük OYNA tuşu (yarışın ayar ekranı), altında liderler panosu; yanında ya da altında diğer
+ * oyunların renkli karoları ve davet kodu alanı. Karolar üç satırda gruplanır: tek başına (Antrenman), arkadaşlarla
+ * (Düello, Oda), haritayı tamamla (İller, İlçeler). Dikey telefonda hepsi alt alta, geniş ve yatay
  * ekranda iki sütun. Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
  */
 export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, onJoin, rankedLeaders = [] }: ModeGridProps) {
@@ -33,7 +34,7 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
   const delay = (step: number) => ({ "--intro-delay": `${introDelayMs + introStepMs * step}ms` }) as React.CSSProperties;
 
   return (
-    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-5 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
+    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-4 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
       <div className="intro-focus flex min-w-0 flex-col items-center gap-4 short:gap-2 lg:gap-6" style={delay(0)}>
         <p className="text-center text-sm font-bold text-cyan-100/80 short:hidden lg:text-lg">{home.tagline}</p>
         <PlayHero onClick={() => onSelect("ranked")} />
@@ -42,12 +43,14 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
 
       <div className="intro-focus flex min-w-0 flex-col gap-3 short:gap-2 lg:gap-4" style={delay(1)}>
         <p className="text-[11px] font-bold tracking-[0.15em] text-cyan-100/60 uppercase lg:text-xs">{home.moreGames}</p>
-        {/* Dört karo: telefonda ve yan sütunda 2×2, geniş ekranda tek satır. */}
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4">
+        {/* Üç satır: Antrenman tam genişlikte; Düello ve Oda; İller ve İlçeler. Yan sütun sınırlı genişlikte, bir satıra
+            ikiden fazla karo konunca adlar taşıyordu. */}
+        <div className="grid grid-cols-2 gap-2 lg:gap-4">
           {TILES.map((tile) => (
             <GameTile key={tile.id} onClick={() => onSelect(tile.id)} tile={tile} />
           ))}
-          <DistrictsTile />
+          <MapTile href="/iller" kind="provinces" />
+          <MapTile href="/ilceler" kind="districts" />
         </div>
         <JoinForm onJoin={onJoin} outlineClass={gameInfo("duel").theme.outline} submitClass={gameInfo("duel").theme.badge} />
       </div>
@@ -84,14 +87,16 @@ const TILES: Tile[] = [
   { id: "room", color: "bg-violet-600 text-white border-violet-300/50", edge: "#4c1d95" },
 ];
 
-/** Karonun görünüşü: dar sütunda (2×2) simge solda, ad ve not sağda; geniş ekranda simge üstte. */
+/** Karonun görünüşü: simge solda, ad ve not sağda. Dikey boşluk ayrı: tam genişlikteki Antrenman daha alçaktır. */
 const TILE_CLASS =
-  "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 py-2.5 text-left max-[22.5rem]:gap-1.5 max-[22.5rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none short:py-1.5 lg:flex-col lg:justify-center lg:gap-2 lg:rounded-3xl lg:px-2 lg:py-6 lg:text-center";
+  "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 text-left max-[22.5rem]:gap-1.5 max-[22.5rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none lg:gap-3.5 lg:rounded-3xl lg:px-4 xl:px-5";
+const TILE_PADDING = "py-2.5 short:py-1.5 lg:py-5";
+const WIDE_TILE_PADDING = "col-span-2 py-1.5 short:py-1 lg:py-3";
 
 function TileText({ title, note }: { title: string; note: string }) {
   return (
-    <span className="flex min-w-0 flex-col lg:items-center">
-      <span className="max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-sm lg:text-2xl">{title}</span>
+    <span className="flex min-w-0 flex-col">
+      <span className="max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-sm lg:text-xl xl:text-2xl">{title}</span>
       <span className="max-w-full truncate text-[11px] font-semibold opacity-80 short:hidden lg:text-sm">{note}</span>
     </span>
   );
@@ -99,26 +104,43 @@ function TileText({ title, note }: { title: string; note: string }) {
 
 function GameTile({ tile, onClick }: { tile: Tile; onClick: () => void }) {
   const { home } = messages();
+  // Antrenman satırda tek başınadır: tam genişlikte ve daha alçak.
+  const padding = tile.id === "practice" ? WIDE_TILE_PADDING : TILE_PADDING;
   return (
-    <button className={`${TILE_CLASS} ${tile.color}`} onClick={onClick} style={{ "--press-edge": tile.edge } as React.CSSProperties} type="button">
+    <button className={`${TILE_CLASS} ${padding} ${tile.color}`} onClick={onClick} style={{ "--press-edge": tile.edge } as React.CSSProperties} type="button">
       <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" game={tile.id} />
       <TileText note={home.tileNotes[tile.id]} title={gameInfo(tile.id).title} />
     </button>
   );
 }
 
-/** İlçeler: ayrı sayfada (/ilceler) "Haritayı tamamla"; köşesinde "Yeni" rozeti. */
-function DistrictsTile() {
-  const { districts } = messages();
-  return (
-    <Link className={`${TILE_CLASS} border-teal-200/60 bg-teal-500 text-white [--press-edge:#115e59]`} href="/ilceler">
-      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+/** Haritayı tamamla oyunlarının karoları: her biri ayrı sayfada; rengi, simgesi ve köşesinde "Yeni" rozeti. */
+const MAP_TILES = {
+  provinces: { color: "border-sky-200/60 bg-sky-600 [--press-edge:#0c4a6e]", icon: <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" /> },
+  districts: {
+    color: "border-teal-200/60 bg-teal-500 [--press-edge:#115e59]",
+    icon: (
+      <>
         <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z" />
         <path d="M9 4v13.5M15 6.5V20" />
+      </>
+    ),
+  },
+};
+
+/** İller (/iller) ya da İlçeler (/ilceler): haritanın bütün parçalarını yerine yerleştirme. */
+function MapTile({ kind, href }: { kind: keyof typeof MAP_TILES; href: string }) {
+  const text = messages()[kind];
+  const { mapPuzzle } = messages();
+  const tile = MAP_TILES[kind];
+  return (
+    <Link className={`${TILE_CLASS} ${TILE_PADDING} ${tile.color} text-white`} href={href}>
+      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+        {tile.icon}
       </svg>
-      <TileText note={districts.tileNote} title={districts.title} />
+      <TileText note={text.tileNote} title={text.title} />
       <span className="absolute -top-2 -right-1.5 rotate-6 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase shadow ring-2 ring-[#0b3a5b]">
-        {districts.badgeNew}
+        {mapPuzzle.badgeNew}
       </span>
     </Link>
   );

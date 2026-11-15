@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { compareTr, DISTRICT_PROVINCES, PROVINCE_SHAPES_URL, type DistrictProvince } from "@/lib/districts";
+import { DISTRICT_PROVINCES, PROVINCE_SHAPES_URL, type DistrictProvince } from "@/lib/districts";
+import { compareTr } from "@/lib/map-puzzle";
 import { currentLocale, messages } from "@/lib/i18n";
 import { REGIONS, type RegionId } from "@/lib/turkish-regions";
 
@@ -14,7 +15,7 @@ const SORT_KEY = "harita-avcisi:district-sort";
  * Bölgenin rengi: kartın sağ üstündeki bölge etiketinde ve bölge sıralamasındaki başlığın noktasında. Kartın kendisi
  * saydamdır; renk yalnızca bölgeyi söyler.
  */
-const REGION_STYLE: Record<RegionId, { color: string; text: string; dot: string }> = {
+export const REGION_STYLE: Record<RegionId, { color: string; text: string; dot: string }> = {
   marmara: { color: "#0ea5e9", text: "text-white", dot: "bg-sky-500" },
   ege: { color: "#6366f1", text: "text-white", dot: "bg-indigo-500" },
   akdeniz: { color: "#f97316", text: "text-white", dot: "bg-orange-500" },
@@ -25,7 +26,7 @@ const REGION_STYLE: Record<RegionId, { color: string; text: string; dot: string 
 };
 
 /** Plaka, ad ve ilçe sayısı etiketlerinin rengi: denizin koyu tonu; saydam kartın üstünde okunur. */
-const LABEL_COLOR = "#072a42";
+export const LABEL_COLOR = "#072a42";
 
 type Shapes = Record<string, [viewBox: string, d: string]>;
 let shapesCache: Shapes | null = null;
@@ -82,7 +83,7 @@ const CORNER_LAYOUT: Record<Corner, { place: string; radius: string; fillets: [s
  * Kartın köşesine oturan etiket: bölgenin koyu tonunda, iç köşesi yuvarlak; iki yanındaki içbükey kıvrımlar onu kartın
  * kenarlarına bağlar (oyun kartlarındaki köşe sekmeleri gibi). Kartın yuvarlak dış köşesi etiketin dış köşesini kırpar.
  */
-function CornerLabel({ corner, color, className = "", children }: { corner: Corner; color: string; className?: string; children: React.ReactNode }) {
+export function CornerLabel({ corner, color, className = "", children }: { corner: Corner; color: string; className?: string; children: React.ReactNode }) {
   const layout = CORNER_LAYOUT[corner];
   return (
     <span className={`absolute z-10 flex items-center ${layout.place} ${layout.radius} ${className}`} style={{ backgroundColor: color }}>
@@ -112,11 +113,11 @@ function ProvinceCard({
   showRegion: boolean;
   onPick: (plate: number) => void;
 }) {
-  const { districts: text } = messages();
+  const { districts: text, mapPuzzle: common } = messages();
   const style = REGION_STYLE[province.region];
   return (
     <button
-      aria-label={`${province.name}, ${text.regions[province.region]}, ${text.districtCount(province.count)}`}
+      aria-label={`${province.name}, ${common.regions[province.region]}, ${text.districtCount(province.count)}`}
       className="relative block h-36 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-white/15 bg-white/[0.07] text-left text-white transition hover:bg-white/[0.12] active:scale-[0.98] focus-visible:ring-4 focus-visible:ring-white/60 focus-visible:outline-none sm:h-40 lg:h-44"
       onClick={() => onPick(province.plate)}
       type="button"
@@ -132,7 +133,7 @@ function ProvinceCard({
       </CornerLabel>
       {showRegion && (
         <CornerLabel className={`px-3 py-1 text-[11px] font-bold tracking-wide uppercase lg:text-xs ${style.text}`} color={style.color} corner="tr">
-          {text.regions[province.region]}
+          {common.regions[province.region]}
         </CornerLabel>
       )}
       <CornerLabel className={`max-w-[68%] px-3 pt-1.5 pb-1 font-display leading-tight font-bold text-white ${nameSize(province.name)}`} color={LABEL_COLOR} corner="bl">
@@ -151,7 +152,7 @@ function ProvinceCard({
  * tarayıcıda hatırlanır.
  */
 export function ProvincePicker({ onPick }: { onPick: (plate: number) => void }) {
-  const { districts: text } = messages();
+  const { districts: text, mapPuzzle: common } = messages();
   const shapes = useProvinceShapes();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortId>("name");
@@ -182,7 +183,7 @@ export function ProvincePicker({ onPick }: { onPick: (plate: number) => void }) 
     sort === "region"
       ? // Bölgeler arayüz dilindeki adlarına göre alfabetik (Türkçede Akdeniz başta, Marmara sonda).
         [...REGIONS]
-          .sort((a, b) => text.regions[a.id].localeCompare(text.regions[b.id], currentLocale()))
+          .sort((a, b) => common.regions[a.id].localeCompare(common.regions[b.id], currentLocale()))
           .map((region) => ({ id: region.id as RegionId | null, items: sorted.filter((province) => province.region === region.id) }))
           .filter((group) => group.items.length > 0)
       : [{ id: null as RegionId | null, items: sorted }];
@@ -201,10 +202,10 @@ export function ProvincePicker({ onPick }: { onPick: (plate: number) => void }) 
     <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3 short:gap-2 lg:px-8 lg:pt-5">
       <div className="flex shrink-0 items-center gap-3">
         <Link
-          aria-label={text.home}
+          aria-label={common.home}
           className="hit-area flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/85 transition hover:border-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
           href="/"
-          title={text.home}
+          title={common.home}
         >
           <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path d="M19 12H5M11 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -249,11 +250,11 @@ export function ProvincePicker({ onPick }: { onPick: (plate: number) => void }) 
         {matching.length === 0 && <p className="py-6 text-center text-sm font-semibold text-cyan-100/70">{text.noProvince}</p>}
         <div className="flex flex-col gap-5">
           {groups.map((group) => (
-            <section aria-label={group.id ? text.regions[group.id] : undefined} key={group.id ?? "all"}>
+            <section aria-label={group.id ? common.regions[group.id] : undefined} key={group.id ?? "all"}>
               {group.id && (
                 <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold lg:text-2xl">
                   <span aria-hidden="true" className={`h-3 w-3 rounded-full ring-2 ring-white/40 ${REGION_STYLE[group.id].dot}`} />
-                  {text.regions[group.id]}
+                  {common.regions[group.id]}
                   <span aria-hidden="true" className="h-px flex-1 bg-white/15" />
                   <span className="shrink-0 text-cyan-100/70">{text.provinceCount(group.items.length)}</span>
                 </h2>

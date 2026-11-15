@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DISTRICTS } from "@/lib/districts-data";
-import { difficultyOf, DISTRICT_PROVINCES, districtScore, districtsOf } from "@/lib/districts";
+import { difficultyOf, DISTRICT_PROVINCES, districtsOf } from "@/lib/districts";
+import { mapPuzzleScore } from "@/lib/map-puzzle";
 import { REGIONS, regionOf } from "@/lib/turkish-regions";
 import { provinces } from "@/lib/turkish-plates";
 
@@ -42,8 +43,8 @@ describe("ilçe verisi", () => {
 
   it("ilçeler alfabetik (Türkçe sıra) gelir; puan hatayla düşer", () => {
     expect(districtsOf(6).slice(-3).map((district) => district.name)).toEqual(["Sincan", "Şereflikoçhisar", "Yenimahalle"]);
-    expect(districtScore(25, 0)).toBe(25);
-    expect(districtScore(3, 7)).toBe(0);
+    expect(mapPuzzleScore(25, 0)).toBe(25);
+    expect(mapPuzzleScore(3, 7)).toBe(0);
   });
 
   it("yedi bölge 81 ili birer kez kapsar", () => {

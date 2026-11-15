@@ -1,4 +1,5 @@
 import { DISTRICTS } from "@/lib/districts-data";
+import { compareTr } from "@/lib/map-puzzle";
 import { provinces } from "@/lib/turkish-plates";
 import { regionOf, type RegionId } from "@/lib/turkish-regions";
 
@@ -13,11 +14,6 @@ export function difficultyOf(count: number): Difficulty {
 
 export type District = { id: string; name: string };
 
-/** Yanlış eşleştirmenin süreye eklediği ceza. */
-export const DISTRICT_PENALTY_SECONDS = 5;
-
-/** Türkçe alfabe sırası (Ç, Ş, Ü yerlerinde). */
-export const compareTr = (a: string, b: string) => a.localeCompare(b, "tr");
 
 /** İlin ilçeleri, adlarına göre alfabetik. */
 export function districtsOf(plate: number): District[] {
@@ -40,11 +36,3 @@ export const PROVINCE_SHAPES_URL = "/maps/districts/provinces.json";
 
 /** İlin ilçe haritası (scripts/build-district-maps.mjs üretir). */
 export const districtMapUrl = (plate: number) => `/maps/districts/${plate}.svg`;
-
-/**
- * Turun yıldızı için puan: hatasız tur tam puan; her hata bir eksik. RoundCelebration'daki oranla yıldıza çevrilir
- * (kusursuz 3, %70 2, %40 1).
- */
-export function districtScore(total: number, mistakes: number) {
-  return Math.max(0, total - mistakes);
-}
