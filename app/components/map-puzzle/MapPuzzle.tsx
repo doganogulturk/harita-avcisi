@@ -87,6 +87,8 @@ type MapPuzzleProps = {
   title: string;
   /** SVG: oynanan her parça <path id> (ad noktası data-lx/ly); kimliksiz path'ler yön bulmak için soluk görünür. */
   mapUrl: string;
+  /** İndirilen SVG'den oyunun haritasını çıkarır (Ülkeler: dünya haritasından kıta); verilmezse SVG olduğu gibi. */
+  transformMap?: (svg: string) => string;
   /** Haritadaki parçalar; liste bu sırayla (alfabetik) görünür. */
   pieces: MapPiece[];
   text: MapPuzzleText;
@@ -99,10 +101,11 @@ type MapPuzzleProps = {
  * düşer. Yanlış eşleşme süreye ceza ekler. Bütün parçalar yerleşince süre, hata ve yıldızlarla sonuç çıkar. Tur
  * kaydedilmez.
  */
-export function MapPuzzle({ title, mapUrl, pieces, text, onBack }: MapPuzzleProps) {
+export function MapPuzzle({ title, mapUrl, transformMap, pieces, text, onBack }: MapPuzzleProps) {
   const common = messages().mapPuzzle;
   const nameById = useMemo(() => new Map(pieces.map((piece) => [piece.id, piece.name])), [pieces]);
-  const { markup, error } = useMapMarkup(mapUrl);
+  const { markup: source, error } = useMapMarkup(mapUrl);
+  const markup = useMemo(() => (source && transformMap ? transformMap(source) : source), [source, transformMap]);
 
   const [placed, setPlaced] = useState<Set<string>>(() => new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
