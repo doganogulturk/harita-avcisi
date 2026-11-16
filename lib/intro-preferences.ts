@@ -57,6 +57,13 @@ const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 // Eski sürümlerin kaydettiği "normal" ve "hard" geçersiz sayılır ve "all"a düşer; kıta seçimleri korunur.
 const SCOPES: WorldScope[] = ["all", "africa", "america", "asia", "europe"];
 
+/** Ana ekrandaki OYNA kutusunun anahtarı: Yarış (sıralamalı) ya da Antrenman (süresiz). */
+export const [useIntroPlayKind, setIntroPlayKind] = createPreference<"ranked" | "practice">(
+  "harita-avcisi:intro-play-kind",
+  (value): value is "ranked" | "practice" => value === "ranked" || value === "practice",
+  "ranked",
+);
+
 /** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
 export const [useIntroMap, setIntroMap] = createPreference<GameMode>(
   "harita-avcisi:intro-map",

@@ -109,10 +109,15 @@ export const tr = {
   },
   home: {
     leaders: "Liderler",
-    /** Ana ekran kartlarının alt köşelerindeki oyun sekmeleri. */
-    tabs: { ranked: "Yarışa başla", practice: "Antrenman yap", duel: "Düello kur", room: "Oda kur" },
-    /** Ana ekrandaki ince Antrenman şeridinin tek satırlık notu. */
-    practiceNote: "Süre yok. İstediğin kadar oyna.",
+    /** OYNA kutusundaki anahtar: Yarış ya da Antrenman. */
+    playKind: "Oyun türü",
+    /** Antrenman seçiliyken OYNA tuşunun altındaki not. */
+    practiceHint: "Süre yok · istediğin kadar · kaydedilmez",
+    /** Antrenman seçiliyken liderler panosundaki not. */
+    practiceNoRank: "Antrenman sıralamaya işlenmez.",
+    /** Haritayı tamamla oyunlarının kutusu. */
+    mapGames: "Haritayı tamamla",
+    mapGamesNote: "Süre yok · haritayı doldur",
     showLeaderboard: "Sıralamayı gör",
     haveCode: "Kodun var mı?",
     codeLabel: "Düello ya da oda kodu",
@@ -129,7 +134,7 @@ export const tr = {
     playHint: (questions: number, seconds: number) => `${questions} soru · ${seconds} sn · sıralamaya gir`,
     tagline: "Haritayı ne kadar iyi biliyorsun?",
     /** Ana ekrandaki oyun karolarının alt satırı. */
-    tileNotes: { practice: "Süre yok", friends: "Kur ya da katıl" },
+    tileNotes: { friends: "Düello, oda ya da kodla katıl" },
     moreGames: "Diğer oyunlar",
   },
   setup: {
@@ -277,7 +282,6 @@ export const tr = {
       `Günün meydan okuması${streak > 0 ? ` · ${streak} günlük seri` : ""}${hasOpen ? " · oynanmamış meydan okuma var" : ""}`,
   },
   mapPuzzle: {
-    badgeNew: "Yeni",
     regions: {
       marmara: "Marmara",
       ege: "Ege",
@@ -302,7 +306,6 @@ export const tr = {
   },
   countries: {
     title: "Ülkeler",
-    tileNote: "Haritayı tamamla",
     pickNote: "Bütün dünyayı ya da bir kıtayı seç; her ülkeyi haritadaki yerine yerleştir.",
     all: "Tüm Dünya",
     countryCount: (count: number) => `${count} ülke`,
@@ -317,7 +320,6 @@ export const tr = {
   },
   provinces: {
     title: "İller",
-    tileNote: "Haritayı tamamla",
     pickNote: "Bütün Türkiye'yi ya da bir bölgeyi seç; her ili haritadaki yerine yerleştir.",
     all: "Tüm Türkiye",
     provinceCount: (count: number) => `${count} il`,
@@ -332,7 +334,6 @@ export const tr = {
   },
   districts: {
     title: "İlçeler",
-    tileNote: "Haritayı tamamla",
     pickProvince: "Bir il seç",
     pickProvinceNote: "İlin bütün ilçeleri boş gelir; her birine adını yerleştir.",
     searchProvince: "İl ara",
@@ -644,10 +645,10 @@ export const tr = {
     touchEyebrow: "Telefonda",
     touchTitle: "Yan çevir, yakınlaştır",
     touchBody: "Yatayda harita iki kat büyük olur. Malta, Singapur gibi küçük yerler için iki parmağını haritanın üstünde aç.",
-    gamesEyebrow: "Tek başıma ya da arkadaşlarımla",
+    gamesEyebrow: "Tek başına ya da arkadaşlarla",
     gamesTitle: "Nasıl istersen öyle oyna",
     gamesBody: (questions: number, seconds: number) =>
-      `Tek başıma: Yarışta ${questions} soru, ${seconds} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarımla: Düello ya da Oda.`,
+      `OYNA'nın üstündeki anahtarla seç: Yarışta ${questions} soru, ${seconds} saniye ve sıralama var; Antrenmanda süre yok, istediğin kıtayı çalışırsın. Arkadaşlarla: Düello ya da Oda.`,
     friendsEyebrow: "Arkadaşlarınla",
     friendsTitle: "Kodu gönder, yarışın",
     friendsBody: "Düello ya da oda kur, kodu veya bağlantıyı paylaş. Arkadaşların açınca aynı sorularla aynı anda yarışırsınız.",

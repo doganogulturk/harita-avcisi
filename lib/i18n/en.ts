@@ -105,8 +105,11 @@ export const en: Messages = {
   },
   home: {
     leaders: "Leaders",
-    tabs: { ranked: "Start a race", practice: "Practice", duel: "Create duel", room: "Create room" },
-    practiceNote: "No timer. Play as long as you like.",
+    playKind: "Game type",
+    practiceHint: "No timer · as long as you like · not saved",
+    practiceNoRank: "Practice isn't ranked.",
+    mapGames: "Fill the map",
+    mapGamesNote: "No timer · fill in the map",
     showLeaderboard: "Leaderboard",
     haveCode: "Got a code?",
     codeLabel: "Duel or room code",
@@ -121,7 +124,7 @@ export const en: Messages = {
     play: "Play",
     playHint: (questions: number, seconds: number) => `${questions} questions · ${seconds} s · get ranked`,
     tagline: "How well do you know the map?",
-    tileNotes: { practice: "No timer", friends: "Host or join" },
+    tileNotes: { friends: "Duel, room or join with a code" },
     moreGames: "More games",
   },
   setup: {
@@ -268,7 +271,6 @@ export const en: Messages = {
       `Daily challenge${streak > 0 ? ` · ${streak}-day streak` : ""}${hasOpen ? " · unplayed challenge available" : ""}`,
   },
   mapPuzzle: {
-    badgeNew: "New",
     regions: {
       marmara: "Marmara",
       ege: "Aegean",
@@ -293,7 +295,6 @@ export const en: Messages = {
   },
   countries: {
     title: "Countries",
-    tileNote: "Fill the map",
     pickNote: "Pick the whole world or a continent; put each country in its place on the map.",
     all: "Whole World",
     countryCount: (count: number) => `${count} ${count === 1 ? "country" : "countries"}`,
@@ -308,7 +309,6 @@ export const en: Messages = {
   },
   provinces: {
     title: "Provinces",
-    tileNote: "Fill the map",
     pickNote: "Pick all of Turkey or a region; put each province in its place on the map.",
     all: "All of Turkey",
     provinceCount: (count: number) => `${count} ${count === 1 ? "province" : "provinces"}`,
@@ -323,7 +323,6 @@ export const en: Messages = {
   },
   districts: {
     title: "Districts",
-    tileNote: "Fill the map",
     pickProvince: "Pick a province",
     pickProvinceNote: "All of the province's districts start blank; put each name in its place.",
     searchProvince: "Search provinces",
@@ -637,7 +636,7 @@ export const en: Messages = {
     gamesEyebrow: "On my own or with friends",
     gamesTitle: "Play your way",
     gamesBody: (questions, seconds) =>
-      `On my own: a Race is ${questions} questions, ${seconds} seconds and a leaderboard; Practice has no timer, study any continent. With friends: Duel or Room.`,
+      `Pick with the switch above PLAY: a Race is ${questions} questions, ${seconds} seconds and a leaderboard; Practice has no timer, study any continent. With friends: Duel or Room.`,
     friendsEyebrow: "With friends",
     friendsTitle: "Send the code, race",
     friendsBody: "Create a duel or a room and share the code or link. When your friends open it, you race on the same questions at the same time.",
