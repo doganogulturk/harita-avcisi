@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BottomSheet } from "../BottomSheet";
 import { DuelAvatar } from "../duel/DuelParts";
-import { HomeButton } from "../HomeButton";
 import { PlayerAvatar } from "../PlayerBadge";
+import { BackLink } from "./PageParts";
 import { BADGE_GROUPS, BADGES, useBadges, type BadgeInfo, type BadgeState } from "@/lib/badges";
 import { DUEL_RULES, duelModeLabel } from "@/lib/duel";
 import { BOARDS, choiceForBoard, choiceLabel, formatTime, QUESTIONS_PER_ROUND, type BoardVariant, type GameMode } from "@/lib/game";
@@ -284,7 +284,7 @@ function ProfileContent({ profile }: { profile: Profile }) {
 }
 
 /**
- * Profil sayfası: yalnızca oyuncunun kendisi görür. Başlıkta profil resmi, ad, hesap türü ve ilk oyun tarihi; altında
+ * İstatistikler (/profil/istatistikler; Profil'den gelinir): yalnızca oyuncunun kendisi görür. Başlıkta profil resmi, ad, hesap türü ve ilk oyun tarihi; altında
  * yarış özeti, düellolar (kartlara dokununca o sonuçtaki düellolar alttan açılan listede), sıralamalardaki yer ve son
  * turlar. Misafir hesapta verinin
  * çıkışta ya da cihaz değişince kaybolacağı söylenir.
@@ -304,7 +304,8 @@ export function ProfileScreen() {
   return (
     <main className="safe-area flex h-[100dvh] flex-col bg-slate-50 text-slate-900">
       <header className="flex shrink-0 items-center gap-3 px-4 pt-3 lg:px-8 lg:pt-5">
-        <HomeButton href="/" label={text.homeLink} />
+        <BackLink href="/profil" label={messages().about.back} />
+        <h1 className="font-display text-2xl leading-none font-bold lg:text-3xl">{messages().profileHub.allStats}</h1>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 lg:px-8 lg:py-5">
@@ -324,7 +325,7 @@ export function ProfileScreen() {
               <section className={`${CARD} flex items-center gap-4`}>
                 <PlayerAvatar player={player} size="lg" />
                 <div className="min-w-0">
-                  <h1 className="truncate font-display text-2xl leading-tight font-bold text-slate-900 lg:text-3xl">{player.name}</h1>
+                  <p className="truncate font-display text-2xl leading-tight font-bold text-slate-900 lg:text-3xl">{player.name}</p>
                   <p className="mt-0.5 text-sm text-slate-500">
                     {profile?.is_guest ? text.guestAccount : provider === "apple" ? text.appleAccount : text.googleAccount}
                     {profile?.first_played_at && text.firstPlayed(formatDate(profile.first_played_at))}

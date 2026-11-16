@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { ProfileScreen } from "../components/profile/ProfileScreen";
+import { ProfileHub } from "../components/profile/ProfileHub";
 
 export const metadata: Metadata = {
   title: "Profil · Harita Avcısı",
-  description: "Yarış istatistiklerin, sıralamalardaki yerin ve en çok yanlış yaptığın yerler.",
+  description: "Hesabın, istatistiklerinin özeti, dil ve ses ayarları, Hakkında ve yasal sayfalar.",
   robots: { index: false },
 };
 
 export default function ProfilePage() {
-  return <ProfileScreen />;
+  return <ProfileHub />;
 }

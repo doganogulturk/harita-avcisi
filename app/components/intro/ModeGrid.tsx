@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type GameMode } from "@/lib/game";
+import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, type GameMode } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type IntroGame, setIntroPlayKind, useIntroPlayKind } from "@/lib/intro-preferences";
+import { dailyProgress } from "./DailyChallenge";
 import { gameInfo, GameIcon, groupInfo } from "./games";
+import { type DailyStatus } from "@/lib/daily";
 
 type ModeGridProps = {
   /** Kartın açılış animasyonu, başlıktan sonra sırayla gelir. */
@@ -16,6 +18,8 @@ type ModeGridProps = {
   onShowLeaderboard: () => void;
   /** Yarış kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
   rankedLeaders?: CardLeader[];
+  /** Günün meydan okuması kartı (sunucu bağlantısı yoksa verilmez): bugünkü durum ve sayfayı açma. */
+  daily?: { status: DailyStatus | null; onOpen: (board: BoardId | null) => void };
 };
 
 export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
@@ -23,25 +27,29 @@ export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null
 /**
  * Adım 1, oyun menüsü: OYNA kutusu (üstte Yarış / Antrenman anahtarı, altında büyük tuş; tuş seçilen oyunun ayar
  * ekranını açar), altında liderler panosu; yanında ya da altında Arkadaşlarla karosu (Düello, Oda ve kodla katılma) ve
- * Haritayı tamamla kutusu (Ülkeler, İller, İlçeler). Dikey telefonda hepsi alt alta, geniş ve yatay ekranda iki sütun.
+ * Haritayı tamamla kutusu (Ülkeler, İller, İlçeler), en altta günün meydan okuması. Dikey telefonda hepsi alt alta, geniş ve yatay ekranda iki sütun.
  * Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
  */
-export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, rankedLeaders = [] }: ModeGridProps) {
+export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, rankedLeaders = [], daily }: ModeGridProps) {
   const { home } = messages();
   const playKind = useIntroPlayKind();
   const delay = (step: number) => ({ "--intro-delay": `${introDelayMs + introStepMs * step}ms` }) as React.CSSProperties;
 
   return (
-    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-4 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
-      <div className="intro-focus flex min-w-0 flex-col items-center gap-4 short:gap-2 lg:gap-6" style={delay(0)}>
+    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-6 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
+      <div className="intro-focus flex min-w-0 flex-col items-center gap-5 short:gap-2 lg:gap-6" style={delay(0)}>
         {/* Alçak telefonda (SE gibi) slogan gizlenir: ana ekran kaydırmadan sığsın. */}
         <p className="text-center text-sm font-bold text-cyan-100/80 short:hidden [@media(max-height:40rem)]:hidden lg:text-lg">{home.tagline}</p>
         <PlayHero kind={playKind} onClick={() => onSelect(playKind)} />
         <LeadersBoard isPractice={playKind === "practice"} leaders={rankedLeaders} onShowLeaderboard={onShowLeaderboard} />
       </div>
 
-      <div className="intro-focus flex min-w-0 flex-col gap-3 short:gap-2 lg:gap-4" style={delay(1)}>
-        <FriendsTile onClick={() => onSelect("friends")} />
+      <div className="intro-focus flex min-w-0 flex-col gap-5 short:gap-2 lg:gap-6" style={delay(1)}>
+        {/* Arkadaşlarla ve Günlük yan yana; sunucu bağlantısı yoksa (günlük yok) Arkadaşlarla tek başına tam genişlikte. */}
+        <div className={`grid gap-3 lg:gap-4 ${daily ? "grid-cols-2" : "grid-cols-1"}`}>
+          <FriendsTile onClick={() => onSelect("friends")} />
+          {daily && <DailyTile onOpen={() => daily.onOpen(null)} status={daily.status} />}
+        </div>
         {/* Haritayı tamamla oyunları bir kutuda, büyükten küçüğe; kutunun başlığı üçünün ortak türünü söyler. */}
         <section aria-labelledby="map-games" className="rounded-3xl bg-white/[0.07] p-2.5 ring-1 ring-white/15 short:p-2 lg:p-4">
           <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5 short:mb-1.5 lg:mb-3">
@@ -49,7 +57,7 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
               <span aria-hidden="true">🧩</span>
               {home.mapGames}
             </h2>
-            <p className="truncate text-[11px] font-semibold text-cyan-100/60 max-[22.5rem]:hidden lg:text-sm">{home.mapGamesNote}</p>
+            <p className="truncate text-[11px] font-semibold text-cyan-100/60 max-[24rem]:hidden lg:text-sm">{home.mapGamesNote}</p>
           </div>
           <div className="grid grid-cols-3 gap-2 lg:gap-3">
             <MapTile href="/ulkeler" kind="countries" />
@@ -166,25 +174,53 @@ function PlayHero({ kind, onClick }: { kind: "ranked" | "practice"; onClick: () 
 
 /** Karonun görünüşü: simge solda, ad ve not sağda. */
 const TILE_CLASS =
-  "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 text-left max-[22.5rem]:gap-1.5 max-[22.5rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none lg:gap-3.5 lg:rounded-3xl lg:px-4 xl:px-5";
+  "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 text-left max-[23rem]:gap-1.5 max-[23rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none lg:gap-3.5 lg:rounded-3xl lg:px-4 xl:px-5";
 /** Kutudaki karo: simge üstte, ad altında; alçak ekranda yan yana. */
 const STACKED_TILE = "flex-col justify-center gap-0.5! px-1.5! py-1.5 text-center short:flex-row short:gap-1.5! short:py-1 lg:gap-1.5! lg:py-4";
 
-const TITLE_CLASS = "max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[22.5rem]:text-sm lg:text-xl xl:text-2xl";
+const TITLE_CLASS = "max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[23rem]:text-sm lg:text-xl xl:text-2xl";
 
 /** Arkadaşlarla: Düello, Oda ve kodla katılma tek kapıda; tam genişlikte, oyunun turuncusunda. */
 function FriendsTile({ onClick }: { onClick: () => void }) {
   const { home } = messages();
   return (
     <button className={`${TILE_CLASS} border-orange-300/60 bg-orange-500 py-2.5 text-white [--press-edge:#c2410c] short:py-1.5 lg:py-5`} onClick={onClick} type="button">
-      <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 lg:h-10 lg:w-10" game="friends" />
+      <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[23rem]:h-5 max-[23rem]:w-5 lg:h-10 lg:w-10" game="friends" />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className={TITLE_CLASS}>{groupInfo("friends").title}</span>
         <span className="max-w-full truncate text-[11px] font-semibold opacity-85 short:hidden lg:text-sm">{home.tileNotes.friends}</span>
       </span>
-      <span aria-hidden="true" className="font-display text-xl leading-none opacity-80 lg:text-2xl">
-        →
+    </button>
+  );
+}
+
+/**
+ * Günlük: günün meydan okumasının kapısı. Notunda bugün kaç modun bitirildiği (0/5) ve gün serisi; oynanmamış mod
+ * kaldıysa köşede kırmızı nokta. Dokununca günün meydan okuması alttan açılır; tur oradan başlar.
+ */
+function DailyTile({ status, onOpen }: { status: DailyStatus | null; onOpen: () => void }) {
+  const { home } = messages();
+  const { done, total, streak } = dailyProgress(status);
+  return (
+    <button
+      aria-label={home.dailyAria(done, total, streak)}
+      className={`${TILE_CLASS} border-fuchsia-300/50 bg-fuchsia-600 py-2.5 text-white [--press-edge:#86198f] short:py-1.5 lg:py-5`}
+      onClick={onOpen}
+      type="button"
+    >
+      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[23rem]:h-5 max-[23rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+        <rect height="16" rx="2.5" width="18" x="3" y="5" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+        <path d="m9 15 2 2 4-4" />
+      </svg>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className={TITLE_CLASS}>{home.daily}</span>
+        <span className="max-w-full truncate text-[11px] font-semibold tabular-nums opacity-85 short:hidden lg:text-sm">
+          {home.dailyNote(done, total)}
+          {streak > 0 && ` · 🔥 ${streak}`}
+        </span>
       </span>
+      {done < total && <span aria-hidden="true" className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-[#0b3a5b]" />}
     </button>
   );
 }
@@ -218,7 +254,7 @@ function MapTile({ kind, href }: { kind: keyof typeof MAP_TILES; href: string })
   const tile = MAP_TILES[kind];
   return (
     <Link className={`${TILE_CLASS} ${STACKED_TILE} ${tile.color} text-white`} href={href}>
-      <svg aria-hidden="true" className="h-6 w-6 shrink-0 short:h-5 short:w-5 max-[22.5rem]:h-5 max-[22.5rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="h-6 w-6 shrink-0 short:h-5 short:w-5 max-[23rem]:h-5 max-[23rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
         {tile.icon}
       </svg>
       <span className={TITLE_CLASS}>{text.title}</span>
@@ -253,7 +289,7 @@ function LeadersBoard({ leaders, isPractice, onShowLeaderboard }: { leaders: Car
       <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-amber-700 uppercase lg:text-xs">
         <span aria-hidden="true">👑</span>
         {home.leaders}
-        {isPractice && <span className="ml-auto truncate text-[11px] font-semibold tracking-normal text-slate-500 normal-case max-[22.5rem]:hidden lg:text-xs">{home.practiceNoRank}</span>}
+        {isPractice && <span className="ml-auto truncate text-[11px] font-semibold tracking-normal text-slate-500 normal-case max-[23rem]:hidden lg:text-xs">{home.practiceNoRank}</span>}
       </p>
       {leaders.length > 0 && (
         <ol className="mt-1.5 flex flex-col gap-1 lg:mt-2.5 lg:gap-2">

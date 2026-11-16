@@ -21,7 +21,7 @@ const INITIAL_SIZE = {
   lg: "text-2xl",
 };
 
-/** Oyuncunun profil resmi; yoksa adının baş harfi. Hesap menüsü (AccountMenu) de bunu kullanır. */
+/** Oyuncunun profil resmi; yoksa adının baş harfi. Profil tuşu (ProfileButton) de bunu kullanır. */
 export function PlayerAvatar({ player, size = "md" }: { player: Player; size?: keyof typeof AVATAR_SIZE }) {
   return player.avatarUrl ? (
     <Image
@@ -40,7 +40,7 @@ export function PlayerAvatar({ player, size = "md" }: { player: Player; size?: k
   );
 }
 
-/** Oyun üst barında (geniş ekran, koyu zemin) oyuncunun resmi, adı ve çıkış bağlantısı. Ekran başlıklarında AccountMenu kullanılır. */
+/** Oyun üst barında (geniş ekran, koyu zemin) oyuncunun resmi, adı ve çıkış bağlantısı. Ana ekranın başlığında ProfileButton kullanılır. */
 export function PlayerBadge({ player, onSignOut, align = "right", size = "md" }: PlayerBadgeProps) {
   if (!player) return null;
 

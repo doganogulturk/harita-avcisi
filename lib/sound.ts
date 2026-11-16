@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 /**
  * Oyunun kısa ses efektleri. Ses dosyası yok: her efekt Web Audio ile birkaç notadan o an üretilir; uygulama boyutu
- * büyümez, ağ isteği olmaz. Ses hesap menüsünden kapatılabilir; seçim tarayıcıda hatırlanır.
+ * büyümez, ağ isteği olmaz. Ses Profil'deki Ayarlar'dan kapatılabilir; seçim tarayıcıda hatırlanır.
  *
  * Tarayıcılar (özellikle iOS) sesi ancak bir dokunuşun içinde açılan ya da sürdürülen bir AudioContext ile çalar.
  * Cevap sesi dokunuştan sonraki çizimde çalındığı için bağlam, ilk dokunuşta (primeSound) önceden açılır.

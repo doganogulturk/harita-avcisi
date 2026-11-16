@@ -6,7 +6,7 @@ import { Leaderboard } from "../Leaderboard";
 import { ShareScoreButton } from "../ShareScoreButton";
 import { messages } from "@/lib/i18n";
 import { boardOf, dailyChoice, dailyDateLabel, dailyShareText, msUntilNextDaily, useDailyLeaderboards, type DailyStatus } from "@/lib/daily";
-import { BOARDS, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type PlayChoice, type Player } from "@/lib/game";
+import { BOARDS, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type PlayChoice } from "@/lib/game";
 
 /** "05:12" biçiminde saat ve dakika; geri sayım yarım dakikada bir güncellenir. */
 function hoursMinutes(ms: number): string {
@@ -48,49 +48,13 @@ function StateLabel({ state, className = "" }: { state: ReturnType<typeof dailyS
   );
 }
 
-const BADGE_SEEN_KEY = "harita-avcisi:daily-badge-opened";
-
-/**
- * Başlıkta, profil resminin yanında günlük meydan okuma rozeti: gün serisi ("🔥 3"; seri yoksa "🗓 Günlük"). Bugün
- * oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta durur. Hiç açılmadıysa bir halka atar, ilk açılışta durur.
- * Dokununca günün meydan okuması alttan açılır.
- */
-export function DailyBadge({ status, player, onOpen }: { status: DailyStatus | null; player: Player | null; onOpen: () => void }) {
-  const [hasOpened, setHasOpened] = useState(true);
-  useEffect(() => {
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- tarayıcı belleği yalnızca çizimden sonra okunabilir.
-      setHasOpened(localStorage.getItem(BADGE_SEEN_KEY) === "1");
-    } catch {
-      // Depolama kapalı; halka atmaz.
-    }
-  }, []);
-
-  const streak = status?.streak ?? 0;
-  // Giriş yoksa her mod oynanmamış sayılır; giriş varsa durum gelince bakılır.
-  const hasOpenChallenge = player ? status !== null && BOARDS.some((board) => dailyStateOf(status, board.id).isOpen) : true;
-
-  return (
-    <button
-      aria-label={messages().daily.badgeAria(streak, hasOpenChallenge)}
-      className="hit-area relative flex h-9 shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-bold text-amber-700 transition hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none max-[25rem]:px-2.5"
-      onClick={() => {
-        setHasOpened(true);
-        try {
-          localStorage.setItem(BADGE_SEEN_KEY, "1");
-        } catch {
-          // Depolama kapalı; bu sayfa yaşamı boyunca halka yine atmaz.
-        }
-        onOpen();
-      }}
-      type="button"
-    >
-      {!hasOpened && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-amber-300/40 motion-reduce:hidden" />}
-      <span aria-hidden="true">{streak > 0 ? "🔥" : "🗓"}</span>
-      {streak > 0 ? <span className="tabular-nums">{streak}</span> : <span className="max-[25rem]:hidden">{messages().daily.badge}</span>}
-      {hasOpenChallenge && <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-slate-50" />}
-    </button>
-  );
+/** Ana ekrandaki Günlük karosu için bugünün özeti: kaç mod bitirildi, kaç mod var, gün serisi. */
+export function dailyProgress(status: DailyStatus | null) {
+  return {
+    done: BOARDS.filter((board) => dailyStateOf(status, board.id).result).length,
+    total: BOARDS.length,
+    streak: status?.streak ?? 0,
+  };
 }
 
 type DailySheetProps = {

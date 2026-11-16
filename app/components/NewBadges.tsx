@@ -32,7 +32,7 @@ export function NewBadges({ isSaved }: { isSaved: boolean }) {
       </ul>
       <p className="mt-1.5 flex items-center justify-between gap-2 text-xs">
         <span className="text-amber-800">{rest > 0 ? messages().badges.more(rest) : ""}</span>
-        <Link className="font-bold text-amber-800 underline-offset-4 hover:underline" href="/profil">
+        <Link className="font-bold text-amber-800 underline-offset-4 hover:underline" href="/profil/istatistikler">
           {messages().badges.seeProfile}
         </Link>
       </p>

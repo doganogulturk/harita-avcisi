@@ -335,7 +335,6 @@ export default function Home() {
             onGuestSignIn={signInAsGuest}
             onPlay={play}
             startGame={introStartGame}
-            onSignOut={signOut}
             pendingChoice={pendingChoice}
             player={player}
             readyModes={readyModes}

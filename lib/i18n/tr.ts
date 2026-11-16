@@ -26,15 +26,8 @@ export const tr = {
     en: "English",
   },
   menu: {
-    accountOf: (name: string) => `Hesap menüsü · ${name}`,
-    menu: "Menü",
-    account: "Hesap menüsü",
-    profile: "Profilim",
-    guide: "Nasıl oynanır?",
     signOut: "Çıkış yap",
     home: "Ana menü",
-    soundOn: "Ses açık",
-    soundOff: "Ses kapalı",
   },
   legalLinks: {
     privacy: "Gizlilik",
@@ -134,7 +127,11 @@ export const tr = {
     playHint: (questions: number, seconds: number) => `${questions} soru · ${seconds} sn · sıralamaya gir`,
     tagline: "Haritayı ne kadar iyi biliyorsun?",
     /** Ana ekrandaki oyun karolarının alt satırı. */
-    tileNotes: { friends: "Düello, oda ya da kodla katıl" },
+    tileNotes: { friends: "Kur ya da katıl" },
+    /** Günlük karosu: günün meydan okuması. */
+    daily: "Günlük",
+    dailyNote: (done: number, total: number) => `Bugün ${done}/${total}`,
+    dailyAria: (done: number, total: number, streak: number) => `Günün meydan okuması: bugün ${done}/${total}${streak > 0 ? ` · ${streak} günlük seri` : ""}`,
     moreGames: "Diğer oyunlar",
   },
   setup: {
@@ -275,11 +272,6 @@ export const tr = {
     pinchBody: "Malta, Singapur gibi küçük yerler için parmaklarını haritanın üstünde aç; sonraki soruda harita eski haline döner.",
     toLandscape: "Yatay moda geç",
     stayPortrait: "Dikeyde devam et",
-  },
-  daily: {
-    badge: "Günlük",
-    badgeAria: (streak: number, hasOpen: boolean) =>
-      `Günün meydan okuması${streak > 0 ? ` · ${streak} günlük seri` : ""}${hasOpen ? " · oynanmamış meydan okuma var" : ""}`,
   },
   mapPuzzle: {
     regions: {
@@ -454,6 +446,39 @@ export const tr = {
       podium: { title: "Kürsü", description: "Herhangi bir sıralamada ilk üçe gir." },
       summit: { title: "Zirve", description: "Herhangi bir sıralamada birinci ol." },
     },
+  },
+  profileHub: {
+    title: "Profil",
+    homeLink: "Ana sayfa",
+    loading: "Yükleniyor…",
+    signInTitle: "Giriş yap",
+    signInBody: "Skorların sıralamaya girsin; istatistiklerin ve rozetlerin burada birikir.",
+    rounds: "Tur",
+    accuracy: "Doğruluk",
+    badges: "Rozet",
+    allStats: "Tüm istatistikler",
+    allStatsNote: "Düellolar, en iyi skorlar, son turlar ve rozetler",
+    settings: "Ayarlar",
+    language: "Dil",
+    languageNote: "Arayüzün dili",
+    sound: "Ses",
+    soundNote: "Oyundaki ses efektleri",
+    haptics: "Titreşim",
+    hapticsNote: "Cevaplarda kısa titreşim",
+    guide: "Nasıl oynanır?",
+    guideNote: "Oyunlar ve kurallar kısaca",
+    about: "Hakkında",
+    aboutNote: (version: string) => `Sürüm ${version} · sürüm geçmişi`,
+    legal: "Yasal sayfalar",
+  },
+  about: {
+    title: "Hakkında",
+    back: "Profil",
+    version: (version: string) => `Sürüm ${version}`,
+    developer: (name: string) => `${name} geliştiriyor.`,
+    description: "Türkiye'nin illerini, ilçelerini ve plakalarını; dünyanın ülkelerini, bayraklarını ve başkentlerini haritada bulduğun bir oyun.",
+    contact: "Görüş ve önerilerin için:",
+    history: "Sürüm geçmişi",
   },
   profile: {
     homeLink: "Ana sayfa",
@@ -697,6 +722,11 @@ export const tr = {
   pageTitles: {
     "/": "Harita Avcısı",
     "/profil": "Profil · Harita Avcısı",
+    "/profil/istatistikler": "İstatistikler · Harita Avcısı",
+    "/hakkinda": "Hakkında · Harita Avcısı",
+    "/ulkeler": "Ülkeler · Harita Avcısı",
+    "/iller": "İller · Harita Avcısı",
+    "/ilceler": "İlçeler · Harita Avcısı",
     "/duello": "Düello · Harita Avcısı",
     "/oda": "Oda · Harita Avcısı",
     "/gizlilik": "Gizlilik Politikası · Harita Avcısı",

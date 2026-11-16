@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Logo } from "../Logo";
 import { currentLocale, messages, setLocale } from "@/lib/i18n";
 
-/** Yasal sayfaların sırası; yasal sayfaların altındaki gezinme ve ekran başlıklarındaki hesap menüsü (AccountMenu) bunu kullanır. */
+/** Yasal sayfaların sırası; yasal sayfaların altındaki gezinme ile Profil ve Hakkında sayfalarının altındaki bağlantılar bunu kullanır. */
 export const LEGAL_PAGES = [
   { href: "/gizlilik", get label() { return messages().legalLinks.privacy; } },
   { href: "/kvkk", get label() { return messages().legalLinks.kvkk; } },

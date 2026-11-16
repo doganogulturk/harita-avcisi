@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "./AuthPanel";
 import { Guide } from "./intro/Guide";
-import { AccountMenu } from "./AccountMenu";
+import { ProfileButton } from "./ProfileButton";
 import { PlayButton } from "./PlayButton";
 import { SignInDialog } from "./SignInDialog";
 import { LeaderboardPanel } from "./LeaderboardPanel";
@@ -12,7 +12,7 @@ import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
 import { FriendsSetup } from "./intro/FriendsSetup";
-import { DailyBadge, DailySheet } from "./intro/DailyChallenge";
+import { DailySheet } from "./intro/DailyChallenge";
 import { useDailyStatus } from "@/lib/daily";
 import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
@@ -62,7 +62,6 @@ type IntroScreenProps = {
   onCancelPendingChoice: () => void;
   onGoogleSignIn: () => void;
   onGuestSignIn: (name: string) => void;
-  onSignOut: () => void;
   /** Verilirse menü bu oyunun ayar ekranıyla (adım 2) açılır; sonuç ekranındaki "Başka tur seç". */
   startGame?: IntroGame | null;
 };
@@ -126,7 +125,6 @@ export function IntroScreen({
   onCancelPendingChoice,
   onGoogleSignIn,
   onGuestSignIn,
-  onSignOut,
   startGame = null,
 }: IntroScreenProps) {
   const router = useRouter();
@@ -141,6 +139,14 @@ export function IntroScreen({
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const isGuideSeen = useGuideSeen();
   const [isGuideRequested, setIsGuideRequested] = useState(false);
+  // Profil'deki "Nasıl oynanır?" ana sayfayı /?rehber ile açar: tanıtım hemen açılır, adres temizlenir.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("rehber")) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- adres yalnızca tarayıcıda okunabilir.
+    setIsGuideRequested(true);
+    window.history.replaceState(window.history.state, "", window.location.pathname);
+  }, []);
 
   // Karar ilk çizimde donar: haritalar yüklenince gelen yeniden çizim animasyonu yarıda kesmesin.
   const [shouldAnimate] = useState(() => !hasPlayedIntro);
@@ -312,6 +318,7 @@ export function IntroScreen({
         rankedLeaders={rankedLeaders}
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
+        daily={supabaseConfigured ? { status: dailyStatus, onOpen: (board) => setDailySheet({ board }) } : undefined}
         onSelect={selectGame}
         onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />
@@ -336,13 +343,6 @@ export function IntroScreen({
               </button>
             </h1>
             <div className="flex shrink-0 items-center gap-2 max-[25rem]:gap-1 lg:gap-3">
-              {/* Giriş yapmamış oyuncunun başlığında "Giriş yap" da durur; telefonda (480 pikselden dar) logoya yer kalsın diye
-                  rozet gizlenir. Günlük meydan okuma zaten giriş ister. */}
-              {supabaseConfigured && (
-                <span className={player ? "contents" : "contents max-[30rem]:hidden"}>
-                  <DailyBadge onOpen={() => setDailySheet({ board: null })} player={player} status={dailyStatus} />
-                </span>
-              )}
               {/* Giriş yapmamış oyuncu istediği an giriş yapabilir; giriş tam oyuna başlarken sürpriz olmasın. */}
               {!player && supabaseConfigured && (
                 <button
@@ -353,7 +353,7 @@ export function IntroScreen({
                   {messages().home.signIn}
                 </button>
               )}
-              <AccountMenu onDark onShowGuide={() => setIsGuideRequested(true)} onSignOut={onSignOut} player={player} />
+              <ProfileButton player={player} />
             </div>
           </header>
         )}

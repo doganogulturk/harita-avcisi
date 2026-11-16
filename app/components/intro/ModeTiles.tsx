@@ -8,7 +8,7 @@ import { messages } from "@/lib/i18n";
 export type ModeBoard = { id: BoardId; mode: GameMode; variant: BoardVariant };
 
 /** Her modun karo rengi ve basılınca inen kenarın rengi (globals.css, .press). */
-const TILE_STYLE: Record<BoardId, { color: string; edge: string }> = {
+export const TILE_STYLE: Record<BoardId, { color: string; edge: string }> = {
   turkey: { color: "bg-rose-500 border-rose-300/60", edge: "#9f1239" },
   "turkey-plates": { color: "bg-blue-600 border-blue-300/50", edge: "#1e3a8a" },
   "world-hard": { color: "bg-sky-500 border-sky-200/60", edge: "#075985" },
