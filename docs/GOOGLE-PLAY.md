@@ -56,6 +56,16 @@ Yarışın soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.4.0)**
+
+```
+• Yeni oyunlar: Ülkeler ve İller — Haritayı tamamla. Bütün dünyayı ya da bir kıtayı, bütün Türkiye'yi ya da bir bölgeyi haritaya yerleştir
+• OYNA'nın üstünde Yarış / Antrenman anahtarı
+• Arkadaşlarla: düello, oda ve kodla katılma tek yerde
+• Günlük: günün meydan okuması ana ekranda; bugün kaçını oynadığın bir bakışta
+• Yeni Profil: dil, ses ve titreşim ayarları, Hakkında ve sürüm geçmişi
+```
+
 **Sürüm notları (1.3.0)**
 
 ```
@@ -145,6 +155,16 @@ Race questions are picked on the server, and scores and times are verified there
 • Play in portrait or landscape; in landscape the map is twice as big
 • Sign in with Google or as a guest; practice needs no account
 • No ads, no tracking
+```
+
+**Release notes (1.4.0)**
+
+```
+• New games: Countries and Provinces — Fill in the map. Place the whole world or a continent, all of Turkey or a region
+• A Race / Practice switch above PLAY
+• With friends: duel, room and joining with a code in one place
+• Daily: the daily challenge on the home screen; see at a glance how many you've played today
+• New Profile: language, sound and vibration settings, About and version history
 ```
 
 **Release notes (1.3.0)**
