@@ -9,8 +9,8 @@
 //   release/app-store/iphone/{tr,en}/     iPhone 6.3", 1206 × 2622 dikey; oyun ekranları 2622 × 1206 yatay
 //   release/app-store/ipad/{tr,en}/       iPad 13", 2752 × 2064 yatay
 //
-// Sıra: 01 ana ekran, 02 mod seçimi, 03 başkent sorusu, 04 seri ve doğru cevap, 05 sonuç, 06 il kartları,
-// 07 ilçe oyunu, 08 sıralama.
+// Sıra: 01 ana ekran, 02 mod seçimi, 03 başkent sorusu, 04 seri ve doğru cevap, 05 sonuç, 06 Ülkeler (Avrupa),
+// 07 İller (Tüm Türkiye), 08 ilçe oyunu, 09 sıralama.
 
 import { createServer } from "node:http";
 import { mkdir, readFile, rm, stat } from "node:fs/promises";
@@ -41,9 +41,31 @@ const PLAYER_ID = "00000000-0000-4000-8000-000000000001";
 const CAPITAL_QUESTIONS = ["jp", "au", "br", "fr", "eg", "ca", "in", "it", "ar", "tr"];
 
 const LABELS = {
-  tr: { play: "Oyna", capitals: "Başkentler", leaderboard: "Sıralamayı gör", closeHint: "İpucunu kapat", ankara: "Ankara" },
-  en: { play: "Play", capitals: "Capitals", leaderboard: "Leaderboard", closeHint: "Close tip", ankara: "Ankara" },
+  tr: { play: "Oyna", capitals: "Başkentler", leaderboard: "Sıralamayı gör", closeHint: "İpucunu kapat", ankara: "Ankara", europe: "Avrupa", allTurkey: "Tüm Türkiye" },
+  en: { play: "Play", capitals: "Capitals", leaderboard: "Leaderboard", closeHint: "Close tip", ankara: "Ankara", europe: "Europe", allTurkey: "All of Turkey" },
 };
+
+/** Haritayı tamamla ekranlarında yerleştirilmiş görünen parçalar: Avrupa'dan ülkeler, Türkiye'den iller (plaka). */
+const EUROPE_PLACED = ["de", "fr", "es", "it", "pl", "gb", "se", "no", "fi", "tr", "gr", "ro", "ua", "pt", "ie", "at"];
+const PROVINCES_PLACED = [1, 6, 7, 16, 21, 25, 27, 33, 34, 35, 38, 42, 44, 52, 55, 58, 61, 63, 65, 10, 20, 26, 45, 66, 19];
+
+const sourceText = (file) => readFile(path.join(ROOT, file), "utf8");
+/** Ülke adları arayüz dilinde: Türkçesi lib/world-countries.ts'ten, İngilizcesi lib/i18n/places-en.ts'ten. */
+const COUNTRY_NAMES = {
+  tr: Object.fromEntries([...(await sourceText("lib/world-countries.ts")).matchAll(/code: "(\w+)", name: "([^"]+)"/g)].map(([, code, name]) => [code, name])),
+  en: Object.fromEntries([...(await sourceText("lib/i18n/places-en.ts")).split("export const")[1].matchAll(/^ {2}(\w+): "([^"]+)"/gm)].map(([, code, name]) => [code, name])),
+};
+const PROVINCE_NAMES = Object.fromEntries([...(await sourceText("lib/turkish-plates.ts")).matchAll(/city: "([^"]+)", plate: (\d+)/g)].map(([, name, plate]) => [Number(plate), name]));
+
+/** Haritayı tamamla: verilen parçaları haritada seçip adlarına dokunarak yerleştirir. */
+async function placePieces(page, pieces) {
+  for (const { id, name } of pieces) {
+    await answer(page, `.puzzle-map path[id="${id}"]`);
+    await sleep(60);
+    await page.evaluate((wanted) => [...document.querySelectorAll("section button")].find((button) => button.textContent?.trim() === wanted)?.click(), name);
+    await sleep(140);
+  }
+}
 
 // --- Yerel sunucu: out/ klasörü, uzantısız adresler .html'e gider (Vercel'deki gibi). ---
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".woff2": "font/woff2", ".txt": "text/plain", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
@@ -213,29 +235,40 @@ async function captureDevice(browser, deviceId, locale) {
   await sleep(1300);
   await shot(page, dir, "05-sonuc");
 
+  await page.goto(`${BASE}/ulkeler`, { waitUntil: "networkidle0" });
+  await sleep(800);
+  await clickText(page, labels.europe);
+  await page.waitForSelector(".puzzle-map svg");
+  await sleep(800);
+  await placePieces(page, EUROPE_PLACED.map((code) => ({ id: code, name: COUNTRY_NAMES[locale][code] })));
+  await sleep(700);
+  await shot(page, dir, "06-ulkeler");
+
+  await page.goto(`${BASE}/iller`, { waitUntil: "networkidle0" });
+  await sleep(800);
+  await clickText(page, labels.allTurkey);
+  await page.waitForSelector(".puzzle-map svg");
+  await sleep(800);
+  await placePieces(page, PROVINCES_PLACED.map((plate) => ({ id: `TUR${String(plate).padStart(3, "0")}`, name: PROVINCE_NAMES[plate] })));
+  await sleep(700);
+  await shot(page, dir, "07-iller");
+
   await page.goto(`${BASE}/ilceler`, { waitUntil: "networkidle0" });
   await sleep(1200);
-  await shot(page, dir, "06-il-kartlari");
-
   await clickText(page, labels.ankara);
-  await page.waitForSelector(".district-map svg");
+  await page.waitForSelector(".puzzle-map svg");
   await sleep(800);
-  const ankara = (await readFile(path.join(ROOT, "lib/districts-data.ts"), "utf8")).match(/^ {2}6: \[(.*)\],$/m)?.[1] ?? "";
+  const ankara = (await sourceText("lib/districts-data.ts")).match(/^ {2}6: \[(.*)\],$/m)?.[1] ?? "";
   const districts = [...ankara.matchAll(/\["(TUR\d+)", "([^"]+)"\]/g)].map(([, id, name]) => ({ id, name }));
-  for (const { id, name } of districts.filter((_, index) => index % 2 === 0).slice(0, 11)) {
-    await answer(page, `.district-map path[id="${id}"]`);
-    await sleep(60);
-    await page.evaluate((wanted) => [...document.querySelectorAll("section button")].find((button) => button.textContent?.trim() === wanted)?.click(), name);
-    await sleep(140);
-  }
+  await placePieces(page, districts.filter((_, index) => index % 2 === 0).slice(0, 11));
   await sleep(700);
-  await shot(page, dir, "07-ilce-oyunu");
+  await shot(page, dir, "08-ilce-oyunu");
 
   await page.goto(`${BASE}/`, { waitUntil: "networkidle0" });
   await sleep(3200);
   await clickText(page, labels.leaderboard);
   await sleep(1200);
-  await shot(page, dir, "08-siralama");
+  await shot(page, dir, "09-siralama");
   await page.close();
 }
 

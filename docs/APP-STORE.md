@@ -175,13 +175,14 @@ fotoğraf ya da metin paylaşımı yok. Uygunsuz adlar Kullanım Koşulları'nda
 Giriş bilgisi gerekmez; "Sign-in required" kapalı bırakılır ve nota şu yazılır:
 
 ```
-No demo account is needed. Practice mode works without signing in. To try races, duels and rooms, tap "Sign in" and choose "Play as guest" (or Sign in with Apple). Account deletion: profile picture (top right) → Delete account → Delete my account.
+No demo account is needed. Practice mode works without signing in. To try races, duels and rooms, tap "Sign in" and choose "Play as guest" (or Sign in with Apple). Account deletion: profile button (top right) → Profile → "Account deletion" at the bottom → Delete my account.
 ```
 
 ## Ekran görüntüleri
 
-`release/` altında (depoya girmez): `release/app-store/{iphone,ipad}/{tr,en}/`, her birinde yükleme sırasıyla 8
-görüntü (ana ekran, başkent sorusu, cevap, sonuç, günün meydan okuması, sıralama, kurulum, plaka sorusu).
+`release/` altında (depoya girmez): `release/app-store/{iphone,ipad}/{tr,en}/`, her birinde yükleme sırasıyla 9
+görüntü (1.4.0: ana ekran, mod seçimi, başkent sorusu, seri, sonuç, Ülkeler, İller, ilçe oyunu, sıralama). Dosya
+adlarına `iphone-tr-` gibi ön ek verilir ki Asset Library'de karışmasın.
 
 - **iPhone (6.1"/6.3" Dynamic Island)**: 1206 × 2622 (dikey); oyun ekranları 2622 × 1206 (yatay, harita iki kat
   büyük). App Store Connect'in sürüm sayfasındaki iPhone alanı bu boyutu istiyor; 6.9" (1320 × 2868) orada "File
@@ -191,6 +192,36 @@ görüntü (ana ekran, başkent sorusu, cevap, sonuç, günün meydan okuması, 
 Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. Sıralama istekleri uydurma adlarla
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
+
+## Sürüm 1.4.0 (yapı 5)
+
+Ülkeler ve İller ("Haritayı tamamla"), OYNA'da Yarış / Antrenman anahtarı, Arkadaşlarla (Düello, Oda, kodla katılma),
+Günlük karosu, yeni Profil (dil, ses, titreşim, Hakkında ve sürüm geçmişi). Ekran görüntüleri yenilendi (9 ekran).
+Hesap menüsü kalktığı için inceleme notundaki hesap silme yolu değişti: profil tuşu → Profil → en alttaki
+"Hesap silme". App Review Notes'un "How to access the features" bölümüne Ülkeler ve İller eklenir: ana ekranda
+"Haritayı tamamla" kutusu → Ülkeler (dünya ya da kıta) / İller (Türkiye ya da bölge); giriş gerekmez, sunucuya bir
+şey yazılmaz. Yayın otomatik. Yapı 5, Xcode Organizer'dan yüklendi (komut satırındaki xcodebuild Xcode hesabını
+göremedi) ve **19 Kasım 2026'da incelemeye gönderildi** (Waiting for Review).
+
+Türkçe:
+
+```
+• Yeni oyunlar: Ülkeler ve İller — Haritayı tamamla. Bütün dünyayı ya da bir kıtayı, bütün Türkiye'yi ya da bir bölgeyi haritaya yerleştir
+• OYNA'nın üstünde Yarış / Antrenman anahtarı
+• Arkadaşlarla: düello, oda ve kodla katılma tek yerde
+• Günlük: günün meydan okuması ana ekranda; bugün kaçını oynadığın bir bakışta
+• Yeni Profil: dil, ses ve titreşim ayarları, Hakkında ve sürüm geçmişi
+```
+
+İngilizce (U.K.):
+
+```
+• New games: Countries and Provinces — Fill in the map. Place the whole world or a continent, all of Turkey or a region
+• A Race / Practice switch above PLAY
+• With friends: duel, room and joining with a code in one place
+• Daily: the daily challenge on the home screen; see at a glance how many you've played today
+• New Profile: language, sound and vibration settings, About and version history
+```
 
 ## Sürüm 1.3.0 (yapı 4)
 
