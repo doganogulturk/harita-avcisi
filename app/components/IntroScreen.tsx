@@ -7,47 +7,19 @@ import { Guide } from "./intro/Guide";
 import { ProfileButton } from "./ProfileButton";
 import { PlayButton } from "./PlayButton";
 import { SignInDialog } from "./SignInDialog";
-import { LeaderboardPanel } from "./LeaderboardPanel";
-import { useLeaders } from "@/lib/hooks/useLeaderboard";
 import { Logo } from "./Logo";
 import { DuelSetup } from "./intro/DuelSetup";
 import { FriendsSetup } from "./intro/FriendsSetup";
 import { DailySheet } from "./intro/DailyChallenge";
 import { useDailyStatus } from "@/lib/daily";
-import { ModeGrid, type CardLeader } from "./intro/ModeGrid";
+import { DailyDock, ModeGrid } from "./intro/ModeGrid";
 import { RoomSetup } from "./intro/RoomSetup";
 import { SoloSetup } from "./intro/SoloSetup";
 import { messages } from "@/lib/i18n";
 import { isAppleSignInAvailable, startAppleSignIn } from "@/lib/auth";
 import { joinPathFor } from "@/lib/join-code";
-import { BOARDS, boardIdFor, choiceLabel, formatTime, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, turkeyChoice, worldChoice, type GameMode, type LeaderboardEntry, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
-import {
-  setGuideSeen,
-  setIntroMap,
-  useGuideSeen,
-  useIntroMap,
-  useQuestionPrompt,
-  useTurkeyPrompt,
-  useWorldScope,
-  type IntroGame,
-} from "@/lib/intro-preferences";
-
-/** Tek başıma kartında birincisi gösterilen sıralamalar. */
-const HIGHLIGHT_BOARDS: { id: BoardId; map: GameMode }[] = [
-  { id: "turkey", map: "turkey" },
-  { id: "world-hard", map: "world" },
-];
-
-/** Sıralamanın birincisi, giriş ekranındaki liderler panosu ve yarış paneli için. */
-function cardLeader(map: GameMode, entry: LeaderboardEntry): CardLeader {
-  return {
-    map,
-    name: entry.display_name,
-    avatarUrl: entry.avatar_url,
-    score: `${entry.score}/${QUESTIONS_PER_ROUND}`,
-    time: formatTime(Math.round(entry.duration_ms / 1000)),
-  };
-}
+import { choiceLabel, GAME_DURATION_SECONDS, type GameMode, type PlayChoice, type PlayKind, type Player } from "@/lib/game";
+import { setGuideSeen, setIntroMap, useGuideSeen, useIntroMap, useWorldScope, type IntroGame } from "@/lib/intro-preferences";
 
 type IntroScreenProps = {
   player: Player | null;
@@ -130,12 +102,9 @@ export function IntroScreen({
   const router = useRouter();
   const map = useIntroMap();
   const storedScope = useWorldScope();
-  const prompt = useQuestionPrompt();
-  const turkeyPrompt = useTurkeyPrompt();
   // Menünün açıldığı adım ilk çizimde donar; sonradan gelen prop değişikliği adımı değiştirmez.
   const [openedAtGame] = useState(startGame);
   const [selectedGame, setSelectedGame] = useState<IntroGame | null>(openedAtGame);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const isGuideSeen = useGuideSeen();
   const [isGuideRequested, setIsGuideRequested] = useState(false);
@@ -180,9 +149,6 @@ export function IntroScreen({
 
   const kind: PlayKind = selectedGame === "practice" ? "practice" : "ranked";
 
-  const choiceFor = (mode: GameMode, playKind: PlayKind): PlayChoice =>
-    mode === "turkey" ? turkeyChoice(playKind, turkeyPrompt) : worldChoice(playKind, storedScope, prompt);
-
   // Adım 2 tarayıcı geçmişine bir kayıt olarak eklenir (adres değişmez): telefonda geri hareketi ve Android'in geri
   // tuşu siteden çıkmak yerine oyun seçimine döner. Kayıttan dönülünce (geri / ileri) adım kayıttaki oyuna uyar.
   useEffect(() => {
@@ -203,7 +169,6 @@ export function IntroScreen({
   /** Başlıktaki logo: hangi adımda olunursa olunsun oyun seçimine (adım 1) döner. */
   const goHome = () => {
     goBack();
-    setIsLeaderboardOpen(false);
     if (pendingChoice) onCancelPendingChoice();
   };
 
@@ -217,23 +182,12 @@ export function IntroScreen({
 
   // Günün meydan okuması: başlıktaki rozet ve alttan açılan sayfa aynı durumu kullanır.
   const dailyStatus = useDailyStatus(player, null);
-  const [dailySheet, setDailySheet] = useState<{ board: BoardId | null } | null>(null);
+  const [isDailyOpen, setIsDailyOpen] = useState(false);
   // Meydan okuma açılamadıysa not, dikey telefonda da görünsün diye sayfa açılır.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- ana sayfadan gelen not bir kez sayfayı açar.
-    if (dailyNotice) setDailySheet((current) => current ?? { board: null });
+    if (dailyNotice) setIsDailyOpen(true);
   }, [dailyNotice]);
-
-  // Ana ekranın liderler panosunda Türkiye'nin ve Dünya'nın (isimle) birincisi, yarışın mod karolarında her sıralamanın
-  // birincisi; yüklenmeyen satır gösterilmez.
-  const leaders = useLeaders(supabaseConfigured);
-  const rankedBoardId = boardIdFor(choiceFor(map, "ranked"));
-  const rankedLeaders: CardLeader[] = HIGHLIGHT_BOARDS.flatMap(({ id, map: boardMap }) => {
-    const leader = leaders[id];
-    return leader
-      ? [cardLeader(boardMap, leader)]
-      : [];
-  });
 
   const content = () => {
     if (pendingChoice && !player) {
@@ -296,31 +250,16 @@ export function IntroScreen({
 
     if (selectedGame) {
       return (
-        <SoloSetup
-          kind={kind}
-          leaders={Object.fromEntries(
-            BOARDS.flatMap((board) => {
-              const leader = leaders[board.id];
-              return leader ? [[board.id, cardLeader(board.mode, leader)]] : [];
-            }),
-          )}
-          needsSignIn={kind === "ranked" && !player}
-          onBack={goBack}
-          onPlay={onPlay}
-          readyModes={readyModes}
-          scope={storedScope}
-        />
+        <SoloSetup kind={kind} onBack={goBack} onPlay={onPlay} readyModes={readyModes} scope={storedScope} />
       );
     }
 
     return (
       <ModeGrid
-        rankedLeaders={rankedLeaders}
         introDelayMs={INTRO_CARD_DELAY_MS}
         introStepMs={INTRO_CARD_STEP_MS}
-        daily={supabaseConfigured ? { status: dailyStatus, onOpen: (board) => setDailySheet({ board }) } : undefined}
+        daily={supabaseConfigured ? { status: dailyStatus, onOpen: () => setIsDailyOpen(true) } : undefined}
         onSelect={selectGame}
-        onShowLeaderboard={() => setIsLeaderboardOpen(true)}
       />
     );
   };
@@ -361,23 +300,18 @@ export function IntroScreen({
         <div className="flex min-h-0 flex-1 flex-col justify-center">{content()}</div>
       </div>
 
-      {dailySheet && (
+      {/* Dikey telefonda günlük girişi ekranın altına sabittir; yalnızca ana ekranda ve sayfa kapalıyken görünür. */}
+      {supabaseConfigured && selectedGame === null && !pendingChoice && !isDailyOpen && !isGuideOpen && (
+        <DailyDock onOpen={() => setIsDailyOpen(true)} status={dailyStatus} />
+      )}
+
+      {isDailyOpen && (
         <DailySheet
-          initialBoardId={dailySheet.board}
           notice={dailyNotice}
-          onClose={() => setDailySheet(null)}
+          onClose={() => setIsDailyOpen(false)}
           onPlay={onPlay}
           playerId={player?.id}
           status={dailyStatus}
-        />
-      )}
-
-      {isLeaderboardOpen && (
-        <LeaderboardPanel
-          currentPlayerId={player?.id}
-          initialBoardId={rankedBoardId}
-          onClose={() => setIsLeaderboardOpen(false)}
-          supabaseConfigured={supabaseConfigured}
         />
       )}
 

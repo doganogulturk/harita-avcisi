@@ -16,6 +16,11 @@ import {
 
 const QUESTION_TRANSITION_SECONDS = QUESTION_TRANSITION_MS / 1000;
 
+/** Kısa gösterimde doğru cevabın ekranda kalma süresi; yanlışta doğru yer yine en fazla QUESTION_TRANSITION_MS gösterilir. */
+export const QUICK_CORRECT_TRANSITION_MS = 1000;
+/** Cevaptan hemen sonraki çift dokunuş sonraki soruya geçirmesin: açıklama bir an görülsün. */
+const SKIP_GRACE_MS = 350;
+
 export type RoundStatus = "idle" | "playing" | "finished";
 
 type RoundOptions = {
@@ -24,6 +29,12 @@ type RoundOptions = {
   timed: boolean;
   /** Süresiz turda sorular bitince çağrılır; döndürdüğü sorularla tur devam eder. Verilmezse tur biter. */
   extend?: (lastQuestion: Question) => Question[];
+  /**
+   * Kısa gösterim (Oyna, Antrenman): doğru cevaptan sonra sonraki soruya yaklaşık 1 saniyede geçilir, yanlış cevapta
+   * doğru yer en fazla 3 saniye gösterilir ve `skip` ile hemen geçilebilir. Günlük meydan okuma ve oda turlarında
+   * kapalıdır: herkes her cevaptan sonra aynı 3 saniyeyi bekler (sunucu en kısa süreyi bu türlerde ona göre denetler).
+   */
+  isQuick?: boolean;
 };
 
 /**
@@ -35,12 +46,12 @@ type RoundOptions = {
 const now = () => Date.now();
 
 /**
- * Tek bir turun oynanışı: sorular sırayla sorulur, cevaptan sonra doğru cevap 3 saniye gösterilir,
- * süreli turda toplam süre 120 saniyedir. Puan, seri ve süre burada tutulur. Ana sayfadaki yarış ve
- * antrenman turları da odadaki turlar da bu kancayla oynanır; soruların nereden geldiği (tarayıcıda
+ * Tek bir turun oynanışı: sorular sırayla sorulur, cevaptan sonra doğru cevap gösterilir (3 saniye; kısa
+ * gösterimde doğru cevapta 1 saniye), süreli turda toplam süre 120 saniyedir. Puan, seri ve süre burada tutulur. Ana
+ * sayfadaki turlar da odadaki turlar da bu kancayla oynanır; soruların nereden geldiği (tarayıcıda
  * karıştırılmış ya da sunucudan gelmiş) kancanın dışında kalır.
  */
-export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
+export function useRoundPlay({ mode, timed, extend, isQuick = false }: RoundOptions) {
   const [status, setStatus] = useState<RoundStatus>("idle");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -63,6 +74,9 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
   useEffect(() => {
     extendRef.current = extend;
   });
+  // Cevaptan sonra sonraki soruya geçen işlev ve cevabın verildiği an; `skip` bunları kullanır.
+  const advanceRef = useRef<(() => void) | null>(null);
+  const answeredAt = useRef(0);
 
   const currentQuestion = questions[questionIndex];
   const isRoundComplete = answers.length === questions.length;
@@ -120,12 +134,17 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
   // Cevaptan sonra doğru cevabı gösterir, ardından sonraki soruya geçer.
   useEffect(() => {
     if (status !== "playing" || !answerState) return;
+    const transitionMs = isQuick && answerState === "correct" ? QUICK_CORRECT_TRANSITION_MS : QUESTION_TRANSITION_MS;
     const transitionStartedAt = now();
     const countdown = window.setInterval(
-      () => setRemainingQuestionSeconds(Math.max(0, Math.ceil((QUESTION_TRANSITION_MS - (now() - transitionStartedAt)) / 1000))),
+      () => setRemainingQuestionSeconds(Math.max(0, Math.ceil((transitionMs - (now() - transitionStartedAt)) / 1000))),
       100,
     );
-    const timer = window.setTimeout(() => {
+    // Zamanlayıcı ile `skip` aynı işlevi çağırır; ikisi birden çalışırsa soru bir kez ilerler.
+    let isAdvanced = false;
+    const advance = () => {
+      if (isAdvanced) return;
+      isAdvanced = true;
       if (questionIndex === questions.length - 1) {
         const more = extendRef.current?.(questions[questions.length - 1]);
         if (!more?.length) {
@@ -137,13 +156,22 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
       setQuestionIndex((currentIndex) => currentIndex + 1);
       setAnswerState(null);
       setSelectedLocation(null);
-    }, QUESTION_TRANSITION_MS);
+    };
+    advanceRef.current = advance;
+    const timer = window.setTimeout(advance, transitionMs);
 
     return () => {
+      advanceRef.current = null;
       window.clearInterval(countdown);
       window.clearTimeout(timer);
     };
-  }, [answerState, questionIndex, questions, status]);
+  }, [answerState, isQuick, questionIndex, questions, status]);
+
+  /** Kısa gösterimde yanlış cevaptan sonra dokunarak sonraki soruya geçer; bu kısa gösterim kapalıysa ya da cevap yoksa bir şey yapmaz. */
+  const skip = () => {
+    if (!isQuick || now() - answeredAt.current < SKIP_GRACE_MS) return;
+    advanceRef.current?.();
+  };
 
   const choose = (locationId: string) => {
     if (status !== "playing" || !currentQuestion || answerState) return;
@@ -154,7 +182,8 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
     }
 
     const nextStreak = isCorrect ? streak + 1 : 0;
-    setRemainingQuestionSeconds(QUESTION_TRANSITION_SECONDS);
+    answeredAt.current = now();
+    setRemainingQuestionSeconds(isQuick && isCorrect ? QUICK_CORRECT_TRANSITION_MS / 1000 : QUESTION_TRANSITION_SECONDS);
     setSelectedLocation(locationId);
     setAnswerState(isCorrect ? "correct" : "incorrect");
     setAnswers((currentAnswers) => [...currentAnswers, isCorrect ? "correct" : "incorrect"]);
@@ -188,6 +217,7 @@ export function useRoundPlay({ mode, timed, extend }: RoundOptions) {
     roundKey,
     start,
     choose,
+    skip,
     finish,
     reset,
   };

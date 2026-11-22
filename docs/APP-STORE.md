@@ -33,7 +33,7 @@ Her gün herkese aynı 10 soru: günün meydan okumasında yerini al, serini sü
 Sorulan ili, plakayı, ülkeyi, bayrağı ya da başkenti haritada ne kadar hızlı bulursun? Harita Avcısı, Türkiye'nin 81 ili ve dünyanın 179 ülkesiyle tek başına ya da arkadaşlarınla oynanan bir harita oyunu.
 
 TEK BAŞINA
-• Yarış: 10 soru, 120 saniye. Skorun sıralamaya işlenir; eşit puanda hızlı olan önde.
+• Oyna: 10 soru, 120 saniye. Giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir.
 • Antrenman: Süre ve giriş yok. İstediğin kadar oyna, kıtaları tek tek çalış.
 
 ARKADAŞLARINLA
@@ -51,17 +51,17 @@ HER GÜN YENİ BİR MEYDAN OKUMA
 Her gün beş mod için herkese aynı 10 soru, günde bir hak. Günün sıralamasında yerini gör, gün serini sürdür, sonucunu renkli karelerle paylaş.
 
 ROZETLER VE PROFİL
-Gün serileri, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 17 rozet. Profilinde yarış özetin, düelloların ve sıralamalardaki yerin.
+Gün serileri, kusursuz turlar, 81 il, 100 ülke, düello galibiyetleri, kürsü ve zirve gibi 17 rozet. Profilinde tur özetin, düelloların ve en iyi sonuçların.
 
 ÖĞRETEN HARİTA
 Yanlış cevapta dokunduğun yerin adı yazar, doğru yer küçükse harita oraya yakınlaşır. Tur sonunda soru soru dökümü görürsün.
 
 ADİL SIRALAMA
-Yarışın soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
+Giriş yapan oyuncunun turunun soruları sunucuda seçilir, skor ve süre sunucuda doğrulanır.
 
 • Türkçe ve İngilizce
 • iPhone ve iPad'de dikey ve yatay oynanır; telefonda yatayda harita iki kat büyür
-• Apple ile, Google ile ya da misafir olarak giriş; antrenman için giriş gerekmez
+• Apple ile, Google ile ya da misafir olarak giriş; Oyna ve antrenman için giriş gerekmez
 • Reklam yok, izleme yok
 ```
 
@@ -97,7 +97,7 @@ The same 10 questions for everyone, every day: take your place in the daily chal
 How fast can you find a province, plate code, country, flag or capital on the map? Harita Avcısı (Map Hunter) is a map game with Türkiye's 81 provinces and 179 countries of the world, to play on your own or with friends.
 
 ON MY OWN
-• Race: 10 questions in 120 seconds. Your score goes on the leaderboard; on a tie the faster one wins.
+• Play: 10 questions in 120 seconds. No sign-in needed; if you sign in, your rounds add up in your profile and badges.
 • Practice: no timer, no sign-in. Play as long as you like and study one continent at a time.
 
 WITH FRIENDS
@@ -115,17 +115,17 @@ A NEW CHALLENGE EVERY DAY
 The same 10 questions for everyone in each of the five modes, one try a day. See your place on today's leaderboard, keep your day streak going and share your result as coloured squares.
 
 BADGES AND PROFILE
-17 badges such as day streaks, perfect rounds, all 81 provinces, 100 countries, duel wins, podium and summit. Your profile shows your race summary, duels and leaderboard positions.
+17 badges such as day streaks, perfect rounds, all 81 provinces, 100 countries, duel wins, podium and summit. Your profile shows your round summary, duels and best results.
 
 A MAP THAT TEACHES
 When you answer wrong, the place you tapped is named, and the map zooms in if the right place is small. After each round you get a question-by-question review.
 
 FAIR LEADERBOARD
-Race questions are picked on the server, and scores and times are verified there.
+For signed-in players, round questions are picked on the server, and scores and times are verified there.
 
 • English and Turkish
 • Play in portrait or landscape on iPhone and iPad; on a phone the map is twice as big in landscape
-• Sign in with Apple, with Google or as a guest; practice needs no account
+• Sign in with Apple, with Google or as a guest; Play and Practice need no account
 • No ads, no tracking
 ```
 
@@ -175,7 +175,7 @@ fotoğraf ya da metin paylaşımı yok. Uygunsuz adlar Kullanım Koşulları'nda
 Giriş bilgisi gerekmez; "Sign-in required" kapalı bırakılır ve nota şu yazılır:
 
 ```
-No demo account is needed. Practice mode works without signing in. To try races, duels and rooms, tap "Sign in" and choose "Play as guest" (or Sign in with Apple). Account deletion: profile button (top right) → Profile → "Account deletion" at the bottom → Delete my account.
+No demo account is needed. Play and Practice work without signing in. To try the daily challenge, duels and rooms, tap "Sign in" and choose "Play as guest" (or Sign in with Apple). Account deletion: profile button (top right) → Profile → "Account deletion" at the bottom → Delete my account.
 ```
 
 ## Ekran görüntüleri

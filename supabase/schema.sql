@@ -135,7 +135,12 @@ revoke all on do_harita_avcisi.round_answers from anon, authenticated;
 
 /*
  * Yarış turunun sonucunu doğrulayıp kaydeder. Sabitler lib/game.ts ile aynıdır:
- * 10 soru, 120 saniye, her cevaptan sonra 3 saniyelik gösterim.
+ * 10 soru, 120 saniye, her cevaptan sonra en çok 3 saniyelik gösterim.
+ *
+ * En kısa tur süresi turun türüne bağlıdır. Günlük meydan okuma ve oda turlarında her cevaptan sonra 3 saniyelik
+ * gösterim beklenir (herkes aynı kuralla yarışır). Serbest turda (Oyna, Antrenman) doğru cevap kısa gösterilir ve
+ * dokunarak geçilebilir; bu yüzden en kısa süreye gösterim eklenmez. Sunucu hangi uygulama sürümünün çağırdığını
+ * bilmez; eski uygulamalar 3 saniye beklemeye devam eder ve daha yavaş bitirdikleri için kabul edilir.
  *
  * p_answers, cevaplanan soruların sırayla listesidir: [{"location": "34", "selected": "41"}, ...].
  * Puan ve en uzun seri tarayıcıdan alınmaz, bu listeden hesaplanır.
@@ -169,7 +174,7 @@ declare
   v_user_id uuid := auth.uid();
   v_round do_harita_avcisi.game_rounds;
   v_elapsed_ms integer;
-  v_min_ms integer := (c_questions - 1) * c_transition_ms + c_questions * c_min_answer_ms;
+  v_min_ms integer;
   v_duration_ms integer;
   v_id_pattern text;
   v_answered integer;
@@ -198,6 +203,10 @@ begin
   end if;
 
   v_elapsed_ms := floor(extract(epoch from (now() - v_round.started_at)) * 1000);
+  v_min_ms := case
+    when v_round.daily_day is null and v_round.room_id is null then c_questions * c_min_answer_ms
+    else (c_questions - 1) * c_transition_ms + c_questions * c_min_answer_ms
+  end;
 
   if p_duration_ms is null or p_answers is null or jsonb_typeof(p_answers) <> 'array' then
     raise exception 'Geçersiz sonuç.';
@@ -382,6 +391,8 @@ grant select on do_harita_avcisi.location_stats to anon, authenticated;
 
 drop view if exists do_harita_avcisi.leaderboard;
 
+-- Her oyuncunun her modda en iyi sonucu. Uygulama artık genel sıralama göstermez (yalnızca günün meydan okumasının
+-- sıralaması var); bu görünüm, sıralamayı henüz gösteren eski uygulama sürümleri ve profildeki en iyi sonuçlar için duruyor.
 create view do_harita_avcisi.leaderboard
 with (security_invoker = true)
 as
@@ -403,7 +414,8 @@ grant select on do_harita_avcisi.leaderboard to anon, authenticated;
 -- ---------------------------------------------------------------------------------------------------------------
 -- Günlük meydan okuma: her gün (Türkiye saatiyle) Türkiye, Plaka, Dünya, Bayrak ve Başkent için ayrı birer meydan okuma.
 -- Bir modun soruları o gün ilk başlatıldığında seçilir ve gün boyu herkes için aynıdır. Her oyuncu her modu günde bir
--- kez oynar; tur normal bir yarış turudur (finish_round doğrular) ve genel sıralamaya da işlenir.
+-- kez oynar; tur normal bir tur gibi kaydedilir (finish_round doğrular) ve günün sıralamasına girer. Bu sıralama uygulamadaki
+-- tek herkese açık sıralamadır; günün meydan okumasında her cevaptan sonra herkes aynı 3 saniyeyi bekler (finish_round).
 
 create table if not exists do_harita_avcisi.daily_challenges (
   day date not null,
@@ -560,6 +572,8 @@ grant execute on function do_harita_avcisi.daily_today() to anon, authenticated;
 grant execute on function do_harita_avcisi.start_daily_round(text, text) to authenticated;
 grant execute on function do_harita_avcisi.my_daily() to authenticated;
 
+-- Gerçek zamanlı abonelik: eski uygulama sürümleri sıralama panosunu bu yayınla canlı tutar. Yeni istemci game_results için
+-- abone olmaz; eski sürümler kalkınca bu satır ve aşağıdaki yayın kaldırılabilir (alter publication ... drop table).
 alter table do_harita_avcisi.game_results replica identity full;
 
 do $$
@@ -1604,9 +1618,9 @@ grant execute on function do_harita_avcisi.abandon_round(uuid) to authenticated;
 create index if not exists round_answers_user_id_idx on do_harita_avcisi.round_answers (user_id);
 
 /*
- * Profil sayfasının verisi (app/profil): hesap türü, ilk oyun, yarış özeti (tur, doğru, cevap, en uzun seri, oynanan
- * gün), her sıralamadaki en iyi sonuç ve sıra, son 10 yarış turu, düello sayıları ve son 100 düello.
- * Antrenman kaydedilmediği için yer almaz; oda turları yarış turudur, dahildir.
+ * Profil sayfasının verisi (app/profil): hesap türü, ilk oyun, tur özeti (tur, doğru, cevap, en uzun seri, oynanan
+ * gün), her modda en iyi sonuç, son 10 tur, düello sayıları ve son 100 düello.
+ * Girişsiz oyuncunun turları ve antrenman kaydedilmediği için yer almaz; oda turları dahildir.
  */
 create or replace function do_harita_avcisi.my_profile()
 returns jsonb
@@ -1640,23 +1654,14 @@ begin
       from do_harita_avcisi.round_answers
       where user_id = v_user_id
     ),
-    -- Her sıralamada oyuncunun en iyi sonucu ve sırası: sıralamayla aynı ölçüt (puan, süre, en uzun seri).
+    -- Her sıralamada oyuncunun en iyi sonucu (puan, süre, en uzun seri sırasıyla). Genel sıralama kalktığı için sıra yok.
     'boards', coalesce((
       select jsonb_agg(
         jsonb_build_object(
           'game_mode', mine.game_mode,
           'variant', mine.variant,
           'score', mine.score,
-          'duration_ms', mine.duration_ms,
-          'rank', 1 + (
-            select count(*)
-            from do_harita_avcisi.leaderboard other
-            where other.game_mode = mine.game_mode and other.variant = mine.variant and other.user_id <> v_user_id
-              and (other.score, -other.duration_ms, other.best_streak) > (mine.score, -mine.duration_ms, mine.best_streak)
-          ),
-          'players', (
-            select count(*) from do_harita_avcisi.leaderboard other where other.game_mode = mine.game_mode and other.variant = mine.variant
-          )
+          'duration_ms', mine.duration_ms
         )
       )
       from do_harita_avcisi.leaderboard mine
@@ -1755,7 +1760,8 @@ begin
       from (select count(*) as length from (select day, day - (row_number() over (order by day))::integer as run from daily_days) as numbered group by run) as runs
     ),
     best_scores as (
-      select game_mode, variant, max(score)::integer as score, bool_or(score = 10 and duration_ms < 45000) as lightning
+      -- Şimşek yalnızca günün meydan okumasında sayılır: serbest turda her cevaptan sonra beklenmediği için süreler karşılaştırılamaz.
+      select game_mode, variant, max(score)::integer as score, bool_or(score = 10 and duration_ms < 45000 and daily_day is not null) as lightning
       from do_harita_avcisi.game_results
       where user_id = v_user_id
       group by game_mode, variant
@@ -1766,15 +1772,22 @@ begin
       where user_id = v_user_id and is_correct
       group by game_mode
     ),
-    -- Gösterilen sıralamalardaki en iyi sıra (kaldırılan dünya "normal" hariç); sıralamayla aynı ölçüt. 0: sıralamada yok.
+    -- Günün meydan okumalarındaki en iyi sıra (bugüne kadarki bütün günler ve modlar); sıralamayla aynı ölçüt (puan, süre, en
+    -- uzun seri). O gün o modu en az 3 oyuncu bitirmediyse sayılmaz: tek başına oynanan günde birinci olmak bir başarı değil.
+    -- 0: günlük sıralamada böyle bir sıra yok. Genel (tüm zamanlar) sıralama kalktığı için rozetler artık günlüğe bağlı.
     best_rank as (
       select coalesce(min(1 + (
-        select count(*) from do_harita_avcisi.leaderboard other
-        where other.game_mode = mine.game_mode and other.variant = mine.variant and other.user_id <> v_user_id
+        select count(*) from do_harita_avcisi.game_results other
+        where other.daily_day = mine.daily_day and other.game_mode = mine.game_mode and other.variant = mine.variant
+          and other.user_id <> v_user_id
           and (other.score, -other.duration_ms, other.best_streak) > (mine.score, -mine.duration_ms, mine.best_streak)
       )), 0)::integer as value
-      from do_harita_avcisi.leaderboard mine
-      where mine.user_id = v_user_id and not (mine.game_mode = 'world' and mine.variant = 'normal')
+      from do_harita_avcisi.game_results mine
+      where mine.user_id = v_user_id and mine.daily_day is not null
+        and (
+          select count(*) from do_harita_avcisi.game_results other
+          where other.daily_day = mine.daily_day and other.game_mode = mine.game_mode and other.variant = mine.variant
+        ) >= 3
     ),
     duel_wins as (
       select count(*)::integer as value from do_harita_avcisi.duels where status = 'finished' and winner_id = v_user_id
@@ -1835,6 +1848,99 @@ $$;
 
 revoke all on function do_harita_avcisi.my_badges() from public, anon;
 grant execute on function do_harita_avcisi.my_badges() to authenticated;
+
+/*
+ * Oyuncunun bir moddaki zayıf yerleri: en çok yanlış yaptığı yerler, kötüden iyiye. Yalnızca oyuncunun kendi cevapları
+ * okunur (round_answers tarayıcıya kapalıdır; bu fonksiyon yalnızca auth.uid() satırlarını toplar). Sıralama,
+ * herkesin "en çok yanlış yapılanlar" listesiyle aynı ölçüyü kullanır: yanlış oranının güvenilir alt sınırı (Wilson,
+ * %95). Bir kez sorulup bir kez yanlış bilinen yer, çok sorulup çoğunda yanlış bilinen yerin önüne geçmez.
+ *
+ * Eski cevaplar daha az sayılır: son 30 gündeki cevap tam, daha eskisi yarım ağırlıkla sayılır. Oyuncu bir yeri
+ * öğrendikçe oranı düşer ve liste yeni yanlışlara döner. Hiç yanlışı olmayan yer listeye girmez. p_limit kadar yer döner
+ * (en çok 50). Her yer için: location_id, asked, wrong, en çok neyle karıştırıldığı (most_confused_with) ve son cevap tarihi.
+ */
+create or replace function do_harita_avcisi.my_weak_spots(p_game_mode text, p_variant text, p_limit integer default 10)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_limit integer := least(greatest(coalesce(p_limit, 10), 1), 50);
+  v_spots jsonb;
+begin
+  if v_user_id is null then
+    raise exception 'Zayıf yerler için giriş gerekir.';
+  end if;
+  if not ((p_game_mode = 'turkey' and p_variant in ('normal', 'plates')) or (p_game_mode = 'world' and p_variant in ('hard', 'flags', 'capitals'))) then
+    raise exception 'Geçersiz mod: % / %', p_game_mode, p_variant;
+  end if;
+
+  with mine as (
+    select
+      location_id,
+      selected_id,
+      is_correct,
+      created_at,
+      -- Son 30 gün tam, daha eskisi yarım ağırlık.
+      case when created_at >= now() - interval '30 days' then 1.0 else 0.5 end as weight
+    from do_harita_avcisi.round_answers
+    where user_id = v_user_id and game_mode = p_game_mode and variant = p_variant
+  ),
+  totals as (
+    select
+      location_id,
+      count(*)::integer as asked,
+      count(*) filter (where not is_correct)::integer as wrong,
+      sum(weight) as weighted_asked,
+      sum(weight) filter (where not is_correct) as weighted_wrong,
+      max(created_at) as last_at
+    from mine
+    group by location_id
+    having count(*) filter (where not is_correct) > 0
+  ),
+  confusions as (
+    select distinct on (location_id) location_id, selected_id
+    from mine
+    where not is_correct
+    group by location_id, selected_id
+    order by location_id, count(*) desc, selected_id
+  ),
+  scored as (
+    select
+      totals.*,
+      confusions.selected_id as most_confused_with,
+      -- Wilson alt sınırı (z = 1,96), ağırlıklı sayılarla.
+      (
+        (totals.weighted_wrong / totals.weighted_asked) + (1.96 * 1.96) / (2 * totals.weighted_asked)
+        - 1.96 * sqrt(
+          ((totals.weighted_wrong / totals.weighted_asked) * (1 - totals.weighted_wrong / totals.weighted_asked)) / totals.weighted_asked
+          + (1.96 * 1.96) / (4 * totals.weighted_asked * totals.weighted_asked)
+        )
+      ) / (1 + (1.96 * 1.96) / totals.weighted_asked) as score
+    from totals
+    join confusions using (location_id)
+  )
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'location_id', location_id,
+      'asked', asked,
+      'wrong', wrong,
+      'most_confused_with', most_confused_with,
+      'last_at', last_at
+    ) order by score desc, wrong desc, location_id
+  ), '[]'::jsonb)
+  into v_spots
+  from (select * from scored order by score desc, wrong desc, location_id limit v_limit) as top;
+
+  return v_spots;
+end;
+$$;
+
+revoke all on function do_harita_avcisi.my_weak_spots(text, text, integer) from public, anon;
+grant execute on function do_harita_avcisi.my_weak_spots(text, text, integer) to authenticated;
 
 -- Hesap silme: App Store ve Google Play, oyuncunun hesabını uygulamanın içinden silebilmesini şart koşar.
 -- Yalnızca oturumdaki kullanıcı kendi hesabını silebilir. auth.users satırı silinince skorları, turları,

@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { flagUrl, GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND, type BoardId, type GameMode } from "@/lib/game";
+import { GAME_DURATION_SECONDS, QUESTIONS_PER_ROUND } from "@/lib/game";
 import { messages } from "@/lib/i18n";
-import { type IntroGame, setIntroPlayKind, useIntroPlayKind } from "@/lib/intro-preferences";
-import { dailyProgress } from "./DailyChallenge";
+import { type IntroGame } from "@/lib/intro-preferences";
+import { dailyProgress, hoursMinutes, useNextDailyCountdown } from "./DailyChallenge";
 import { gameInfo, GameIcon, groupInfo } from "./games";
 import { type DailyStatus } from "@/lib/daily";
 
@@ -15,41 +14,33 @@ type ModeGridProps = {
   /** Kartlar arasındaki açılış gecikmesi farkı. */
   introStepMs: number;
   onSelect: (game: IntroGame) => void;
-  onShowLeaderboard: () => void;
-  /** Yarış kartındaki canlı bilgi: sıralamaların birincileri ("Türkiye'de 1. Murat · 10/10 · 00:42"). */
-  rankedLeaders?: CardLeader[];
   /** Günün meydan okuması kartı (sunucu bağlantısı yoksa verilmez): bugünkü durum ve sayfayı açma. */
-  daily?: { status: DailyStatus | null; onOpen: (board: BoardId | null) => void };
+  daily?: { status: DailyStatus | null; onOpen: () => void };
 };
 
-export type CardLeader = { map: GameMode; name: string; avatarUrl: string | null; score: string; time: string };
-
 /**
- * Adım 1, oyun menüsü: OYNA kutusu (üstte Yarış / Antrenman anahtarı, altında büyük tuş; tuş seçilen oyunun ayar
- * ekranını açar), altında liderler panosu; yanında ya da altında Arkadaşlarla karosu (Düello, Oda ve kodla katılma) ve
- * Haritayı tamamla kutusu (Ülkeler, İller, İlçeler), en altta günün meydan okuması. Dikey telefonda hepsi alt alta, geniş ve yatay ekranda iki sütun.
- * Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran yetmezse liste kayar.
+ * Adım 1, oyun menüsü: büyük OYNA tuşu (10 soru, 120 saniye; giriş gerekmez), altında yan yana Antrenman (süresiz) ve
+ * Arkadaşlarla (Düello, Oda ve kodla katılma) tuşları, Haritayı tamamla kutusu (Ülkeler, İller, İlçeler) ve en altta
+ * günün meydan okuması girişi: bugünün özetini gösteren, açık sayfanın kapalı başlığı gibi görünen tek bir şerit;
+ * dokununca alttan açılan sayfada (DailySheet) Türkiye ve Dünya bölümleri ve modlar seçilir. Geniş ve yatay ekranda şerit
+ * akışta, dikey telefonda ekranın altına sabittir (DailyDock).
+ * Dikey telefonda hepsi alt alta, geniş ve yatay ekranda iki sütun (solda OYNA ile iki tuş, sağda Haritayı tamamla);
+ * günlük iki sütunun altında bütün genişliği kaplar. Tuşlar basılabilir oyun tuşlarıdır (globals.css, .press). Ekran
+ * yetmezse liste kayar.
  */
-export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboard, rankedLeaders = [], daily }: ModeGridProps) {
+export function ModeGrid({ introDelayMs, introStepMs, onSelect, daily }: ModeGridProps) {
   const { home } = messages();
-  const playKind = useIntroPlayKind();
   const delay = (step: number) => ({ "--intro-delay": `${introDelayMs + introStepMs * step}ms` }) as React.CSSProperties;
 
   return (
-    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-center gap-6 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-6 lg:gap-10">
+    <div className="-mx-1.5 grid min-h-0 w-[calc(100%+0.75rem)] flex-1 content-center items-start gap-6 overflow-y-auto px-1.5 pt-1 pb-3 short:gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-6 lg:gap-x-10 lg:gap-y-8">
       <div className="intro-focus flex min-w-0 flex-col items-center gap-5 short:gap-2 lg:gap-6" style={delay(0)}>
         {/* Alçak telefonda (SE gibi) slogan gizlenir: ana ekran kaydırmadan sığsın. */}
         <p className="text-center text-sm font-bold text-cyan-100/80 short:hidden [@media(max-height:40rem)]:hidden lg:text-lg">{home.tagline}</p>
-        <PlayHero kind={playKind} onClick={() => onSelect(playKind)} />
-        <LeadersBoard isPractice={playKind === "practice"} leaders={rankedLeaders} onShowLeaderboard={onShowLeaderboard} />
+        <PlayHero onFriends={() => onSelect("friends")} onPlay={() => onSelect("ranked")} onPractice={() => onSelect("practice")} />
       </div>
 
       <div className="intro-focus flex min-w-0 flex-col gap-5 short:gap-2 lg:gap-6" style={delay(1)}>
-        {/* Arkadaşlarla ve Günlük yan yana; sunucu bağlantısı yoksa (günlük yok) Arkadaşlarla tek başına tam genişlikte. */}
-        <div className={`grid gap-3 lg:gap-4 ${daily ? "grid-cols-2" : "grid-cols-1"}`}>
-          <FriendsTile onClick={() => onSelect("friends")} />
-          {daily && <DailyTile onOpen={() => daily.onOpen(null)} status={daily.status} />}
-        </div>
         {/* Haritayı tamamla oyunları bir kutuda, büyükten küçüğe; kutunun başlığı üçünün ortak türünü söyler. */}
         <section aria-labelledby="map-games" className="rounded-3xl bg-white/[0.07] p-2.5 ring-1 ring-white/15 short:p-2 lg:p-4">
           <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5 short:mb-1.5 lg:mb-3">
@@ -66,108 +57,59 @@ export function ModeGrid({ introDelayMs, introStepMs, onSelect, onShowLeaderboar
           </div>
         </section>
       </div>
+
+      {/* Günün meydan okuması girişi: geniş ve yatay ekranda iki sütunun altında ortada akışta durur. Dikey telefonda
+          ekranın altına sabitlenir (aşağıdaki DailyDock); orada ızgara içinde çizilmez. Sunucu bağlantısı yoksa hiç çizilmez. */}
+      {daily && (
+        <div className="intro-focus mx-auto hidden w-full min-w-0 max-w-xl sm:col-span-2 sm:block portrait-phone:hidden" style={delay(2)}>
+          <DailyEntry onOpen={daily.onOpen} status={daily.status} />
+        </div>
+      )}
+      {/* Sabit şeridin altında kalan son satır görünsün: şerit kadar boşluk. */}
+      {daily && <div aria-hidden="true" className="hidden h-16 shrink-0 portrait-phone:block" />}
     </div>
   );
 }
 
-/** OYNA tuşunun iki görünüşü: Yarış yeşil, Antrenman sarı (Antrenman'ın kendi rengi). */
-const PLAY_STYLE = {
-  ranked: {
-    button: "border-emerald-300/60 bg-emerald-500 text-white [--press-edge:#047857] focus-visible:ring-emerald-200",
-    shadow: "drop-shadow-[0_2px_0_rgb(4_120_87)]",
-    hint: "text-emerald-50/90",
-    knob: "border-emerald-300/70 bg-emerald-500 text-white",
-    knobEdge: "#047857",
-    stripe: "#10b981",
-  },
-  practice: {
-    button: "border-amber-200/70 bg-amber-400 text-amber-950 [--press-edge:#b45309] focus-visible:ring-amber-100",
-    shadow: "drop-shadow-[0_2px_0_rgb(253_230_138)]",
-    hint: "text-amber-950/80",
-    knob: "border-amber-200/80 bg-amber-400 text-amber-950",
-    knobEdge: "#b45309",
-    stripe: "#fbbf24",
-  },
-} as const;
-
-/** Yarış: dama desenli yarış bayrağı. */
-function RaceFlagIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4 shrink-0 lg:h-5 lg:w-5" viewBox="0 0 24 24">
-      <path d="M5 3v18" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={2.2} />
-      <path d="M6 4h14v10H6Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={1.6} />
-      <path d="M6 4h3.5v3.33H6ZM13 4h3.5v3.33H13ZM9.5 7.33H13v3.33H9.5ZM16.5 7.33H20v3.33h-3.5ZM6 10.67h3.5V14H6ZM13 10.67h3.5V14H13Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-/** Antrenman: antrenman kukası (koni). */
-function ConeIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4 shrink-0 lg:h-5 lg:w-5" viewBox="0 0 24 24">
-      <path d="M9.6 4.2a1 1 0 0 1 .97-.7h2.86a1 1 0 0 1 .97.7L18.6 18H5.4Z" fill="currentColor" />
-      <path d="M8.3 9h7.4M7.1 13.5h9.8" stroke="var(--cone-stripe, #fff)" strokeWidth={1.8} />
-      <rect fill="currentColor" height="2.6" rx="1" width="18" x="3" y="17.8" />
-    </svg>
-  );
-}
-
 /**
- * Ana ekranın asıl kutusu: üstte Yarış / Antrenman anahtarı, altında büyük, hafifçe nabız gibi atan OYNA. Anahtar tek
- * parça bir ray; seçili oyunun simgeli jetonu raya oturur, dokununca yaylanarak öbür tarafa geçer (seçim hatırlanır).
- * Rayın iki yarısı birer seçenektir: seçili olmayana dokunmak onu seçer, jetona dokunmak öbürüne geçirir. Tuşun rengi
- * ve altındaki kural seçime göre değişir. Anahtar tuşun içinde değil: anahtara dokunurken tur başlamasın.
+ * Ana ekranın asıl kutusu: büyük, hafifçe nabız gibi atan yeşil OYNA ve altındaki kuralı (10 soru, 120 saniye); tuş Oyna'nın
+ * ayar ekranını açar. Altında yan yana iki daha küçük tuş: sarı Antrenman (süre yok, istediğin kadar; giriş istemez) ve
+ * turuncu Arkadaşlarla (Düello, Oda ve kodla katılma).
  */
-function PlayHero({ kind, onClick }: { kind: "ranked" | "practice"; onClick: () => void }) {
+function PlayHero({ onPlay, onPractice, onFriends }: { onPlay: () => void; onPractice: () => void; onFriends: () => void }) {
   const { home } = messages();
-  const style = PLAY_STYLE[kind];
-  const options = [
-    { id: "ranked" as const, label: gameInfo("ranked").title, icon: <RaceFlagIcon /> },
-    { id: "practice" as const, label: gameInfo("practice").title, icon: <ConeIcon /> },
-  ];
+  // xl'de başlıklar büyür (TITLE_CLASS); blok da genişler ki "Arkadaşlarla" karoya sığsın.
   return (
-    <div className="flex w-full max-w-md flex-col gap-2 short:gap-1.5 lg:gap-3">
-      <div aria-label={home.playKind} className="relative grid h-11 grid-cols-2 rounded-full border-2 border-white/20 bg-[#123f5e] short:h-9 lg:h-12" role="radiogroup">
-        {options.map((option) => (
-          <button
-            aria-checked={kind === option.id}
-            className="relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-bold text-white/70 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none lg:text-base"
-            key={option.id}
-            onClick={() => setIntroPlayKind(kind === option.id ? (option.id === "ranked" ? "practice" : "ranked") : option.id)}
-            role="radio"
-            // Kukanın şeritleri rayın koyu renginde.
-            style={{ "--cone-stripe": "#123f5e" } as React.CSSProperties}
-            type="button"
-          >
-            {option.icon}
-            {option.label}
-          </button>
-        ))}
-        {/* Jeton: seçili oyunun simgesi ve adı; altındaki kalın kenarla basılabilir oyun tuşu gibi durur. */}
-        <span
-          aria-hidden="true"
-          className={`pointer-events-none absolute top-0.5 bottom-1.5 left-0.5 flex w-[calc(50%-0.125rem)] items-center justify-center gap-1.5 rounded-full border-2 text-sm font-bold transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] motion-reduce:transition-none lg:text-base ${style.knob}`}
-          style={{ transform: kind === "practice" ? "translateX(100%)" : "none", boxShadow: `0 4px 0 ${style.knobEdge}`, "--cone-stripe": style.stripe } as React.CSSProperties}
-        >
-          {options.find((option) => option.id === kind)?.icon}
-          {options.find((option) => option.id === kind)?.label}
-        </span>
-      </div>
+    <div className="flex w-full max-w-md flex-col gap-3 short:gap-2 lg:gap-4 xl:max-w-lg">
+      {/* Simge solda, başlık ve kural sağında sola yaslı: Antrenman ve Arkadaşlarla tuşlarıyla aynı düzen. Simge iki satırın yüksekliğine
+          yayıldığı için eskisinden büyüktür. */}
       <button
-        className={`press play-breathe flex w-full cursor-pointer flex-col items-center rounded-3xl border-2 px-6 pt-4 pb-3.5 transition-colors [--press-depth:7px] focus-visible:ring-4 focus-visible:outline-none short:pt-2.5 short:pb-2 lg:pt-6 lg:pb-5 ${style.button}`}
-        onClick={onClick}
+        className="press play-breathe flex w-full cursor-pointer items-center gap-4 rounded-3xl border-2 border-emerald-300/60 bg-emerald-500 px-6 pt-4 pb-3.5 text-left text-white transition-colors [--press-depth:7px] [--press-edge:#047857] focus-visible:ring-4 focus-visible:ring-emerald-200 focus-visible:outline-none short:gap-3 short:pt-2.5 short:pb-2 lg:gap-6 lg:pt-6 lg:pb-5"
+        onClick={onPlay}
         type="button"
       >
-        <span className={`flex items-center gap-3 font-display text-5xl leading-none font-bold tracking-wide uppercase short:text-3xl lg:text-7xl ${style.shadow}`}>
-          <svg aria-hidden="true" className="h-9 w-9 short:h-6 short:w-6 lg:h-14 lg:w-14" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2Z" />
-          </svg>
-          {home.play}
-        </span>
-        <span className={`mt-2 text-xs font-bold short:mt-1 lg:text-base ${style.hint}`}>
-          {kind === "ranked" ? home.playHint(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS) : home.practiceHint}
+        <svg aria-hidden="true" className="h-12 w-12 shrink-0 drop-shadow-[0_2px_0_rgb(4_120_87)] short:h-8 short:w-8 lg:h-16 lg:w-16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2Z" />
+        </svg>
+        <span className="flex min-w-0 flex-col">
+          <span className="font-display text-5xl leading-none font-bold tracking-wide uppercase drop-shadow-[0_2px_0_rgb(4_120_87)] short:text-3xl lg:text-7xl">{home.play}</span>
+          <span className="mt-2 text-xs font-bold text-emerald-50/90 short:mt-1 lg:text-base">{home.playHint(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS)}</span>
         </span>
       </button>
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
+        <button
+          className="press press-sm flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 border-amber-200/70 bg-amber-400 px-3 py-2.5 text-left text-amber-950 [--press-edge:#b45309] focus-visible:ring-4 focus-visible:ring-amber-100 focus-visible:outline-none max-[23rem]:gap-1.5 max-[23rem]:px-2 short:py-1.5 lg:gap-3.5 lg:px-4 lg:py-4"
+          onClick={onPractice}
+          type="button"
+        >
+          <GameIcon className="h-7 w-7 shrink-0 short:h-5 short:w-5 lg:h-9 lg:w-9" game="practice" />
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className={TITLE_CLASS}>{gameInfo("practice").title}</span>
+            <span className="max-w-full truncate text-[11px] font-semibold text-amber-950/80 short:hidden lg:text-sm">{home.practiceHint}</span>
+          </span>
+        </button>
+        <FriendsTile onClick={onFriends} />
+      </div>
     </div>
   );
 }
@@ -175,7 +117,7 @@ function PlayHero({ kind, onClick }: { kind: "ranked" | "practice"; onClick: () 
 /** Karonun görünüşü: simge solda, ad ve not sağda. */
 const TILE_CLASS =
   "press press-sm relative flex min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 px-3 text-left max-[23rem]:gap-1.5 max-[23rem]:px-2 focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none lg:gap-3.5 lg:rounded-3xl lg:px-4 xl:px-5";
-/** Kutudaki karo: simge üstte, ad altında; alçak ekranda yan yana. */
+/** Kutudaki karo: simge üstte, ad altta; alçak ekranda yan yana. */
 const STACKED_TILE = "flex-col justify-center gap-0.5! px-1.5! py-1.5 text-center short:flex-row short:gap-1.5! short:py-1 lg:gap-1.5! lg:py-4";
 
 const TITLE_CLASS = "max-w-full truncate font-display text-base leading-tight font-bold short:text-sm max-[23rem]:text-sm lg:text-xl xl:text-2xl";
@@ -195,33 +137,69 @@ function FriendsTile({ onClick }: { onClick: () => void }) {
 }
 
 /**
- * Günlük: günün meydan okumasının kapısı. Notunda bugün kaç modun bitirildiği (0/5) ve gün serisi; oynanmamış mod
- * kaldıysa köşede kırmızı nokta. Dokununca günün meydan okuması alttan açılır; tur oradan başlar.
+ * Günlük: günün meydan okumasının girişi, ana ekranın altında tam genişlikte tek bir satırdır (dar telefonda yer
+ * kaplamaz). Başlığın yanında bugünün özeti durur: kaç mod bitti (Bugün 2/5; hepsi bitince "Bugünün hepsi tamam"), gün
+ * serisi ve sonraki meydan okumaya kalan süre. Dokununca günün
+ * meydan okuması alttan açılır: modlar orada seçilir (DailySheet).
  */
-function DailyTile({ status, onOpen }: { status: DailyStatus | null; onOpen: () => void }) {
-  const { home } = messages();
+export function DailyEntry({ status, onOpen, variant = "inline" }: { status: DailyStatus | null; onOpen: () => void; variant?: "inline" | "dock" }) {
+  const { home, dailySheet } = messages();
   const { done, total, streak } = dailyProgress(status);
+  const msLeft = useNextDailyCountdown();
+  const isAllDone = done === total;
+  const subtitle = [isAllDone ? home.dailyAllDone : home.dailyNote(done, total), streak > 0 ? `🔥 ${streak}` : null, msLeft !== null ? dailySheet.nextIn(hoursMinutes(msLeft)) : null]
+    .filter(Boolean)
+    .join(" · ");
+
+  // Sabit şerit (dikey telefon) açık sayfanın üst kenarı gibidir: yalnızca üst köşeleri yuvarlak, ekranın alt kenarına yapışık,
+  // üstünde tutamaç çizgisi. Akıştaki şerit eskisi gibi basılabilir bir tuştur.
+  const isDock = variant === "dock";
+  // Oynanmamış mod varken şerit nefes alır ("seni bekleyen bir şey var"); beşi de bitince durur. Oyna'dan yarım tur geç başlar ki ikisi
+  // aynı anda atıp dikkat için yarışmasın. Akıştaki şerit büyür (daily-breathe); ekranın iki kenarına yapışık alt şerit büyürse kenarlardan
+  // taşar, o yüzden orada yalnızca parlaklığı atar (daily-glow).
+  const breathing = isAllDone ? "" : isDock ? "daily-glow" : "daily-breathe";
+  const tone = isAllDone ? "border-emerald-200/70 bg-emerald-600 [--press-edge:#047857]" : "border-fuchsia-300/50 bg-fuchsia-700 [--press-edge:#701a75]";
   return (
     <button
       aria-label={home.dailyAria(done, total, streak)}
-      className={`${TILE_CLASS} border-fuchsia-300/50 bg-fuchsia-600 py-2.5 text-white [--press-edge:#86198f] short:py-1.5 lg:py-5`}
+      className={`relative flex w-full min-w-0 cursor-pointer items-center gap-3 text-left text-white focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:outline-none ${
+        isDock
+          ? `flex-col rounded-t-3xl border-2 border-b-0 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(0_0_0/0.35)] ${tone} ${breathing}`
+          : `press press-sm rounded-2xl border-2 px-4 py-3 short:py-2 lg:gap-4 lg:rounded-3xl lg:px-6 lg:py-4 ${tone} ${breathing}`
+      }`}
       onClick={onOpen}
       type="button"
     >
-      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 max-[23rem]:h-5 max-[23rem]:w-5 lg:h-10 lg:w-10" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
+      {isDock && <span aria-hidden="true" className="h-1.5 w-10 shrink-0 rounded-full bg-white/40" />}
+      <span className="flex w-full min-w-0 items-center gap-3">
+      <svg aria-hidden="true" className="h-7 w-7 shrink-0 short:h-5 short:w-5 lg:h-9 lg:w-9" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 24 24">
         <rect height="16" rx="2.5" width="18" x="3" y="5" />
         <path d="M3 10h18M8 3v4M16 3v4" />
         <path d="m9 15 2 2 4-4" />
       </svg>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className={TITLE_CLASS}>{home.daily}</span>
-        <span className="max-w-full truncate text-[11px] font-semibold tabular-nums opacity-85 short:hidden lg:text-sm">
-          {home.dailyNote(done, total)}
-          {streak > 0 && ` · 🔥 ${streak}`}
-        </span>
+        <span className="truncate font-display text-base leading-tight font-bold short:text-sm lg:text-xl">{dailySheet.title}</span>
+        <span className="max-w-full truncate text-[11px] font-semibold tabular-nums opacity-85 short:hidden lg:text-sm">{subtitle}</span>
       </span>
-      {done < total && <span aria-hidden="true" className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-[#0b3a5b]" />}
+      <svg aria-hidden="true" className="h-5 w-5 shrink-0 opacity-80 lg:h-6 lg:w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      </span>
     </button>
+  );
+}
+
+/**
+ * Dikey telefonda günlük girişinin sabit şeridi: ekranın altına yapışık, tam genişlikte, açık sayfanın kapalı başlığı gibi.
+ * Yalnızca ana ekranda çizilir (IntroScreen), ayar ve oyun ekranlarında değil. Geniş ve yatay ekranda gizlidir.
+ */
+export function DailyDock({ status, onOpen }: { status: DailyStatus | null; onOpen: () => void }) {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 hidden portrait-phone:block">
+      <div className="pointer-events-auto">
+        <DailyEntry onOpen={onOpen} status={status} variant="dock" />
+      </div>
+    </div>
   );
 }
 
@@ -259,91 +237,5 @@ function MapTile({ kind, href }: { kind: keyof typeof MAP_TILES; href: string })
       </svg>
       <span className={TITLE_CLASS}>{text.title}</span>
     </Link>
-  );
-}
-
-/** Liderin haritası: Türkiye bayrağı ya da dünya simgesi, yuvarlak. */
-function MapBadge({ map }: { map: GameMode }) {
-  if (map === "turkey") {
-    return <Image alt="" className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-slate-200 lg:h-6 lg:w-6" height={24} src={flagUrl("tr")} unoptimized width={24} />;
-  }
-  return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 ring-1 ring-sky-200 lg:h-6 lg:w-6">
-      <svg aria-hidden="true" className="h-3.5 w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
-      </svg>
-    </span>
-  );
-}
-
-/**
- * Yarış kartındaki liderler panosu: Türkiye'nin ve Dünya'nın birincisi, taçlı ve altın halkalı profil resmiyle;
- * skor altın renkli bir rozette. Oyuncuya "zirve burada" der; panonun altından sıralama açılır.
- */
-function LeadersBoard({ leaders, isPractice, onShowLeaderboard }: { leaders: CardLeader[]; isPractice: boolean; onShowLeaderboard: () => void }) {
-  const { home, boards } = messages();
-  return (
-    // Antrenman sıralamaya girmez: pano soluklaşır ve bunu söyler; sıralama yine açılabilir.
-    <div className={`w-full max-w-md rounded-2xl bg-white/95 p-2.5 shadow-sm ring-1 ring-amber-200 transition-opacity short:p-2 lg:p-4 ${isPractice ? "opacity-70" : ""}`}>
-      <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-amber-700 uppercase lg:text-xs">
-        <span aria-hidden="true">👑</span>
-        {home.leaders}
-        {isPractice && <span className="ml-auto truncate text-[11px] font-semibold tracking-normal text-slate-500 normal-case max-[23rem]:hidden lg:text-xs">{home.practiceNoRank}</span>}
-      </p>
-      {leaders.length > 0 && (
-        <ol className="mt-1.5 flex flex-col gap-1 lg:mt-2.5 lg:gap-2">
-          {leaders.map((leader) => (
-            <li className="flex min-w-0 items-center gap-2 lg:gap-3" key={leader.map}>
-              <MapBadge map={leader.map} />
-              <span className="sr-only">{leader.map === "turkey" ? boards.turkey : boards.world}</span>
-              <span className="relative shrink-0">
-                {leader.avatarUrl ? (
-                  <Image
-                    alt=""
-                    className="h-7 w-7 rounded-full object-cover ring-2 ring-amber-400 lg:h-9 lg:w-9"
-                    height={36}
-                    referrerPolicy="no-referrer"
-                    src={leader.avatarUrl}
-                    unoptimized
-                    width={36}
-                  />
-                ) : (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-800 ring-2 ring-amber-400 lg:h-9 lg:w-9 lg:text-sm">
-                    {leader.name.slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-                <span aria-hidden="true" className="absolute -top-2 -right-1.5 rotate-12 text-xs lg:text-sm">
-                  👑
-                </span>
-              </span>
-              <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900 lg:text-base">{leader.name}</span>
-              <span className="shrink-0 rounded-full bg-gradient-to-b from-amber-300 to-amber-400 px-2 py-0.5 font-display text-xs font-bold text-amber-950 tabular-nums shadow-sm lg:px-2.5 lg:text-sm">
-                {leader.score}
-              </span>
-              <span className="w-10 shrink-0 text-right text-xs font-semibold text-slate-500 tabular-nums lg:w-12 lg:text-sm">{leader.time}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-      <button
-        className="hit-area mt-1.5 flex items-center gap-1 text-xs font-bold text-amber-800 underline-offset-4 transition hover:underline focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none lg:mt-2.5 lg:text-sm"
-        onClick={onShowLeaderboard}
-        type="button"
-      >
-        <TrophyIcon />
-        {home.showLeaderboard}
-        <span aria-hidden="true">→</span>
-      </button>
-    </div>
-  );
-}
-
-
-function TrophyIcon() {
-  return (
-    <svg aria-hidden="true" className="h-3.5 w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} viewBox="0 0 24 24">
-      <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
-    </svg>
   );
 }

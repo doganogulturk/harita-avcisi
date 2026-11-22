@@ -13,7 +13,8 @@
     "android:release": "node scripts/android-release.mjs",
     "test": "vitest run",
     "maps:districts": "node scripts/build-district-maps.mjs",
-    "maps:provinces": "node scripts/build-province-maps.mjs"
+    "maps:provinces": "node scripts/build-province-maps.mjs",
+    "maps:neighbors": "node scripts/build-neighbors.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

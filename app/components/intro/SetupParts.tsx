@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { createContext, useContext } from "react";
 import { SetupPreviewMap } from "../MapDemo";
-import { BOARDS, type BoardId, type QuestionPrompt } from "@/lib/game";
+import { BOARDS, flagUrl, type BoardId, type GameMode, type QuestionPrompt } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 import { type WorldScope } from "@/lib/world-countries";
 import { GameIcon, type GameInfo } from "./games";
@@ -17,6 +18,28 @@ const START_BUTTON: Record<IntroGame, { color: string; edge: string }> = {
   duel: { color: "bg-orange-500 text-white", edge: "#c2410c" },
   room: { color: "bg-violet-600 text-white", edge: "#4c1d95" },
 };
+
+/**
+ * Bölüm başlığı: Türk bayrağı ya da dünya simgesi ve haritanın adı, yanında ince bir çizgi. Oyna ve Antrenman'ın mod
+ * ekranı koyu zeminde ("dark"), günün meydan okuması sayfası açık zeminde ("light") kullanır.
+ */
+export function SectionTitle({ map, tone = "dark" }: { map: GameMode; tone?: "dark" | "light" }) {
+  const isLight = tone === "light";
+  return (
+    <h3 className={`flex items-center gap-2 font-display text-lg font-bold short:text-base lg:text-2xl ${isLight ? "text-slate-900" : "text-white"}`}>
+      {map === "turkey" ? (
+        <Image alt="" className="h-4 w-auto rounded-[2px] lg:h-5" height={20} src={flagUrl("tr")} unoptimized width={30} />
+      ) : (
+        <svg aria-hidden="true" className={`h-5 w-5 lg:h-6 lg:w-6 ${isLight ? "text-cyan-600" : "text-cyan-300"}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" />
+        </svg>
+      )}
+      {messages().setup.maps[map]}
+      <span aria-hidden="true" className={`h-px flex-1 ${isLight ? "bg-slate-200" : "bg-white/15"}`} />
+    </h3>
+  );
+}
 
 /** Seçili seçeneğin rengi oyunun rengini izler; SetupShell içindeki seçiciler buradan okur. */
 const SelectedClass = createContext("border-cyan-600 bg-cyan-600 text-white");

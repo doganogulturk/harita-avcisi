@@ -25,6 +25,8 @@ type GameTopBarProps = {
   player: Player | null;
   choice: PlayChoice;
   question: Question | undefined;
+  /** Komşuluk sorusunun konusu olan ilin adı ("X ile komşu olan hangisi?"); yalnızca choice.neighbors iken. */
+  subjectName?: string | null;
   answerState: AnswerState;
   answers: AnswerState[];
   questionCount: number;
@@ -106,9 +108,56 @@ function timeTone(remainingGameSeconds: number, tones: [danger: string, warning:
   return tones[2];
 }
 
+/** Şıklı soruda üst çubuğun sorusu: yerin adı verilmez (haritada işaretlidir), ne sorulduğu söylenir. */
+function markedPromptText(choice: PlayChoice): string {
+  const prompts = messages().game.markedPrompt;
+  if (isFlagChoice(choice)) return prompts.flag;
+  if (isCapitalChoice(choice)) return prompts.capital;
+  if (isPlateChoice(choice)) return prompts.plate;
+  return choice.mode === "turkey" ? prompts.turkey : prompts.world;
+}
+
 /** Sorulan şey: ülke / il adı, bayrak, başkent ya da plaka; bayrak, başkent ve plakada cevaptan sonra yanında adı. */
-function QuestionPrompt({ choice, question, answerState, isNarrow = false }: { choice: PlayChoice; question: Question | undefined; answerState: AnswerState; isNarrow?: boolean }) {
+function QuestionPrompt({
+  choice,
+  question,
+  answerState,
+  subjectName = null,
+  isNarrow = false,
+}: {
+  choice: PlayChoice;
+  question: Question | undefined;
+  answerState: AnswerState;
+  subjectName?: string | null;
+  isNarrow?: boolean;
+}) {
   const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-base" : "text-base lg:text-2xl"}`;
+  // Komşuluk sorusu: konunun adı sorunun kendisidir ("Kayseri ile komşu olan hangisi?"); cevap şıklarda aranır, haritada konu işaretlidir.
+  if (question && choice.neighbors && subjectName) {
+    return (
+      <>
+        <h1
+          className={`text-center font-display leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-2xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
+        >
+          {messages().game.neighborQuestion(subjectName)}
+        </h1>
+        {answerState && <span className={`shrink-0 ${answerName} text-slate-500`}>· {questionName(question)}</span>}
+      </>
+    );
+  }
+  if (question && choice.choices) {
+    return (
+      <>
+        <h1
+          className={`text-center font-display leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-2xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
+        >
+          {markedPromptText(choice)}
+        </h1>
+        {/* Yerin adı cevaptan sonra gösterilir; oyuncu yanlış bildiği yeri de öğrensin. */}
+        {answerState && <span className={`shrink-0 ${answerName} text-slate-500`}>· {questionName(question)}</span>}
+      </>
+    );
+  }
   if (question && isFlagChoice(choice) && "code" in question) {
     return (
       <>
@@ -287,6 +336,7 @@ const QUESTION_CARD = "rounded-2xl border-b-4 border-slate-300 bg-white text-sla
  * (gizlenen ekran okuyucuya da görünmez).
  */
 export function GameTopBar({
+  subjectName = null,
   player,
   choice,
   onPlay,
@@ -378,7 +428,7 @@ export function GameTopBar({
 
         <div className={`mt-2 flex min-h-14 flex-col items-center justify-center px-3 py-1.5 ${QUESTION_CARD}`}>
           <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} />
+            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} subjectName={subjectName} />
           </div>
           <div aria-live="polite" className="mt-1 flex flex-wrap items-center justify-center gap-1.5 empty:mt-0">
             {celebration && (
@@ -393,7 +443,7 @@ export function GameTopBar({
 
       {/* Yatay ekran ve masaüstü: tek satır, üç sütun; soru adı yanlardaki içerik ne kadar geniş olursa olsun ortada
           kalır. Telefonda oyuncunun resmi ve adı gösterilmez. */}
-      <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 sm:grid lg:gap-6 lg:px-5 lg:py-3">
+      <div className="hidden grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid lg:gap-6 lg:px-5 lg:py-3">
         <div className="flex min-w-0 items-center gap-2 lg:gap-3">
           <ExitButton onClick={onExit} title={exitTitle} />
           <div className="hidden lg:block">
@@ -402,12 +452,16 @@ export function GameTopBar({
         </div>
 
         <div className={`flex min-w-0 items-center justify-center gap-2 px-4 py-1 lg:gap-3 lg:px-6 lg:py-1.5 ${QUESTION_CARD}`}>
-          <QuestionPrompt answerState={answerState} choice={choice} question={question} />
+          <QuestionPrompt answerState={answerState} choice={choice} question={question} subjectName={subjectName} />
         </div>
 
         {isPractice ? (
-          <div className="flex items-center justify-end gap-3 lg:gap-5">
-            <span className="hidden shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase lg:inline lg:text-xs">
+          <div className="flex min-w-0 items-center justify-end gap-3 lg:gap-5">
+            {/* Tur etiketi ikincil bilgidir: yer dar kalırsa seri, skor ve Bitir yerinde kalır, etiket kısalır (uzun bir soru olunca). */}
+            <span
+              className="hidden min-w-0 truncate rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase lg:block lg:text-xs"
+              title={choiceLabel(choice)}
+            >
               {choiceLabel(choice)}
             </span>
             <StreakChip streak={streak} />

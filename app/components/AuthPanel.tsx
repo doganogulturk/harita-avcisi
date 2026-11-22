@@ -24,11 +24,6 @@ type AuthPanelProps = {
   guestSubmitLabel?: string;
 };
 
-/** Misafir girişinde ad alanına önerilen ad; oyuncu isterse üzerine yazar. */
-function suggestGuestName() {
-  return messages().auth.guestSuggestion(Math.floor(1000 + Math.random() * 9000));
-}
-
 /**
  * Giriş, ayrı bir ekran değil; oyuncu "Oyna"ya bastıktan sonra aynı kartın içinde
  * açılan bir adım. Seçim korunur, giriş biter bitmez o tur başlar.
@@ -47,7 +42,8 @@ export function AuthPanel({
   guestSubmitLabel,
 }: AuthPanelProps) {
   const { auth, common } = messages();
-  const [guestName, setGuestName] = useState(suggestGuestName);
+  // Ad alanı boş açılır; oyuncuya ad önerilmez, yalnızca ne yazılacağını söyleyen bir yer tutucu durur.
+  const [guestName, setGuestName] = useState("");
   const [isGuestFormVisible, setIsGuestFormVisible] = useState(false);
   // Apple girişi (yalnızca iOS) sayfadan ayrılmadan biter ve sayfayı yeniden yükler; durumu bu panelde tutulur.
   const [isAppleAvailable] = useState(isAppleSignInAvailable);
@@ -62,8 +58,11 @@ export function AuthPanel({
     setIsAppleSigningIn(false);
   };
 
+  const isGuestNameEmpty = guestName.trim() === "";
+
   const submitGuestName = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isGuestNameEmpty) return;
     onGuestSignIn(guestName);
   };
 
@@ -149,14 +148,12 @@ export function AuthPanel({
             id="guest-name"
             maxLength={40}
             onChange={(event) => setGuestName(event.target.value)}
-            // Önerilen ad seçili gelir: yazmaya başlayan kendi adını yazar, dokunmayan önerilenle devam eder.
-            onFocus={(event) => event.currentTarget.select()}
             placeholder={auth.guestName}
             value={guestName}
           />
           <button
-            className="rounded-xl bg-cyan-600 px-5 py-3 font-bold text-white transition hover:bg-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
-            disabled={isBusy}
+            className={`rounded-xl bg-cyan-600 px-5 py-3 font-bold text-white transition hover:bg-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60 ${isBusy ? "disabled:cursor-wait" : "disabled:cursor-not-allowed"}`}
+            disabled={isBusy || isGuestNameEmpty}
             type="submit"
           >
             {guestSubmitLabel ?? common.start}

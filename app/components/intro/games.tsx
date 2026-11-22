@@ -190,7 +190,7 @@ export const GROUPS: GroupInfo[] = [
 
 export const groupInfo = (id: IntroGroup): GroupInfo => GROUPS.find((group) => group.id === id) ?? GROUPS[0];
 
-/** Kronometre, döngü oku, çapraz kılıçlar ve bir grup insan; gruplar için tek kişi ve iki kişi. */
+/** Kronometre, antrenman konisi, çapraz kılıçlar ve bir grup insan; gruplar için tek kişi ve iki kişi. */
 export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame | IntroGroup; className?: string }) {
   return (
     <svg
@@ -209,7 +209,16 @@ export function GameIcon({ game, className = "h-7 w-7" }: { game: IntroGame | In
           <path d="M12 9v4l2.5 2M9 2h6" />
         </>
       )}
-      {game === "practice" && <path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4.5h-4.5" />}
+      {game === "practice" && (
+        // Antrenman konisi: dolu, üç parça ve taban. Şeritler çizgi değil parçalar arasındaki boşluktur; böylece simge hangi zeminde
+        // (sarı rozet, açık sarı karo, sarı tuş) durursa dursun şeritler zeminin rengini alır, ayrı bir şerit rengi gerekmez.
+        <g fill="currentColor" stroke="none">
+          <path d="M9.6 4.2a1 1 0 0 1 .97-.7h2.86a1 1 0 0 1 .97.7l1.187 3.9H8.413Z" />
+          <path d="M7.865 9.9h8.27l.821 2.7H7.044Z" />
+          <path d="M6.496 14.4h11.008L18.6 18H5.4Z" />
+          <rect height="2.6" rx="1" width="18" x="3" y="17.8" />
+        </g>
+      )}
       {game === "duel" && (
         <>
           <path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" />

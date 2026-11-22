@@ -219,6 +219,30 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     if (previous) animateTo(previous);
   }, [animateTo]);
 
+  /**
+   * Şıklı soruda işaretli yeri gösterir. Yer oyuncunun görünümünde çok küçükse (Malta, Lüksemburg) harita oraya yakınlaşır;
+   * değilse oyuncunun bıraktığı görünüme dönülür. Boyut, önceki sorunun yakınlaştırmasına göre değil oyuncunun kendi
+   * görünümüne göre ölçülür (viewBeforeReveal); aksi halde küçük bir yerden sonra gelen soru yanlış ölçekte görünürdü.
+   * "Önce geri dön, sonra yakınlaş" iki ayrı adım olsaydı ikincisi animasyonun ortasındaki görünümü "önceki" diye kaydederdi.
+   */
+  const focusOn = useCallback(
+    (element: SVGGraphicsElement) => {
+      const container = containerRef.current;
+      const reference = viewBeforeReveal.current ?? viewBox.current;
+      if (!container || !reference) return;
+
+      const box = element.getBBox();
+      const screenSize = (Math.max(box.width, box.height) * container.clientWidth) / reference.width;
+      if (screenSize >= SMALL_TARGET_PX) return restoreAfterReveal();
+
+      viewBeforeReveal.current ??= viewBox.current;
+      const width = (reference.width * Math.max(screenSize, 1)) / REVEAL_TARGET_PX;
+      const height = width * aspect.current;
+      animateTo({ x: box.x + box.width / 2 - width / 2, y: box.y + box.height / 2 - height / 2, width, height });
+    },
+    [animateTo, containerRef, restoreAfterReveal],
+  );
+
   /** Görünümün merkezini sabit tutarak yakınlaştırır. */
   const zoomBy = useCallback(
     (factor: number) => {
@@ -385,6 +409,7 @@ export function useMapZoom(containerRef: RefObject<HTMLDivElement | null>, mapMa
     reset,
     ensureVisible,
     restoreAfterReveal,
+    focusOn,
     /** Sürükleme sonrası gelen tıklamanın seçim sayılmaması için. */
     wasDragged: () => dragDistance.current > dragThreshold.current,
     panHandlers: { onPointerDown: startPan, onPointerMove: movePan, onPointerUp: endPan, onPointerCancel: endPan },

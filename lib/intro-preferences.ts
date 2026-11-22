@@ -45,8 +45,8 @@ function createPreference<T extends string>(key: string, isValid: (value: string
 }
 
 /**
- * Giriş ekranının oyunları: Yarış, Antrenman, Düello ve Oda. "friends" ikisinin ortak kapısıdır: Düello ya da Oda
- * kurulur, ya da kodla katılınır.
+ * Giriş ekranının oyunları: Oyna ("ranked"), Antrenman, Düello ve Oda. "friends" ikisinin ortak kapısıdır: Düello ya da
+ * Oda kurulur, ya da kodla katılınır. "ranked" kimliği eski adından kalmadır: 10 soru, 120 saniyelik turdur.
  */
 export type IntroGame = "ranked" | "practice" | "friends" | "duel" | "room";
 export type IntroGroup = "solo" | "friends";
@@ -57,11 +57,15 @@ const TURKEY_PROMPTS: TurkeyPrompt[] = ["name", "plate"];
 // Eski sürümlerin kaydettiği "normal" ve "hard" geçersiz sayılır ve "all"a düşer; kıta seçimleri korunur.
 const SCOPES: WorldScope[] = ["all", "africa", "america", "asia", "europe"];
 
-/** Ana ekrandaki OYNA kutusunun anahtarı: Yarış (sıralamalı) ya da Antrenman (süresiz). */
-export const [useIntroPlayKind, setIntroPlayKind] = createPreference<"ranked" | "practice">(
-  "harita-avcisi:intro-play-kind",
-  (value): value is "ranked" | "practice" => value === "ranked" || value === "practice",
-  "ranked",
+/**
+ * Oyna ve Antrenman'ın soru biçimi: haritaya dokunarak ("tap") ya da haritada işaretli yeri dört şıktan bularak ("choose").
+ * Seçim hatırlanır; sonuç ekranındaki "tekrar oyna" da aynı biçimle başlar.
+ */
+export type AnswerStyle = "tap" | "choose" | "neighbors";
+export const [useAnswerStyle, setAnswerStyle] = createPreference<AnswerStyle>(
+  "harita-avcisi:answer-style",
+  (value): value is AnswerStyle => value === "tap" || value === "choose" || value === "neighbors",
+  "tap",
 );
 
 /** İkinci adımdaki Türkiye / Dünya seçimi dört oyunda ortaktır. */
@@ -147,3 +151,10 @@ export const [useGuideSeen, setGuideSeen] = createSeenFlag("harita-avcisi:guide-
 
 /** Dikey telefonda ilk oyundan önce bir kez gösterilen ipuçları: yan çevir, iki parmakla yakınlaştır (PlayTips). */
 export const [usePlayTipsSeen, setPlayTipsSeen, readPlayTipsSeen] = createSeenFlag("harita-avcisi:play-tips-seen");
+
+/**
+ * Soru biçimi kartlarındaki "YENİ" rozeti: oyuncu o biçimi bir kez seçene kadar görünür. Yalnızca cihazda bir bayraktır;
+ * sunucuya ya da analitiğe hiçbir şey gitmez. Sunucuda ve depolama kapalıyken "görüldü" sayılır (rozet çizilmez).
+ */
+export const [useChooseStyleSeen, setChooseStyleSeen] = createSeenFlag("harita-avcisi:style-choose-seen");
+export const [useNeighborsStyleSeen, setNeighborsStyleSeen] = createSeenFlag("harita-avcisi:style-neighbors-seen");

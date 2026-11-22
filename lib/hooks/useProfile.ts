@@ -5,8 +5,8 @@ import { type DuelRule } from "@/lib/duel";
 import { type BoardVariant, type GameMode, type Player } from "@/lib/game";
 import { getSupabaseClient } from "@/lib/supabase";
 
-/** Bir sıralamada oyuncunun en iyi sonucu ve sırası. */
-export type ProfileBoard = { game_mode: GameMode; variant: BoardVariant; score: number; duration_ms: number; rank: number; players: number };
+/** Bir modda oyuncunun en iyi sonucu. */
+export type ProfileBoard = { game_mode: GameMode; variant: BoardVariant; score: number; duration_ms: number };
 
 export type DuelResultKind = "win" | "loss" | "draw";
 

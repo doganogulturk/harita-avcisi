@@ -2,62 +2,63 @@ import { useState } from "react";
 import { Leaderboard } from "./Leaderboard";
 import { MostMissed } from "./MostMissed";
 import { NewBadges } from "./NewBadges";
-import { RoundReview } from "./RoundReview";
+import { RoundReview, RoundSquares } from "./RoundReview";
+import { RightAnswers, WrongAnswers } from "./SessionReview";
 import { RoundCelebration } from "./RoundCelebration";
+import { SignInDialog } from "./SignInDialog";
+import { WeakSpots } from "./WeakSpots";
 import { boardOf, dailyShareText, useDailyLeaderboards, useDailyStatus } from "@/lib/daily";
 import { PRIMARY_BUTTON_CLASS } from "./PlayButton";
 import { ShareScoreButton } from "./ShareScoreButton";
 import {
   boardIdFor,
   BOARDS,
-  choiceForBoard,
   choiceLabel,
   emptyLeaderboards,
   formatTime,
-  GAME_DURATION_SECONDS,
-  QUESTIONS_PER_ROUND,
   type AnswerRecord,
   type BoardId,
   type LocationStat,
+  type WeakSpot,
   type PlayChoice,
   type Player,
 } from "@/lib/game";
-import { type Leaderboards, type SaveResult } from "@/lib/hooks/useLeaderboard";
+import { type SaveResult } from "@/lib/hooks/useRoundSave";
 import { messages } from "@/lib/i18n";
+import { getSupabaseClient } from "@/lib/supabase";
 
 type ResultScreenProps = {
   player: Player | null;
   choice: PlayChoice;
-  playedBoardId: BoardId;
   score: number;
   questionCount: number;
   /** Antrenmanda tur uzunluğu sabit değildir; oyuncunun cevapladığı soru sayısı. */
   answeredCount: number;
   bestStreak: number;
   durationMs: number;
-  leaderboards: Leaderboards;
-  boardId: BoardId;
-  leaderboardError: string | null;
-  /** Yarış skorunun kaydı: null sürüyor; "failed" yeniden denenebilir; "no-round" tur sunucuda açılamamıştı. */
+  /** Oyna turunun kaydı (giriş yapmış oyuncuda): null sürüyor ya da kayıt yok; "failed" yeniden denenebilir; "no-round" tur sunucuda açılamamıştı. */
   saveResult: SaveResult | null;
   onRetrySave: () => void;
-  /** Tüm oyuncuların bu modda en çok yanlış yaptığı yerler; `undefined` yükleniyor, `null` yüklenemedi. */
+  /** Oyuncuların bu modda en çok yanlış yaptığı yerler; `undefined` yükleniyor, `null` yüklenemedi. */
   mostMissed: LocationStat[] | null | undefined;
-  /** Listenin ait olduğu mod: yarışta sıralamada seçili sekme, antrenmanda oynanan mod. */
-  mostMissedChoice: PlayChoice;
+  /** Oyuncunun kendi zayıf yerleri (giriş yapmışsa); `undefined` yükleniyor, `null` giriş yok ya da yüklenemedi. */
+  weakSpots: WeakSpot[] | null | undefined;
   /** Oyuncunun bu turda yanlış cevapladığı yerler. */
   missedLocationIds: string[];
   /** Turun cevapları sırayla; soru soru döküm (RoundReview) bunlardan çizilir. */
   answerRecords: AnswerRecord[];
-  onBoardChange: (boardId: BoardId) => void;
+  /** Komşuluk turunda her sorunun konusu ("X ile komşu olan hangisi?"); başka turlarda null. */
+  subjects: string[] | null;
   onPlay: (choice: PlayChoice) => void;
-  /** Oynanan oyunun (Yarış ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
+  /** Oynanan oyunun (Oyna ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
   onChooseAnother: () => void;
   onHome: () => void;
 };
 
 /** Giriş ekranındaki kartlarla aynı çerçeve. */
 const RESULT_CARD = "rounded-3xl border-2 border-slate-200 bg-white p-5 short:p-4 lg:p-7";
+/** Geri planda duran kart (en çok yanlış yapılanlar): oturumun dökümünden daha sade ve soluk. */
+const RESULT_CARD_QUIET = "rounded-3xl border border-slate-200 bg-slate-50/70 p-4 short:p-3 lg:p-6";
 /**
  * Sol özet kartı: iki sütunlu düzende ekranın yüksekliğini doldurur, tuşlar altına yaslanır.
  * Alçak ekranda (yatay telefon) aralıklar daralır; içerik yine sığmazsa kart kendi içinde kayar.
@@ -71,7 +72,8 @@ const RESULT_EYEBROW = "text-xs font-semibold tracking-[0.2em] text-cyan-700 upp
 
 /**
  * Sonuç ekranı giriş ekranı gibi ekranın tamamını kullanır. Solda boydan boya turun özeti ve yeni tur
- * tuşları, sağda alt alta önce sıralama, sonra en çok yanlış yapılanlar; iki sütun da kendi içinde kayar.
+ * tuşları, sağda alt alta önce bu turun soru soru dökümü (yanlışlar önde; günlük sonuçta günün sıralaması), sonra
+ * geri planda en çok yanlış yapılanlar; iki sütun da kendi içinde kayar.
  * Yatay telefonda da iki sütundur. Dikey telefonda her şey tek sütunda alt alta gelir ve sayfa kayar.
  */
 function ResultShell({
@@ -127,6 +129,16 @@ function PrimaryButton({ label, onClick, isCompact = false }: { label: string; o
   );
 }
 
+/** Komşuluk turunun neden kaydedilmediğini söyler (Oyna'da bile): giriş yapmış oyuncu "kaydedilmedi" hatası sanmasın. */
+function NeighborsNotSaved() {
+  const text = messages().result;
+  return (
+    <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+      <span className="font-semibold text-slate-700">{text.neighborsNotSaved}.</span> {text.neighborsNotSavedNote}
+    </p>
+  );
+}
+
 /** Skor kaydedilemediyse özetin altında: neden ve (yapılabiliyorsa) yeniden deneme. Kaydedildiyse ya da sürüyorsa yok. */
 function SaveNotice({ result, onRetry }: { result: SaveResult | null; onRetry: () => void }) {
   if (result !== "failed" && result !== "no-round") return null;
@@ -152,6 +164,41 @@ function SaveNotice({ result, onRetry }: { result: SaveResult | null; onRetry: (
 
 const RESULT_LINK_CLASS = "text-sm font-semibold underline-offset-4 transition hover:underline";
 
+/**
+ * Girişsiz oyuncuya sonuç ekranında: giriş yaparsa turları profilinde ve rozetlerinde birikir, günün meydan okumasına
+ * katılabilir. Bu turun kaydedilmediği açıkça söylenir; sonraki turlar kaydedilir. Sunucu bağlantısı yoksa gösterilmez.
+ */
+function SignInInvite() {
+  const [isOpen, setIsOpen] = useState(false);
+  const text = messages().result;
+  if (getSupabaseClient() === null) return null;
+  return (
+    <>
+      <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 lg:p-5">
+        <p className="text-sm font-bold text-slate-900">{text.inviteTitle}</p>
+        <p className="mt-1 text-xs text-slate-600">{text.inviteBody}</p>
+        <button
+          className="mt-2 text-sm font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-800 hover:decoration-cyan-600"
+          onClick={() => setIsOpen(true)}
+          type="button"
+        >
+          {text.inviteAction}
+        </button>
+      </div>
+      {isOpen && <SignInDialog onClose={() => setIsOpen(false)} />}
+    </>
+  );
+}
+
+/**
+ * "Bunları çalış": aynı modun antrenmanı, yalnızca verilen yerlerle. Soru biçimi (şıklı ya da haritaya dokunma) korunur;
+ * kıta, günlük ve önceki odak sıfırlanır: odak zaten
+ * oyuncunun bu moddaki bütün zayıf yerlerini kapsar, kıta süzgeci onları sessizce eleyebilirdi.
+ */
+function practiceFor(choice: PlayChoice, ids: string[]): PlayChoice {
+  return { kind: "practice", mode: choice.mode, difficulty: choice.difficulty, prompt: choice.prompt, focusIds: ids, choices: choice.choices };
+}
+
 /** Asıl tuşun altındaki iki bağlantı: aynı oyunun ayar ekranında başka bir tur seçmek ve ana menüye dönmek. */
 function ResultLinks({ chooseLabel, onChooseAnother, onHome }: { chooseLabel: string; onChooseAnother: () => void; onHome: () => void }) {
   return (
@@ -170,22 +217,18 @@ function ResultLinks({ chooseLabel, onChooseAnother, onHome }: { chooseLabel: st
 export function ResultScreen({
   player,
   choice,
-  playedBoardId,
   score,
   questionCount,
   answeredCount,
   bestStreak,
   durationMs,
-  leaderboards,
-  boardId,
-  leaderboardError,
   saveResult,
   onRetrySave,
   mostMissed,
-  mostMissedChoice,
+  weakSpots,
   missedLocationIds,
   answerRecords,
-  onBoardChange,
+  subjects,
   onPlay,
   onChooseAnother,
   onHome,
@@ -211,6 +254,7 @@ export function ResultScreen({
     return (
       <PracticeResult
         answerRecords={answerRecords}
+        subjects={subjects}
         answeredCount={answeredCount}
         bestStreak={bestStreak}
         choice={choice}
@@ -220,18 +264,16 @@ export function ResultScreen({
         onChooseAnother={onChooseAnother}
         onHome={onHome}
         onPlay={onPlay}
-        player={player}
         score={score}
+        weakSpots={weakSpots}
       />
     );
   }
 
-  // Sıralamadaki satır en yüksek puanlı tura ait; süresi bu turunkinden uzun olabilir.
-  const personalBest = leaderboards[playedBoardId].find((entry) => entry.user_id === player?.id);
-  const rank = personalBest ? leaderboards[playedBoardId].indexOf(personalBest) + 1 : 0;
+  // Oyna turunun yarış sıralaması yok; sonuç oyuncunun kendi gelişimi için (giriş yapmışsa profilinde birikir).
   const duration = formatTime(Math.round(durationMs / 1000));
   const text = messages().result;
-  const shareText = text.shareRanked(choiceLabel(choice), score, questionCount, duration, rank);
+  const shareText = text.shareRanked(choiceLabel(choice), score, questionCount, duration);
 
   return (
     <ResultShell
@@ -247,11 +289,6 @@ export function ResultScreen({
                   <span className={SCORE_NUMBER}>{score}</span>
                   <span className="text-3xl text-slate-400 short:text-2xl">/{questionCount}</span>
                 </p>
-                {personalBest && (
-                  <p className="mt-1.5 text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums lg:text-sm">
-                    {text.personalBest(personalBest.score, questionCount, formatTime(Math.round(personalBest.duration_ms / 1000)))}
-                  </p>
-                )}
               </div>
 
               <dl className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -260,10 +297,17 @@ export function ResultScreen({
               </dl>
             </div>
 
-            <RoundReview answers={answerRecords} choice={choice} />
+            <RoundSquares answers={answerRecords} />
+            <WrongAnswers answers={answerRecords} choice={choice} subjects={subjects} />
 
-            <SaveNotice onRetry={onRetrySave} result={saveResult} />
-            <NewBadges isSaved={saveResult === "saved"} />
+            {choice.neighbors ? (
+              <NeighborsNotSaved />
+            ) : (
+              <>
+                <SaveNotice onRetry={onRetrySave} result={saveResult} />
+                <NewBadges isSaved={saveResult === "saved"} />
+              </>
+            )}
 
             {/* Yeni oyun: en sık yapılan iş aynı turu tekrar oynamak; başka tur, seçeneklerin hepsinin durduğu
                 ayar ekranında seçilir. */}
@@ -278,37 +322,44 @@ export function ResultScreen({
           </aside>
       }
     >
-      <section className={RESULT_CARD}>
-        <Leaderboard
-          boardId={boardId}
-          currentPlayerId={player?.id}
-          leaderboardError={leaderboardError}
-          leaderboards={leaderboards}
-          onBoardChange={onBoardChange}
-          tall
-        />
-      </section>
+      <RightAnswers answers={answerRecords} choice={choice} className={RESULT_CARD} isOpenByDefault={Boolean(choice.neighbors)} subjects={subjects} />
 
-      <MostMissed
-        className={RESULT_CARD}
-        choice={mostMissedChoice}
-        missedLocationIds={missedLocationIds}
-        modeLabel={BOARDS.find((board) => board.id === boardId)?.label}
-        stats={mostMissed}
-      />
+      {!player && !choice.neighbors && <SignInInvite />}
+
+      {/* Kişisel zayıf yerler ve herkesin en çok yanlışları yerleri adıyla bulmaktan hesaplanır; komşuluk turunda gösterilmez. */}
+      {!choice.neighbors && (
+        <>
+          {/* Kişisel zayıf yerler: giriş yapmış oyuncuda; "Bunları çalış" antrenmanı yalnızca bu yerlerle başlatır. */}
+          <WeakSpots
+            choice={choice}
+            className={RESULT_CARD}
+            onPractice={(ids) => onPlay(practiceFor(choice, ids))}
+            spots={weakSpots}
+          />
+
+          <MostMissed
+            className={RESULT_CARD_QUIET}
+            choice={choice}
+            missedLocationIds={missedLocationIds}
+            modeLabel={BOARDS.find((board) => board.id === boardIdFor(choice))?.label}
+            stats={mostMissed}
+          />
+        </>
+      )}
     </ResultShell>
   );
 }
 
 type PracticeResultProps = {
-  player: Player | null;
   answerRecords: AnswerRecord[];
+  subjects: string[] | null;
   choice: PlayChoice;
   score: number;
   answeredCount: number;
   bestStreak: number;
   durationMs: number;
   mostMissed: LocationStat[] | null | undefined;
+  weakSpots: WeakSpot[] | null | undefined;
   missedLocationIds: string[];
   onPlay: (choice: PlayChoice) => void;
   onChooseAnother: () => void;
@@ -317,11 +368,12 @@ type PracticeResultProps = {
 
 /**
  * Antrenman sonucu kaydedilmez; yalnızca oyuncunun kendi gelişimi için özet gösterilir.
- * En çok yanlış yapılanlar listesi yine de gösterilir: yarış turlarından gelir, okumak serbesttir.
+ * En çok yanlış yapılanlar listesi yine de gösterilir: oyuncuların turlarından gelir, okumak serbesttir.
  */
 function PracticeResult({
-  player,
+  weakSpots,
   answerRecords,
+  subjects,
   choice,
   score,
   answeredCount,
@@ -334,8 +386,6 @@ function PracticeResult({
   onHome,
 }: PracticeResultProps) {
   const accuracy = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
-  // Antrenmanın yarıştaki karşılığı (kıtalar dünyanın 179 ülkelik sıralamasına düşer).
-  const rankedBoard = BOARDS.find((board) => board.id === boardIdFor(choice)) ?? BOARDS[0];
   const text = messages().result;
 
   return (
@@ -360,32 +410,25 @@ function PracticeResult({
               </dl>
             </div>
 
-            <RoundReview answers={answerRecords} choice={choice} />
+            <RoundSquares answers={answerRecords} />
+            <WrongAnswers answers={answerRecords} choice={choice} subjects={subjects} />
 
             <div className="flex flex-col gap-3 pt-2 short:pt-0 lg:mt-auto">
               <PrimaryButton label={text.practiceAgain} onClick={() => onPlay(choice)} />
               <ResultLinks chooseLabel={text.choosePractice} onChooseAnother={onChooseAnother} onHome={onHome} />
             </div>
-
-            {/* Antrenmandan yarışa davet. Giriş yapılmamışsa yarış tuşu giriş adımını açar; bu yüzden önceden söylenir. */}
-            <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4">
-              <p className="text-sm font-bold text-slate-900">{text.inviteTitle}</p>
-              <p className="mt-1 text-xs text-slate-600">
-                {text.inviteBody(QUESTIONS_PER_ROUND, GAME_DURATION_SECONDS, rankedBoard.label)}
-                {!player && text.inviteSignIn}
-              </p>
-              <button
-                className="mt-2 text-sm font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-800 hover:decoration-cyan-600"
-                onClick={() => onPlay(choiceForBoard(rankedBoard))}
-                type="button"
-              >
-                {player ? text.inviteStart(rankedBoard.label) : text.inviteSignInStart(rankedBoard.label)}
-              </button>
-            </div>
           </aside>
       }
     >
-      <MostMissed className={RESULT_CARD} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+      <RightAnswers answers={answerRecords} choice={choice} className={RESULT_CARD} isOpenByDefault={Boolean(choice.neighbors)} subjects={subjects} />
+      {/* Komşuluk turunda cevap bir komşuluk bilgisidir, yerin adı değil; "zayıf yerlerin" ve "herkesin en çok yanlışları" yerleri adıyla
+          bulmakla ilgili olduğu için burada karışmasın diye gösterilmez. */}
+      {!choice.neighbors && (
+        <>
+          <WeakSpots choice={choice} className={RESULT_CARD} onPractice={(ids) => onPlay(practiceFor(choice, ids))} spots={weakSpots} />
+          <MostMissed className={RESULT_CARD_QUIET} choice={choice} missedLocationIds={missedLocationIds} stats={mostMissed} />
+        </>
+      )}
     </ResultShell>
   );
 }

@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnswerChoices } from "./components/AnswerChoices";
 import { GameMap, nextQuestionCountdown, streakCelebration, wrongPickNotice } from "./components/GameMap";
 import { GameTopBar } from "./components/GameTopBar";
 import { DarkSystemBars } from "./components/NativeSystemBars";
 import { IntroScreen } from "./components/IntroScreen";
 import { PlayTips } from "./components/PlayTips";
 import { ResultScreen } from "./components/ResultScreen";
-import { startRankedRound, useLeaderboard } from "@/lib/hooks/useLeaderboard";
+import { choiceOptions } from "@/lib/choices";
+import { neighborIds, neighborOptions, neighborSubject } from "@/lib/neighbors";
+import { startRankedRound, useRoundSave } from "@/lib/hooks/useRoundSave";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
+import { useWeakSpots } from "@/lib/hooks/useWeakSpots";
 import { loadMapMarkup, useMapMarkup } from "@/lib/hooks/useMapMarkup";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { type IntroGame, readPlayTipsSeen, setPlayTipsSeen } from "@/lib/intro-preferences";
@@ -25,16 +29,14 @@ import { provinces } from "@/lib/turkish-plates";
 import { capitalOf } from "@/lib/world-capitals";
 import { continentInfo, continentLocationIds, countries, countriesIn } from "@/lib/world-countries";
 import {
-  BOARDS,
-  boardIdFor,
-  choiceForBoard,
   correctLocationId,
   flagUrl,
+  isSavedChoice,
+  locationName,
   isCapitalChoice,
   isFlagChoice,
   GAME_MODES,
   QUESTIONS_PER_ROUND,
-  type BoardId,
   type GameMode,
   type GamePhase,
   type PlayChoice,
@@ -69,13 +71,16 @@ function writePendingChoice(choice: PlayChoice | null) {
 }
 
 function poolFor(choice: PlayChoice): Question[] {
-  if (choice.mode === "turkey") return provinces;
-  const pool = choice.continent ? countriesIn(choice.continent) : countries;
+  const pool: Question[] = choice.mode === "turkey" ? provinces : choice.continent ? countriesIn(choice.continent) : countries;
   // Başkent turunda başkenti listede olmayan ülkeler (tartışmalılar, bağlı topraklar) sorulmaz.
-  return isCapitalChoice(choice) ? pool.filter((country) => capitalOf(country.code)) : pool;
+  const asked = choice.mode === "world" && isCapitalChoice(choice) ? pool.filter((question) => capitalOf(correctLocationId(question))) : pool;
+  // "Bunları çalış": oyuncunun zayıf yerleri. Havuz yalnızca bu yerlerle kurulur; sunucudan eski bir yer kodu gelirse sorulmaz.
+  if (!choice.focusIds) return asked;
+  const focus = new Set(choice.focusIds);
+  return asked.filter((question) => focus.has(correctLocationId(question)));
 }
 
-/** Sıralamalı tur 10 soru sorar; antrenman tüm havuzu sırayla dolaşır. */
+/** Oyna turu 10 soru sorar; antrenman tüm havuzu sırayla dolaşır. */
 function roundFor(choice: PlayChoice): Question[] {
   const shuffled = shuffle(poolFor(choice));
   return choice.kind === "practice" ? shuffled : shuffled.slice(0, QUESTIONS_PER_ROUND);
@@ -99,10 +104,31 @@ export default function Home() {
     mode,
     timed: !isPractice,
     extend: isPractice ? (lastQuestion) => nextPracticeCycle(choice, lastQuestion) : undefined,
+    // Günlük meydan okumada herkes her cevaptan sonra aynı 3 saniyeyi bekler; diğer turlarda gösterim kısadır.
+    isQuick: !choice.daily,
   });
   const { questions, questionIndex, currentQuestion, answers, answerRecords, answerState, score, bestStreak, completionDurationMs } = round;
   const phase: GamePhase = round.status === "idle" ? "ready" : round.status;
   const roundId = round.roundKey;
+  // Şıklı soru: dört şık soru başına bir kez üretilir (aynı soru antrenmanda yeniden gelince şıklar da yenilenir).
+  // Komşuluk sorusunda haritada işaretlenen il konudur ("X ile komşu olan hangisi?"), soru havuzundaki il cevaptır. Konu, tur ve
+  // sorunun sırasından türetilir (lib/neighbors.ts): aynı soruda hep aynıdır, sonuç ekranı yeniden kurabilir.
+  const subjectId = useMemo(
+    () => (choice.neighbors && currentQuestion ? neighborSubject(correctLocationId(currentQuestion), roundId, questionIndex) : null),
+    [choice.neighbors, currentQuestion, questionIndex, roundId],
+  );
+  // Sonuç ekranı için cevaplanan her sorunun konusu (komşuluk turunda). Konu, tur ve sıradan türetildiği için yeniden kurulur.
+  const subjects = useMemo(
+    () => (choice.neighbors ? answerRecords.map((answer, index) => neighborSubject(answer.location, roundId, index)) : null),
+    [answerRecords, choice.neighbors, roundId],
+  );
+  const options = useMemo(() => {
+    if (!choice.choices || !currentQuestion) return null;
+    if (subjectId) return neighborOptions(subjectId, correctLocationId(currentQuestion));
+    return choiceOptions(choice, currentQuestion, poolFor({ ...choice, focusIds: undefined }));
+    // questionIndex değerde kullanılmaz, yalnızca tetikleyicidir: aynı yer antrenmanda yeniden sorulunca şıklar yenilensin.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [choice, currentQuestion, questionIndex, subjectId]);
   const [serverRound, setServerRound] = useState<Promise<string | null> | null>(null);
 
   const [pendingChoice, setPendingChoice] = useState<PlayChoice | null>(null);
@@ -113,31 +139,35 @@ export default function Home() {
   });
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [boardId, setBoardId] = useState<BoardId>("turkey");
   const [readyModes, setReadyModes] = useState<GameMode[]>([]);
 
   const { mapMarkup, mapError } = useMapMarkup(mode);
-  const { leaderboards, leaderboardError, resetLeaderboards, playedBoardId, isResultSettled, saveResult, retrySave } = useLeaderboard({
+  // Giriş yapmış oyuncunun Oyna turu kaydedilir (profil, rozetler, en çok yanlış yapılanlar); girişsizde ve antrenmanda hiçbir şey yazılmaz.
+  const { isResultSettled, saveResult, retrySave } = useRoundSave({
     player,
     roundId,
     serverRound,
-    // Antrenman turları kaydedilmez.
-    isFinished: phase === "finished" && !isPractice,
-    choice,
+    isFinished: phase === "finished" && isSavedChoice(choice),
     answers: answerRecords,
     durationMs: completionDurationMs,
   });
-  // Antrenman havuzu sıralamanınkinden dar olabilir (kıta); liste o havuzdan seçilir.
+  // Antrenman havuzu oynanan modunkinden dar olabilir (kıta); liste o havuzdan seçilir.
   const practicePoolIds = useMemo(() => (isPractice ? poolFor(choice).map(correctLocationId) : null), [choice, isPractice]);
-  // Yarışta bu turun cevapları kaydedildikten sonra çekilir; oyuncunun az önceki cevapları da sayılsın.
-  // Yarışta liste, sıralamada seçili sekmenin modunu izler; antrenmanda oynanan moddur.
-  const statsBoard = BOARDS.find((board) => board.id === boardId) ?? BOARDS[0];
-  const statsChoice = useMemo(() => (isPractice ? choice : choiceForBoard(statsBoard)), [choice, isPractice, statsBoard]);
+  // Bu turun cevapları kaydedildikten sonra çekilir; oyuncunun az önceki cevapları da sayılsın.
   const mostMissed = useMostMissed({
-    choice: statsChoice,
+    choice,
     locationIds: practicePoolIds,
     roundId,
-    enabled: phase === "finished" && (isPractice || isResultSettled),
+    enabled: phase === "finished" && !choice.neighbors && (isPractice || isResultSettled),
+  });
+
+  // Oyuncunun kendi zayıf yerleri: yalnızca giriş yapmış oyuncuda ve tur bittiğinde çekilir. Oyna turunda önce bu turun
+  // cevapları kaydedilir ki liste güncel olsun; antrenman kaydedilmediği için hemen çekilir (önceki turlardan gelir).
+  const weakSpots = useWeakSpots({
+    player,
+    choice,
+    roundId,
+    enabled: phase === "finished" && !choice.neighbors && (isPractice || isResultSettled),
   });
 
   const supabaseConfigured = getSupabaseClient() !== null;
@@ -179,7 +209,7 @@ export default function Home() {
     if (tipsChoice) beginRound(tipsChoice);
   }
 
-  // Yarış turunun soruları sunucudan beklenirken "Tur hazırlanıyor" katmanı durur; süre sorular gelince başlar.
+  // Oyna turunun soruları sunucudan beklenirken "Tur hazırlanıyor" katmanı durur; süre sorular gelince başlar.
   const [isPreparing, setIsPreparing] = useState(false);
   // Günlük meydan okuma açılamadıysa (bugün oynandı, bağlantı yok) ana ekranda günün meydan okuması sayfasında gösterilen not.
   const [dailyNotice, setDailyNotice] = useState<string | null>(null);
@@ -191,12 +221,15 @@ export default function Home() {
   }
 
   /**
-   * Yarış turu sunucuda açılır ve sorularını sunucu seçer: skor o sorularla doğrulanır, süre sunucuda ölçülür.
-   * Misafir girişinden hemen sonra `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır. Sunucuya
-   * ulaşılamazsa tur yerel sorularla oynanır, sonucu kaydedilemez (sonuç ekranı bunu söyler). Antrenman hemen başlar.
+   * Giriş yapmış oyuncunun Oyna turu sunucuda açılır ve sorularını sunucu seçer: skor o sorularla doğrulanır, süre
+   * sunucuda ölçülür. Misafir girişinden hemen sonra `player` henüz güncellenmemiş olabilir, ama Supabase oturumu açıktır;
+   * bu yolla yalnızca günlük meydan okuma başlar. Sunucuya ulaşılamazsa tur yerel sorularla oynanır, sonucu kaydedilemez
+   * (sonuç ekranı bunu söyler). Girişsiz oyuncunun turu ve antrenman hemen başlar; hiçbir şey kaydedilmez. Komşuluk turu
+   * (Oyna'da da) hiçbir zaman kaydedilmez: sunucu yalnızca cevap olan ili görür, konuyu bilmez; kayıt "Kayseri bilindi" gibi
+   * okunur ve 81 il rozetini ile zayıf yer listesini bozar (docs/GELISTIRME.md, "Komşuluk sorusu").
    */
   function beginRound(nextChoice: PlayChoice) {
-    if (nextChoice.kind === "practice") return launchRound(nextChoice, roundFor(nextChoice), null);
+    if (!isSavedChoice(nextChoice) || (!player && !nextChoice.daily)) return launchRound(nextChoice, roundFor(nextChoice), null);
     if (isPreparing) return;
     setIsPreparing(true);
     setDailyNotice(null);
@@ -224,25 +257,23 @@ export default function Home() {
   function launchRound(nextChoice: PlayChoice, nextQuestions: Question[], serverRoundId: string | null) {
     setChoice(nextChoice);
     round.start(nextQuestions);
-    setServerRound(nextChoice.kind === "ranked" ? Promise.resolve(serverRoundId) : null);
-    setBoardId(boardIdFor(nextChoice));
+    setServerRound(isSavedChoice(nextChoice) ? Promise.resolve(serverRoundId) : null);
     setPendingChoice(null);
-    resetLeaderboards();
   }
 
   /**
-   * Antrenman ve giriş yapılmış oyuncunun turu hemen başlar; sıralamalı turda giriş
-   * yapılmamışsa seçim saklanıp giriş adımı açılır.
+   * Oyna, antrenman ve giriş yapmış oyuncunun turu hemen başlar; giriş yalnızca günün meydan okuması için gerekir
+   * (sorularını sunucu verir). Girişsizse seçim saklanıp giriş adımı açılır.
    */
   function play(choice: PlayChoice) {
-    if (player || choice.kind === "practice") {
+    if (player || !choice.daily) {
       startRound(choice);
       return;
     }
     setAuthError(null);
     setPendingChoice(choice);
     writePendingChoice(choice);
-    // Giriş adımı ana menüde açılır; sonuç ekranından (antrenmandan yarışa davet) istendiyse oraya dönülür.
+    // Giriş adımı ana menüde açılır; sonuç ekranından istendiyse oraya dönülür.
     round.reset();
   }
 
@@ -255,7 +286,7 @@ export default function Home() {
     setAuthError(null);
   }
 
-  /** Sonuç ekranından, oynanan oyunun (Yarış / Antrenman) ayar ekranına: başka bir tur orada seçilir. */
+  /** Sonuç ekranından, oynanan oyunun (Oyna / Antrenman) ayar ekranına: başka bir tur orada seçilir. */
   function chooseAnother() {
     goHome();
     setIntroStartGame(isPractice ? "practice" : "ranked");
@@ -318,7 +349,18 @@ export default function Home() {
   // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
   const celebration = streakCelebration(answerState, round.streak);
   const wrongPick = wrongPickNotice(choice, answerState, round.selectedLocation);
-  const countdown = nextQuestionCountdown(answerState, round.remainingQuestionSeconds, !isPractice && questionIndex === questions.length - 1);
+  // Yanlış cevaptan sonra gösterilecek komşular: yalnızca Türkiye illerinde (lib/neighbors.ts).
+  // Komşuluk turunda ise konunun komşuları gösterilir (cevap bunlardan biridir).
+  const correctNeighbors = useMemo(
+    () => (currentQuestion ? neighborIds(choice.mode, subjectId ?? correctLocationId(currentQuestion)) : null),
+    [choice.mode, currentQuestion, subjectId],
+  );
+  const countdown = nextQuestionCountdown(
+    answerState,
+    round.remainingQuestionSeconds,
+    !isPractice && questionIndex === questions.length - 1,
+    !choice.daily,
+  );
 
   return (
     <main className="safe-area sea-backdrop flex h-[100dvh] flex-col text-slate-900">
@@ -343,28 +385,19 @@ export default function Home() {
         ) : phase === "finished" ? (
           <ResultScreen
             answerRecords={answerRecords}
+            subjects={subjects}
             answeredCount={answers.length}
             bestStreak={bestStreak}
             choice={choice}
             durationMs={completionDurationMs}
-            boardId={boardId}
-            leaderboardError={leaderboardError}
             onRetrySave={retrySave}
             saveResult={saveResult}
-            leaderboards={leaderboards}
-            missedLocationIds={
-              // "Sen de" işareti yalnızca oynanan modun listesinde anlamlı.
-              isPractice || boardId === playedBoardId
-                ? answerRecords.filter((answer) => answer.location !== answer.selected).map((answer) => answer.location)
-                : []
-            }
+            missedLocationIds={answerRecords.filter((answer) => answer.location !== answer.selected).map((answer) => answer.location)}
             mostMissed={mostMissed}
-            mostMissedChoice={statsChoice}
-            onBoardChange={setBoardId}
+            weakSpots={weakSpots}
             onChooseAnother={chooseAnother}
             onHome={goHome}
             onPlay={play}
-            playedBoardId={playedBoardId}
             player={player}
             questionCount={questions.length}
             score={score}
@@ -385,6 +418,7 @@ export default function Home() {
               question={currentQuestion}
               questionCount={questions.length}
               remainingGameSeconds={round.remainingGameSeconds}
+              subjectName={subjectId ? locationName(choice.mode, subjectId) : null}
               score={score}
             />
             <GameMap
@@ -393,16 +427,32 @@ export default function Home() {
               celebration={celebration}
               countdown={countdown}
               wrongPick={wrongPick}
+              neighborIds={correctNeighbors}
+              alwaysShowNeighbors={Boolean(choice.neighbors)}
+              neighborsLabel={subjectId ? messages().game.neighborsOfSubject(locationName(choice.mode, subjectId)) : null}
               areNoticesInHeaderWhenNarrow
               homeView={continent ? continentInfo(continent).view : null}
               isInteractive
+              isMarking={Boolean(choice.choices)}
+              markedLocation={subjectId}
               mapError={mapError}
               mapMarkup={mapMarkup}
               mode={mode}
+              onContinue={choice.daily ? undefined : round.skip}
               onSelect={round.choose}
               question={currentQuestion}
               selectedLocation={round.selectedLocation}
             />
+            {options && currentQuestion && (
+              <AnswerChoices
+                answerState={answerState}
+                choice={choice}
+                correctLocation={correctLocationId(currentQuestion)}
+                onPick={round.choose}
+                options={options}
+                selectedLocation={round.selectedLocation}
+              />
+            )}
           </section>
         )}
       </div>

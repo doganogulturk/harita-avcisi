@@ -56,8 +56,8 @@ describe("dil değişimi", () => {
     applyLocale("en");
     expect(BADGES.find((badge) => badge.id === "perfect_capitals")?.title).toBe("10/10 in Capitals");
     expect(BADGE_GROUPS[0].title).toBe("Day streak");
-    expect(en.result.shareRanked("World", 9, 10, "00:48", 3)).toBe(
-      "I scored 9/10 in the World race on Harita Avcısı in 00:48. I'm #3 on the leaderboard. Can you beat it?",
+    expect(en.result.shareRanked("World", 9, 10, "00:48")).toBe(
+      "I scored 9/10 in a World round on Harita Avcısı in 00:48. Can you beat it?",
     );
   });
 });

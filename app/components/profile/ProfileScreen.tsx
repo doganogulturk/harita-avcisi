@@ -221,14 +221,9 @@ function ProfileContent({ profile }: { profile: Profile }) {
                 <li className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2" key={board.id}>
                   <span className="min-w-0 flex-1 truncate font-bold text-slate-900">{board.label}</span>
                   {best ? (
-                    <>
-                      <span className="shrink-0 text-xs text-slate-500 tabular-nums">
-                        {best.score}/{QUESTIONS_PER_ROUND} · {seconds(best.duration_ms)}
-                      </span>
-                      <span className="w-20 shrink-0 text-right text-sm font-bold text-cyan-700 tabular-nums">
-                        {messages().common.rank(best.rank)} <span className="text-xs font-semibold text-slate-400">/ {best.players}</span>
-                      </span>
-                    </>
+                    <span className="shrink-0 text-sm font-bold text-cyan-700 tabular-nums">
+                      {best.score}/{QUESTIONS_PER_ROUND} <span className="text-xs font-semibold text-slate-400">· {seconds(best.duration_ms)}</span>
+                    </span>
                   ) : (
                     <span className="shrink-0 text-xs text-slate-400">{text.notPlayed}</span>
                   )}

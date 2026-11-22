@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BOARDS, boardVariantFor, choiceForBoard, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type LeaderboardEntry, type PlayChoice, type Player } from "@/lib/game";
-import { type Leaderboards, type RankedRound } from "@/lib/hooks/useLeaderboard";
+import { BOARDS, boardVariantFor, choiceForBoard, emptyLeaderboards, formatTime, QUESTIONS_PER_ROUND, type BoardId, type LeaderboardEntry, type Leaderboards, type PlayChoice, type Player } from "@/lib/game";
+import { type RankedRound } from "@/lib/hooks/useRoundSave";
 import { localeTag } from "@/lib/i18n";
 import { getSupabaseClient } from "@/lib/supabase";
 

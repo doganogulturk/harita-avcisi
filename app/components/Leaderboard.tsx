@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { BOARDS, formatTime, GAME_DURATION_MS, type BoardId, type LeaderboardEntry } from "@/lib/game";
-import { type Leaderboards } from "@/lib/hooks/useLeaderboard";
+import { BOARDS, formatTime, GAME_DURATION_MS, type BoardId, type LeaderboardEntry, type Leaderboards } from "@/lib/game";
 import { messages } from "@/lib/i18n";
 
 type LeaderboardProps = {

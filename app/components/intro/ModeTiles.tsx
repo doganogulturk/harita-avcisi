@@ -60,9 +60,6 @@ function TileVisual({ id, isCompact, isRow = false }: { id: BoardId; isCompact: 
   );
 }
 
-/** Sıralamanın birincisi; yarışta karonun üzerinde iki satır: ad, altında puan ve süre. */
-export type TileLeader = { name: string; score: string; time: string };
-
 type ModeTilesProps = {
   /** Karoya dokununca; tek başına oyunda tur başlar, düello ve odada mod seçilir. */
   onPick: (board: ModeBoard) => void;
@@ -72,8 +69,6 @@ type ModeTilesProps = {
   gridClass?: string;
   /** Kaç yerden sorulduğu (karonun alt satırı); verilmezse yazılmaz. */
   countFor?: (id: BoardId) => number;
-  /** Sıralamanın birincisi (yarış); verilmezse ya da yoksa yazılmaz. */
-  leaderFor?: (id: BoardId) => TileLeader | null;
   /** Seçili mod (düello ve oda); verilirse seçili olmayanlar soluk görünür. */
   selected?: BoardId;
   /** Karo kullanılamıyorsa (harita yükleniyor, bağlantı yok) üzerinde yazan neden. */
@@ -84,11 +79,11 @@ type ModeTilesProps = {
 
 /**
  * Modlar renkli karolar olarak: İller, Plakalar (Türkiye), Ülkeler, Bayraklar, Başkentler (Dünya). Harita ve soru tipini
- * ayrı ayrı seçmek yerine tek dokunuş. Her karo kendi renginde, basılabilir bir oyun tuşudur. Büyük karolar (yarış ve
- * antrenman) dikey telefonda tam genişlikte satırlardır (solda görsel, ortada ad, sağda birinci); alçak ve geniş ekranda
+ * ayrı ayrı seçmek yerine tek dokunuş. Her karo kendi renginde, basılabilir bir oyun tuşudur. Büyük karolar (Oyna ve
+ * Antrenman) dikey telefonda tam genişlikte satırlardır (solda görsel, ortada ad); alçak ve geniş ekranda
  * kart olur. Küçük karolar (düello ve oda kartı) beşi bir arada, her ekranda kart biçimindedir.
  */
-export function ModeTiles({ onPick, ids, gridClass, countFor, leaderFor, selected, disabledReasonFor, isCompact = false }: ModeTilesProps) {
+export function ModeTiles({ onPick, ids, gridClass, countFor, selected, disabledReasonFor, isCompact = false }: ModeTilesProps) {
   const { setup } = messages();
   const boards = ids ? BOARDS.filter((board) => ids.includes(board.id)) : BOARDS;
   return (
@@ -102,7 +97,6 @@ export function ModeTiles({ onPick, ids, gridClass, countFor, leaderFor, selecte
         const disabledReason = disabledReasonFor?.(board.id) ?? null;
         const isSelected = selected === board.id;
         const isDimmed = selected !== undefined && !isSelected;
-        const leader = disabledReason ? null : (leaderFor?.(board.id) ?? null);
         const count = countFor?.(board.id);
         const common = `press relative flex min-w-0 cursor-pointer overflow-hidden border-2 text-left text-white transition focus-visible:ring-4 focus-visible:ring-white/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${style.color} ${
           isDimmed ? "opacity-55 saturate-[0.6] hover:opacity-80" : ""
@@ -155,17 +149,6 @@ export function ModeTiles({ onPick, ids, gridClass, countFor, leaderFor, selecte
             </span>
             {disabledReason && (
               <span className="shrink-0 truncate rounded-xl bg-black/20 px-2.5 py-1 text-xs font-semibold lg:text-sm">{disabledReason}</span>
-            )}
-            {leader && (
-              <span className="flex max-w-[40%] min-w-0 shrink-0 flex-col items-start rounded-xl bg-black/20 px-2.5 py-1.5 short:max-w-full short:py-1 lg:max-w-full lg:px-3 lg:py-2">
-                <span className="flex max-w-full min-w-0 items-center gap-1 text-xs font-bold lg:text-sm">
-                  <span aria-hidden="true">🏆</span>
-                  <span className="min-w-0 truncate">{leader.name}</span>
-                </span>
-                <span className="text-[11px] font-semibold whitespace-nowrap tabular-nums opacity-85 lg:text-sm">
-                  {leader.score} · {leader.time}
-                </span>
-              </span>
             )}
           </button>
         );

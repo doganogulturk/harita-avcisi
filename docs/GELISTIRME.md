@@ -11,14 +11,39 @@ uygulamasında durum çubuğu yazıları açık renklidir, tarayıcı çubuğu d
 ve profil sayfaları açık zeminlidir.
 
 Giriş ekranı iki adımlıdır (`intro/ModeGrid.tsx`). İlk adımda en üstte büyük, yeşil ve hafifçe nabız gibi atan
-**OYNA** tuşu durur; altında yarışın kuralı tek satırda ("10 soru · 120 sn · sıralamaya gir"). OYNA yarışın mod ekranını
-açar. Altında **👑 Liderler** panosu (Türkiye'nin ve Dünya'nın birincisi; harita simgesi, altın halkalı ve taçlı profil
-resmi, altın rozette skor ve süre) ve **Sıralamayı gör** bağlantısı. **Diğer oyunlar** başlığının altında üç renkli
-karo yan yana durur: **Antrenman** (sarı), **Düello** (turuncu), **Oda** (mor); karo o oyunun ayar ekranını açar. En altta
-**🔑 Kodun var mı? Katıl →** satırı durur; dokununca kod alanı açılır: davetle gelen oyuncu kodu yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu
-için kodun hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa alanın altında yazar.
-Geniş ve yatay ekranda iki sütundur: solda OYNA ve liderler, sağda karolar ve kod alanı.
-Ekran yetmezse (küçük telefon) liste kayar.
+**OYNA** tuşu durur: simgesi solda, "OYNA" ve altında kuralı ("10 soru · 120 sn · giriş gerekmez") sola yaslı, yani Antrenman ve
+Arkadaşlarla tuşlarıyla aynı düzende (simge iki satıra yayıldığı için onlardan büyüktür). OYNA, Oyna'nın mod ekranını açar.
+Hemen altında yan yana iki tuş durur: sarı **Antrenman** (alt satırı "Süre yok, sınır yok"; simgesi antrenman konisidir ve ayar ekranının rozetinde ile tanıtımda da aynıdır, tek tanım `GameIcon`'un `practice` dalı; Antrenman'ın mod ekranını açar) ve
+turuncu **Arkadaşlarla** (Düello, Oda ve kodla katılma). Genel sıralama ve liderler panosu yoktur. Davetle gelen oyuncu
+kodu Arkadaşlarla ekranındaki alana yazıp **Katıl**'a basar; düello ve oda kodları aynı biçimde olduğu için kodun
+hangisine ait olduğunu sunucu söyler (`code_kind`, `lib/join-code.ts`), kod bulunamazsa alanın altında yazar.
+**Haritayı tamamla** kutusu (Ülkeler, İller, İlçeler) bunların yanında ya da altında durur. En altta, tam genişlikte
+**Günün meydan okuması** girişi (yalnızca Supabase tanımlıysa) açık sayfanın kapalı başlığı gibi görünen tek bir
+şerittir (`DailyEntry`). **Dikey telefonda** (`portrait-phone`) ekranın altına sabittir (`DailyDock`): tam genişlikte, üst
+köşeleri yuvarlak, üstünde küçük bir tutamaç çizgisi ve alttaki güvenli alan payı (`safe-area-inset-bottom`) vardır;
+ızgara şerit kadar alt boşluk bırakır ki son satır altında kalmasın. Şerit yalnızca ana ekranda çizilir: Oyna,
+Antrenman, Arkadaşlarla ekranlarında, tanıtım açıkken ve günlük sayfası açıkken görünmez. **Geniş ve yatay ekranda**
+şerit akışta durur, en çok 36rem genişliğinde ve iki sütunun altında ortalıdır, basılabilir bir oyun tuşu gibidir.
+Şeritte bugünkü durum (Bugün 1/5; hepsi bitince "Bugünün hepsi tamam" ve yeşil), gün serisi ve sonraki meydan okumaya
+kalan süre yazar; bugünün durumu zaten "1/5" gibi yazıldığı için ayrıca nokta ya da rozet yoktur. **Oynanmamış mod varken şerit nefes alır**
+(`daily-breathe`, `globals.css`): Oyna'dan daha yumuşak (en çok %1,5 büyür, Oyna %2,5) ve yarım tur geç başlar (1,2 sn gecikme), yani ikisi
+sırayla atar ve dikkat için yarışmaz; beş mod da bitince durur ve yeşil kalır. Telefondaki sabit alt şerit büyümez (kenarlardan taşardı),
+yalnızca parlaklığı atar (`daily-glow`). Hareketi azaltma ayarı açıkken ikisi de durur. Dokununca günün meydan okuması alttan
+açılır (`DailySheet`; geniş ekranda ortada pencere) ve arka plan belirgin biçimde bulanıklaşıp kararır (`BottomSheet`,
+`isFocused`); arka plana dokunmak, ✕, Esc ve Android geri tuşu kapatır. Şerit ile sayfa ayrı öğelerdir (şerit büyüyüp
+sayfaya dönüşmez); sayfa açıkken şerit gizlenir. Sayfada üstte tarih, seri ve kalan süre, altında bir kural notu ("Her mod günde bir kez
+oynanır; başlatıp bırakırsan hakkın gider") ve iki bölüm durur. Bölüm başlıkları Oyna ekranındakiyle aynı bileşendir
+(`SectionTitle`): Türkiye'de Türk bayrağı, Dünya'da dünya simgesi ve haritanın adı, yanında ince bir çizgi; günlük
+sayfası açık zeminli olduğu için başlık koyu yazıyla çizilir (`tone="light"`). Bölümün modları **yan yana** kartlardır:
+Türkiye'de iki (**İller**, **Plakalar**), Dünya'da üç (**Ülkeler**, **Bayraklar**, **Başkentler**); adlar Oyna
+ekranıyla aynıdır. Her kartta üstte mod adı, altında bugünkü durum yazar: oynanmamış mod açık gül tonunda ve "Başla ›",
+bitirilen yeşil ve "✓ 8/10" (sıra kartta yazmaz; sonucun ayrıntısında görünür), bırakılan gri ve "Bırakıldı". Durum yalnızca renkle değil yazıyla da söylenir ve
+çarpı kullanılmaz: oynanmamış mod hâlâ yapılabilir, bırakılan mod bugün için bitmiştir. Oynanmamış moda dokununca tur
+başlar. Bitirilmiş ya da bırakılmış moda dokununca sayfa o modun ayrıntısına geçer: oyuncunun sonucu, paylaşma tuşu ve
+günün sıralaması; **Modlara dön** ile liste açılır (liste ve ayrıntı aynı anda gösterilmez, sayfa telefonda uzamasın
+diye). Sunucu ve rozetler değişmedi: beş mod duruyor, yalnızca sunum değişti.
+Geniş ve yatay ekranda iki sütundur: solda OYNA ile altındaki iki tuş, sağda Haritayı tamamla; günlük girişi altlarında
+ortada durur. Dikey telefonda hepsi alt alta ve günlük girişi altta sabittir. Ekran yetmezse (küçük telefon) liste kayar.
 400 pikselden dar ekranlarda başlıktaki logo küçülür, 360 pikselden dar ekranlarda nişangah rozeti gizlenir. Zeminde
 silik enlem-boylam çizgileri ve dünya haritası vardır. Çok geniş ekranda içerik ortada en fazla 80rem genişlikte durur
 ve yazılar büyür. Yasal sayfalar (Gizlilik, KVKK, Koşullar, Hesap silme) ekranın altında satır
@@ -29,17 +54,31 @@ menüsü yalnızca ana ekranın başlığındadır: mod ve kurulum ekranlarında
 düello ve oda lobisinde ve profilde sol üstteki ev tuşu (`HomeButton`) ana menüye döner. Yasal sayfalar logolu
 başlığını korur.
 
-İkinci adımda harita ve soru tipi ayrı ayrı seçilmez: beş mod tek seçimdir ve renkli karolarla gösterilir
-(`intro/ModeTiles.tsx`): **İller**, **Plakalar** (Türkiye), **Ülkeler**, **Bayraklar**, **Başkentler** (Dünya).
+İkinci adımda harita ve soru tipi ayrı ayrı seçilmez: beş mod tek seçimdir: **İller**, **Plakalar** (Türkiye), **Ülkeler**,
+**Bayraklar**, **Başkentler** (Dünya). Oyna ve Antrenman bunları gruplanmış listeyle (`intro/ModeList.tsx`), Düello ve Oda renkli
+küçük karolarla (`intro/ModeTiles.tsx`) gösterir.
 
-**Yarış ve Antrenman** (`intro/SoloSetup.tsx`) ayar paneli olmayan tek ekrandır: üstte **←** tuşu ve oyunun adı, altında
-iki bölüm: **Türkiye** (İller, Plakalar) ve **Dünya** (Ülkeler, Bayraklar, Başkentler); her bölümün başında bayrak ya da
-dünya simgesiyle bir başlık satırı. Karoya dokununca tur hemen başlar; seçilen mod hatırlanır. Dikey telefonda bölümler
-alt alta, karolar tam genişlikte büyük satırlardır (solda görsel, ortada ad ve kaç yerden sorulduğu, sağda yarışta o
-sıralamanın birincisi: üstte adı, altında puanı ve süresi). Alçak ve geniş ekranda iki bölüm yan yana durur (Dünya daha
-geniş sütunda), karolar kart olur: görsel üstte, ad ve sayı altta, birinci en altta. Harita henüz yüklenmediyse karo
-"hazırlanıyor", yarışta bağlantı yoksa "bağlantı yok" der ve kapalıdır. Antrenmanda Dünya bölümünün başlığının altında
-kıta seçimi durur (Tümü, Afrika, Amerika, Asya, Avrupa); dünya karolarının sayısı seçilen kıtaya göre değişir.
+**Oyna ve Antrenman** (`intro/SoloSetup.tsx`): üstte **←** tuşu ve oyunun adı; altında **"Nasıl oynamak istersin?"** soru biçimi
+seçicisi (`intro/StylePicker.tsx`); altında **Türkiye** ve **Dünya** listeleri.
+
+- **Soru biçimi seçicisi** üç büyük karttır (simge, başlık, tek satır açıklama): **Haritaya dokun**, **Şıklı**, **Komşuluk**. Seçili kart
+  oyunun renginde dolar. Şıklı ve Komşuluk'ta, oyuncu o biçimi bir kez seçene kadar **YENİ** rozeti görünür; bu yalnızca cihazda bir
+  bayraktır (`harita-avcisi:style-choose-seen`, `style-neighbors-seen`), sunucuya ya da analitiğe bir şey gitmez. Kartlar rem tabanlı otomatik ızgarada durur (`repeat(auto-fit, minmax(5.5rem, 1fr))`): normal yazıda üç sütun, telefonda büyük yazı ayarı
+  açıkken iki ya da bir sütun; böylece başlık ("Haritaya dokun") kelime ortasından bölünmez ve kırpılmaz, dar ekranda gerekirse iki satıra iner.
+  Kartlardaki kısa açıklama 416 pikselin altında ve alçak ekranda gizlenir; seçili biçimin açıklaması kartların altında tek satır olarak görünür. Seçici bir
+  mod değil bir biçimdir ve beş modun hepsine uygulanır; Komşuluk bunun tek istisnasıdır (aşağıda).
+- **Mod listeleri** iPhone Ayarlar gibi tek bir kapta, ince çizgilerle ayrılmış satırlardır. Her satırda solda modun görseli
+  (Türk bayrağı, plaka, dünya, bayrak destesi, başkent binası), ortada adı ve kaç yerden sorulduğu, sağda **Başla** tuşu durur;
+  satırın tamamı da dokunmayla başlatır (küçük tuş tek hedef olsaydı dokunma alanı daralırdı). **Renk tektir**: Türkiye kırmızı, Dünya
+  mavi; eskiden beş modun beş ayrı rengi göz yoruyordu, artık modlar renkle değil görselleriyle ayrışır. Dikey telefonda bölümler alt alta,
+  alçak ve geniş ekranda yan yana durur (Dünya daha geniş sütunda). Dar ekranda (≤360 piksel) **Başla** yazısı gizlenir, yalnızca oynat
+  simgesi kalır. Harita henüz yüklenmediyse satır "hazırlanıyor" der ve kapalıdır.
+- **Komşuluk seçiliyken** yalnızca **İller** satırı kalır: Plakalar satırı ve bütün Dünya bölümü gizlenir (kapalı gri satır yerine, liste
+  dağınık görünmesin ve "neden kapalı" sorusu doğmasın) ve İller listesi en çok 42rem genişliğinde durur. Ülkeler ve Bayraklar için
+  komşuluk eklenirse bu satırlar listede kalır.
+- Giriş gerekmez, bağlantı yokken de oynanır. Antrenmanda Dünya bölümünün başlığının **bir alt satırında** kıta seçimi durur (Tümü, Afrika,
+  Amerika, Asya, Avrupa); yan yana olunca dar ekranda taşıp yatay kayıyordu, şimdi sarmalanır ve hiçbir seçenek gizlenmez (360-412 pikselde tek
+  satır, 320'de iki satır). Ülkeler ve Bayraklar'ın sayısı seçilen kıtaya göre değişir.
 
 **Düello ve Oda** (`intro/SetupParts.tsx`, `SetupShell`): solda üstte **←** ve oyunun adı, altında aynı beş mod küçük
 karolar olarak (seçili olan parlak, diğerleri soluk) ve bu seçimle dönen canlı önizleme: haritada soru çıkar ("🏛️ Kanberra
@@ -70,11 +109,19 @@ Sayfa ilk açıldığında oyunun adı ekranın ortasında belirir, ardından bu
 Açılış sayfa yaşamı boyunca bir kez oynar; oyundan ana menüye ya da **←** ile ilk adıma dönüşte
 tekrarlanmaz, kartlar beklemeden görünür. Hareket azaltma açıksa hiç gösterilmez.
 
-### Yarış
+### Oyna
 
-Giriş gerektirir (Google ya da misafir adı). Giriş yapmamış oyuncu ana menünün sağ üstündeki **Giriş yap** ile
-istediği an giriş yapabilir; yapmadıysa ayar ekranındaki tuş **Giriş yap ve başla** (düello ve odada **Giriş yap ve
-kur**) yazar, giriş son anda sürpriz olmaz. Misafir adı alanına "Avcı 4821" gibi bir ad önerilir. Her tur 10 soru ve toplam 120 saniyedir; her cevaptan sonra doğru cevap 3 saniye gösterilir.
+Giriş gerekmez. Her tur 10 soru ve toplam 120 saniyedir. Doğru cevaptan sonra yaklaşık 1 saniyede sonraki soruya geçilir;
+yanlış cevapta doğru yer (ve tıklanan yerin adı) en fazla 3 saniye gösterilir, haritaya dokununca ya da klavyede Enter ile
+hemen geçilir (cevaptan sonraki ilk 350 ms'de yanlışlıkla çift dokunuş sayılmaz). Günün meydan okumasında ve oda turunda
+bu kısa gösterim kapalıdır: herkes her cevaptan sonra aynı 3 saniyeyi bekler (`useRoundPlay`, `isQuick`).
+
+**Kayıt.** Giriş yapmış oyuncunun turu sunucuda açılır (`start_ranked_round`), bitince `finish_round` ile kaydedilir:
+profil, rozetler ve "en çok yanlış yapılanlar" bu kayıtlardan hesaplanır. Girişsiz oyuncunun turu yerel sorularla oynanır
+ve hiçbir yere kaydedilmez; sonuç ekranında giriş daveti çıkar ve bu turun kaydedilmediğini söyler. Genel (tüm zamanların)
+sıralaması yoktur; herkese açık tek sıralama günün meydan okumasınındır. Giriş ekranının sağ üstündeki **Giriş yap** ile
+oyuncu istediği an giriş yapabilir (Google, iOS'ta Apple ya da misafir adı; misafir adı alanında öneri yoktur, yalnızca
+"Görünecek adın" yer tutucusu durur ve ad boşken tuş pasiftir). Giriş yalnızca günün meydan okuması, düello ve oda için zorunludur.
 
 | Tur | Havuz | Soru |
 | --- | --- | --- |
@@ -88,31 +135,120 @@ Başkentler `lib/world-capitals.ts`'tedir; adlar TDK yazımını ve Türkçede y
 Başkenti tartışmalı olan İsrail ile ülke olmayan bağlı topraklar (Falkland Adaları, Grönland, Porto Riko, Yeni Kaledonya)
 bu turda sorulmaz. Birden çok başkenti olan ülkelerde en bilineni seçildi (La Paz, Pretorya, Amsterdam).
 
-Her turun ayrı sıralaması vardır. Sıralama önce puana, eşitlikte süreye, sonra en uzun doğru serisine göre yapılır.
+Sonuç ekranı bu oturum odaklıdır (`SessionReview.tsx`). Solda dar özet kartında skor, seri, süre ve soru başına küçük
+kareler (yeşil doğru, kırmızı yanlış) ile tuşlar durur. Karelerin hemen altında **Yanlış cevapladıkların** her zaman açıktır
+(`WrongAnswers`): her yanlış tek satırdır, solda sorulan yer (bayrak turunda bayrak, plaka turunda plaka, başkent turunda
+"Kanberra · Avustralya"), sağında oyuncunun tıkladığı yer ("Sen: Sivas"; dikey telefonda yer kazanmak için alt satır
+yok). Hiç yanlış yoksa bölüm çizilmez. Uzun antrenmanda ilk altı yanlış görünür ("Hepsini göster"). Sağdaki geniş
+alanda **Doğru cevapladıkların** kapalı başlar (`RightAnswers`), açılınca kompakt etiketler gösterir; altında geri planda
+en çok yanlış yapılanlar durur. Günün meydan okuması sonucu eski düzenini korur (`RoundReview`: kareler ve "Soruları gör").
 
-Sonuç ekranında skorun altında soru başına küçük bir kare durur (yeşil doğru, kırmızı yanlış); **Soruları gör** ile her
-soru bir satır olur: sorulan yer (bayrak turunda bayrak, plaka turunda plaka, başkent turunda "Kanberra · Avustralya")
-ve yanlışsa tıklanan yer. Antrenmanda da
-vardır; liste uzarsa kendi içinde kayar.
-
-Tur bitince sonuç ekranında asıl tuş **Tekrar oyna** aynı turu yeniden başlatır; **Başka tur seç** Yarış'ın ayar
+Tur bitince sonuç ekranında asıl tuş **Tekrar oyna** aynı turu yeniden başlatır; **Başka tur seç** Oyna'nın ayar
 ekranını açar (antrenmanda **Tekrar antrenman** ve **Başka antrenman seç**). Yatay telefonda sonuç ekranı iki
-sütundur: solda özet ve tuşlar, sağda sıralama ve en çok yanlış yapılanlar.
+sütundur: solda özet ve tuşlar, sağda tur dökümü, (girişsizse giriş daveti ve) giriş yapmış oyuncunun kendi zayıf yerleri,
+geri planda herkesin en çok yanlış yaptıkları.
 
-Tur bittiğinde o modda **en çok yanlış yapılan 5 yer** gösterilir: tüm oyuncuların yarış turlarındaki cevaplarından,
+**Senin zayıf yerlerin** (`WeakSpots.tsx`, `useWeakSpots.ts`, sunucuda `my_weak_spots`): giriş yapmış oyuncuya, o modda
+yalnızca kendi cevaplarından en çok yanlış yaptığı yerler (en çok 10). Her satırda yer, en çok neyle karıştırdığı ve
+"3/4 yanlış" yazar. Sıralama herkesin listesiyle aynı ölçüyü (Wilson alt sınırı) kullanır, ama oyuncunun kendi
+cevaplarına uygulanır ve son 30 gündeki cevap tam, daha eskisi yarım sayılır: oyuncu bir yeri öğrendikçe oranı düşer ve
+liste yeni yanlışlara döner. Hiç yanlışı olmayan yer listeye girmez. Liste en az 3 yer içeriyorsa altında **Bunları
+çalış** tuşu çıkar: aynı modun antrenmanını yalnızca bu yerlerle başlatır (`PlayChoice.focusIds`; kıta süzgeci sıfırlanır,
+çünkü zayıf yerler kıtaya bakmadan hesaplanır). Etiket "Antrenman · Dünya · Bayrak · Zayıf yerlerin" olur. Girişsiz
+oyuncuda bölüm çizilmez; giriş daveti (`inviteBody`) bunu anlatır. Antrenman cevapları kaydedilmediği için antrenmanda
+yapılan yanlışlar bu listeyi değiştirmez; liste yalnızca Oyna, günlük ve oda turlarından beslenir.
+
+Tur bittiğinde o modda **herkesin en çok yanlış yaptığı 5 yer** gösterilir: giriş yapan oyuncuların turlarındaki cevaplarından,
 yanlış oranının güvenilir alt sınırına (Wilson, %95) göre. Yalnızca orana göre sıralanınca bir kez sorulup bir kez
 yanlış bilinen yer (1/1, %100), yedi kez sorulup altısında yanlış bilinen yerin (6/7) önüne geçiyordu; bu ölçü az
 sorulan yerleri geri iter. Sıralama tarayıcıda yapılır (`useMostMissed.ts`). Her yerin altında en çok neyle
 karıştırıldığı yazar ("Tunceli sanılıyor"); oyuncunun o turda kendisinin de yanlış
 yaptığı yerler işaretlenir. Türkiye'de İsim ile Plaka, dünyada isim, Bayrak ve Başkent ayrı değerlendirilir.
-Giriş ekranındaki Tek başıma kartında bulunan **Sıralamayı gör** bağlantısı sıralamayı tur oynamadan açar; giriş yapmamış ziyaretçi de görebilir. Antrenman sonuçları kaydedilmediği için o modda çıkmaz.
-Oyun sırasında da açılmaz, çünkü yarışta süre işlerken sıralamaya bakmak puan kaybettirir.
+
+### Soru biçimi: haritaya dokun ya da şıklı
+
+Oyna ve Antrenman'ın ayar ekranındaki soru biçimi seçicisinde **Haritaya dokun** (olağan biçim: yerin adı, bayrağı,
+başkenti ya da plakası sorulur, oyuncu haritada bulur) ya da **Şıklı** (harita bir yeri sarı renkle işaretler ve nabız gibi
+atar, oyuncu dört şıktan hangisi olduğunu seçer). Seçim hatırlanır (`useAnswerStyle`) ve `PlayChoice.choices` ile tura
+taşınır; "Tekrar oyna", "Bunları çalış" ve oyun içi mod değiştirme onu korur. Etiket "Antrenman · Türkiye · Şıklı" olur.
+Günlük meydan okuma, düello ve odada şıklı biçim yoktur.
+
+- **Şıklar modun kendi gösterimiyle çizilir** (`AnswerChoices.tsx`): İller ve Ülkeler'de yerin adı, Bayraklar'da yalnızca
+  bayrak, Başkentler'de yalnızca başkent, Plakalar'da plaka rozeti. Cevaptan sonra her şıkkın altında yerin adı görünür; doğru
+  şık yeşil, yanlış seçilen kırmızı olur, diğerleri solar. Masaüstünde 1-4 tuşları şık seçer.
+- **Yanlış şıklar** önce aynı bölgeden (Türkiye) ya da aynı kıtadan (dünya) seçilir, yetmezse havuzun geri kalanından
+  (`lib/choices.ts`). Havuz turun kendi havuzudur (kıta antrenmanında yalnızca o kıta, Başkentler'de başkenti olanlar);
+  "Bunları çalış" odağı havuzu daraltmaz, yoksa şıklar hep aynı birkaç yerden gelirdi.
+- **Üst çubuk yerin adını vermez**: "Bu hangi il?", "Bu ülkenin bayrağı hangisi?" gibi ne sorulduğunu söyler; adı cevaptan
+  sonra "· Gaziantep" olarak ekler.
+- **Haritada işaretli yer** `map-marked` sınıfıyla (sarı, nabız) boyanır. Ekranda çok küçükse (Malta, Lüksemburg) harita
+  oraya yakınlaşır, en çok 8 kata kadar (`useMapZoom.focusOn`); değilse oyuncunun bıraktığı görünüme döner. Şıklı soruda harita
+  seçim almaz, yalnızca gezilir (kaydırma, yakınlaştırma) ve yerlere Tab ile gelinmez. Hareket azaltma açıksa nabız durur.
+- **Sunucu değişmez.** Cevap yine `{location, selected}`'tir: seçilen şık bir yer kimliğidir (Türkiye'de başında sıfır olmayan
+  plaka, dünyada ISO kodu) ve `finish_round` aynı doğrulamayı yapar. Şıklı turlar mevcut türlerle (`variant`) kaydedilir; ayrım
+  yoktur. Bunun iki sonucu bilinçli bir takastır: dört şıklı turda 10/10 daha kolaydır, bu yüzden `perfect_*`,
+  `provinces_81` ve `countries_100` rozetleri şıklı turlardan da kazanılır; "Senin zayıf yerlerin" ve "herkesin en çok yanlış
+  yaptıkları" iki biçimin cevabını karıştırır (şıklıda yanlış şıklar aynı bölgeden geldiği için karışıklık oranları farklıdır).
+  Ayırmak gerekirse ayrı bir `variant` gerekir: dört tabloda `check (variant in (...))` kısıtı ve fonksiyonlardaki listeler,
+  canlıda tek seferlik bir geçiş.
+
+### Komşuluk (Türkiye illeri)
+
+**Tablo.** `lib/turkish-neighbors.ts` 81 ilin kara sınırı komşularını tutar (199 komşu çifti, il başına 1-9, ortalama 4,9). Dosya elle
+yazılmaz: `npm run maps:neighbors` (`scripts/build-neighbors.mjs`) `public/maps/provinces/all.svg` içinden üretir. Bu haritada
+bütün iller aynı sınır noktalarını paylaştığı için iki il en az 2 ortak köşede buluşuyorsa komşudur (tek köşede değen iller, yani
+dörtlü kavşaklar komşu sayılmaz). Üretilen dosyanın başında kaynağın özeti (sha256) yazar; `tests/neighbors.test.ts` il haritası
+değişmişse (özet tutmuyorsa) tablonun yeniden üretilmesi gerektiğini söyler. Elle düzeltme gerekirse betikteki `CORRECTIONS`'a nedeniyle
+yazılır; şu an boştur. Yalnızca Türkiye vardır: `world.svg`'de ülkeler arasında boşluk bulunduğu için aynı yöntem dünyada çalışmaz
+(Fransa–Almanya gibi çiftlerde ortak köşe sıfır çıkar) ve ülkeler için dış bir veri kaynağı ve lisans kararı gerekir.
+
+**Doğrulama (2026-11).** Harita çıktısı iki bağımsız kaynakla karşılaştırıldı. Wikidata'nın "ortak sınır" ilişkisiyle 197 çift
+uyuştu, 3 çift ayrıştı; ayrışanlar OpenStreetMap il sınırlarında ortak sınır çizgisi (way) aranarak çözüldü ve harita üçünde de doğru
+çıktı: İstanbul–Kırklareli ve Bilecik–Kocaeli komşudur (Wikidata'da eksik), Bursa–Sakarya komşu değildir (Wikidata'da fazla). Not:
+kontrol için başta hafızadan yazılmış bir liste kullanılmıştı ve 15 çelişkili çiftin 12'sinde yanlış çıktı; bu yüzden doğruluk kaynağı
+olarak yalnızca yukarıdaki iki kaynak sayılır. `tests/neighbors.test.ts` doğrulanmış 16 komşu ve 11 komşu olmayan çifti kalıcı olarak
+denetler. Sınır: bu karşılaştırma yalnızca kara sınırını ölçer; deniz ya da boğaz karşısında kalan iller komşu sayılmaz. Üç kaynağın
+haberleşmediği (hepsinin aynı hatayı yaptığı) bir çift olabilir; 199 çiftin her biri tek tek elle sınanmadı.
+
+**Oyundaki kullanımı.** İller ve Plakalar'da, Oyna, Antrenman ve günlük meydan okumada, yanlış cevaptan sonra doğru ilin komşuları
+haritada kesik çizgili açık yeşille (`map-neighbor`) işaretlenir ve adları haritanın altında yazar ("Komşuları: Adıyaman · Diyarbakır ·
+…"). Oyuncunun tıkladığı yer doğru ilin komşusuysa kırmızı kalır ve "Senin cevabın" etiketine **Komşu il** rozeti eklenir. Doğru cevapta
+hiçbir şey gösterilmez; dünya haritasında yoktur. Düello ve odada kapalıdır (`GameMap.neighborIds` verilmez).
+
+### Komşuluk sorusu (Oyna ve Antrenman, yalnızca İller, kaydedilmez)
+
+Oyna ve Antrenman ayar ekranlarındaki **Soru biçimi** seçicisinin üçüncü seçeneği **Komşuluk**'tur. Seçilince yalnızca **İller** karosu açık
+kalır; Plakalar ve Dünya bölümü listeden çıkar (komşuluk yalnızca Türkiye illerinde vardır). Oyna'da tur 10 soru ve 120 saniyedir, Antrenman'da süresiz
+sürer. Soru "Kayseri ile komşu olan hangisi?" biçimindedir:
+
+- **Konu ve cevap.** Soru havuzundaki il cevaptır; haritada işaretlenen (turuncu çerçeveli, sarı) il **konu**dur ve cevabın komşularından
+  biridir. Konu, tur numarası ve sorunun sırasından türetilir (`neighborSubject`, `lib/neighbors.ts`): aynı soruda hep aynıdır, sonuç ekranı
+  soru başına konuyu yeniden kurar, ayrıca bir yerde saklanmaz.
+- **Şıklar** (`neighborOptions`): cevap ve konuyla komşu olmayan üç il. Yanlış şıklar önce "komşunun komşusu" illerden seçilir (konuya yakın
+  ama komşu değil), yetmezse kalan illerden tamamlanır; konunun kendisi şık olmaz. Şıklardan yalnızca biri konunun komşusudur; bu, 81 ilin
+  hepsi ve bütün komşuları için `tests/neighbors.test.ts`'te denetlenir.
+- **Cevaptan sonra**, doğru da yanlış da olsa: konunun bütün komşuları haritada kesik çizgili açık yeşille işaretlenir ve adları yazılır
+  ("Erzincan · komşuları: Bayburt · Bingöl · …"); doğru cevap düz yeşil, yanlış seçilen kırmızı, konu işaretli kalır. Olağan turlarda
+  komşular yalnızca yanlış cevaptan sonra gösterilir (`GameMap.alwaysShowNeighbors`).
+- **Sonuç ekranı.** Döküm her satırda konuyu da yazar ("Sivas ile komşu: Kayseri · Sen: Van"); doğrular açık başlar. "Senin zayıf yerlerin" ve
+  "herkesin en çok yanlışları" gösterilmez, çünkü cevap bir yerin adı değil bir komşuluk bilgisidir. Oyna sonucunda "Komşuluk turları kaydedilmez"
+  notu çıkar; giriş yapmış oyuncu bunu bir kayıt hatası sanmasın, girişsiz oyuncuya "ilerlemen kaydedilsin mi?" daveti de gösterilmez.
+- **Hiçbir yerde kaydedilmez, sunucu değişmez** (`isSavedChoice`, `lib/game.ts`). Oyna'da bile komşuluk turu sunucuda açılmaz, `finish_round`
+  çağrılmaz ve rozet, profil ya da zayıf yerlere hiçbir şey yazılmaz. Sebep sunucunun turu reddetmesi değildir: `finish_round` komşuluk
+  turunu kabul eder, çünkü cevap (`location`, sunucunun seçtiği il) ile seçilen şık (`selected`) zaten geçerli il kimlikleridir ve doğruluk
+  `location = selected` ile hesaplanır. Sebep kaydın **anlamıdır**: sunucu soru konusunu (haritada işaretli il) bilmez, yalnızca cevap olan ili
+  görür; kayıt "Kayseri bilindi" gibi okunur. Bu da `provinces_81` rozetini ("her ili en az bir kez doğru bil"), "senin zayıf yerlerin" listesini
+  ve herkesin "en çok yanlış yapılanlar" istatistiğini yanlış besler (Kayseri'yi haritada bulamamak ile Sivas'ın komşusunu bilememek
+  karışır). Ayrıştırmak ya da komşuluğu kayıtlı yapmak istenirse ayrı bir `variant` gerekir: dört tabloda `check (variant in (...))` kısıtı ve
+  fonksiyonlardaki tür listeleri, yani canlıda ikinci bir SQL geçişi.
+- **Üst çubuk.** Soru uzun olabildiği için masaüstü üst çubuğunun yan sütunları küçülebilir (`minmax(0,1fr)`); soru kartı ortada kalır, tur
+  etiketi ("ANTRENMAN · TÜRKİYE · KOMŞULUK") yer daraldıkça kısalır ve 900 pikselin altında gizlenir. Oyna'nın üst çubuğu (süre ve
+  ilerleme çubukları ayrı satırlarda) komşuluk sorusuyla 1440, 1280, 1024, 768 (dikey), 390 (dikey) ve 844 (yatay) pikselde çakışmadan sığar.
 
 ### Antrenman
 
-Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir. Sonuçta aynı
-haritanın yarışına bir davet de durur; giriş yapılmamışsa giriş adımını açar.
-En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; yalnızca yarış turlarından hesaplanır ve antrenmanın
+Giriş, süre ve soru sınırı yoktur; havuz bitince yeniden karıştırılır ve oyuncu **Bitir** diyene kadar sürer. Sonuçlar kaydedilmez, turun sonunda doğru sayısı, başarı oranı, en uzun seri ve süre gösterilir.
+En çok yanlış yapılanlar listesi antrenmanın sonunda da çıkar; giriş yapan oyuncuların turlarından hesaplanır ve antrenmanın
 havuzuyla (ör. seçilen kıta) sınırlanır. Antrenman cevapları bu istatistiğe katılmaz.
 
 - **Türkiye:** 81 il, isimle ya da plakayla
@@ -145,7 +281,7 @@ sayımla başlar.
   üstte çıkış ve iki oyuncu kutusu, altta tam genişlikte soru şeridi (soru, sayaç, soru bitince sonraki soruya geri
   sayım).
 - Rakip 30 saniyeden uzun süre bağlantısız kalırsa düello hükmen kazanılır.
-- Düellolar genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine işlenmez.
+- Düellolar "en çok yanlış yapılanlar" istatistiğine işlenmez.
 
 ### Oda
 
@@ -156,31 +292,30 @@ Oda `/oda?kod=<kod>` sayfasındadır; kod ya da bağlantı gruba gönderilir, ko
 - **Lobi:** katılanlar görünür; katılım yalnızca lobide açıktır. Oda sahibi en az 2 oyuncuyla **Başlat** der, süre o an
   işlemeye başlar. Başlatılmayan oda 24 saat sonra kapanır. Oda başladıktan sonra bağlantıyı açan katılamaz ama
   sıralamayı izleyebilir.
-- **Turlar:** her tur normal bir yarış turudur (10 soru, 120 saniye); her turun soruları odadaki herkes için aynıdır
+- **Turlar:** her tur normal bir turdur (10 soru, 120 saniye; her cevaptan sonra 3 saniye gösterim); her turun soruları odadaki herkes için aynıdır
   ve tur başlayana kadar gizlidir. Turlar sırayla, oda süresi içinde istenen anda ve birer kez oynanır. Başlatılıp
   bırakılan tur "yarım" sayılır: 0 puan, 120 saniye.
 - **Oda sıralaması:** tur tur puanlar, toplam puan ve toplam süre canlı güncellenir; toplam puana, eşitlikte toplam
   süreye göre dizilir. Dikey telefonda tablo sıra, oyuncu ve puandan oluşur (süre puanın altında); tur tur puanlar
   geniş ekranda görünür. Süre bitince oda kapanır ve ilk üç kürsüde gösterilir.
-- Oda turları genel sıralamaya ve "en çok yanlış yapılanlar" istatistiğine de işlenir.
+- Oda turları profile ve "en çok yanlış yapılanlar" istatistiğine de işlenir (genel sıralama yoktur).
 - Bir oyuncunun aynı anda en fazla 3 açık odası olabilir.
 
 ### Günlük meydan okuma
 
 Her gün (Türkiye saatiyle, gece yarısı değişir) Türkiye, Plaka, Dünya, Bayrak ve Başkent için ayrı birer meydan okuma vardır. Bir
 modun 10 sorusu o gün ilk başlatıldığında sunucuda seçilir ve gün boyu herkes için aynıdır. Her oyuncu her modu günde bir
-kez oynar; başlatılıp bırakılan tur da hakkı kullanır. Tur yarışla aynı biçimdedir (10 soru, 120 saniye), sunucuda
-doğrulanır ve genel sıralamaya da işlenir. Giriş gerekir (misafir de olur). Meydan okuma yerel sorularla oynanmaz:
+kez oynar; başlatılıp bırakılan tur da hakkı kullanır. Tur Oyna ile aynı biçimdedir (10 soru, 120 saniye; her cevaptan sonra herkes için 3 saniye gösterim), sunucuda
+doğrulanır ve günün sıralamasına işlenir; uygulamadaki herkese açık tek sıralama budur. Giriş gerekir (misafir de olur). Meydan okuma yerel sorularla oynanmaz:
 sunucuya ulaşılamazsa ya da mod bugün oynandıysa ana ekrandaki şeritte not çıkar.
 
-Ana ekranın başlığında, profil resminin yanında bir rozet durur: gün serisi ("🔥 3"; seri yoksa "🗓 Günlük"); bugün
-oynanmamış bir meydan okuma varsa köşesinde kırmızı nokta. Hiç açılmadıysa bir halka atar. Giriş yapmamış oyuncuda başlıkta "Giriş yap" da
-durduğu için rozet 480 pikselden dar ekranda gizlenir; logoya yer kalır. Dokununca **Günün meydan
-okuması** alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve beş mod ikişerli, tek kalan tam satır (oynanmamışta "Oyna",
-bitirilende skor, bırakılanda "Bırakıldı"). Oynanmamış moda dokununca tur başlar; bitirilen mod seçilir ve altında o
-modun günlük sıralaması, oyuncunun sonucu ve paylaşma tuşu görünür. Her ekranda yalnızca rozet vardır; kartlar ekranı
-doldurur. Meydan okuma açılamazsa (bugün oynandı, bağlantı yok) sayfa kendiliğinden açılır ve notu gösterir. Sonuç ekranında skor, süre, günün sıralamasındaki yer, gün serisi,
-soru soru kareler, paylaşma tuşu ve günün sıralaması vardır; "Tekrar oyna" yoktur.
+Ana ekrandaki **Günün meydan okuması** girişi yukarıda anlatılmıştır (`DailyEntry`, dikey telefonda altta sabit `DailyDock`).
+Dokununca günün meydan okuması alttan açılır: tarih, seri, yeni meydan okumaya kalan süre ve iki bölümde (Türkiye, Dünya)
+yan yana beş mod kartı (oynanmamışta "Başla ›", bitirilende skor, bırakılanda "Bırakıldı"). Oynanmamış moda dokununca tur
+başlar; bitirilen mod seçilir ve altında o modun günlük sıralaması, oyuncunun sonucu (sırasıyla birlikte) ve paylaşma tuşu
+görünür. Meydan okuma açılamazsa (bugün oynandı, bağlantı yok) sayfa kendiliğinden açılır ve notu gösterir. Sonuç
+ekranında skor, süre, günün sıralamasındaki yer, gün serisi, soru soru kareler, paylaşma tuşu ve günün sıralaması vardır;
+"Tekrar oyna" yoktur.
 
 Gün serisi: en az bir meydan okumanın bitirildiği ardışık günler. Bir gün kaçırılırsa sıfırlanır; bugün henüz oynanmadıysa
 dünden geriye sayılır. Paylaşım metni:
@@ -197,11 +332,11 @@ sonuçlarını, `my_daily` oyuncunun bugünkü durumunu ve serisini döndürür;
 ### Profil
 
 Hesap menüsündeki **Profilim** `/profil` sayfasını açar; profili yalnızca oyuncunun kendisi görür. Başlıkta profil
-resmi, ad, hesap türü (Google / Misafir) ve ilk oyun tarihi; altında yarış özeti (tur, başarı oranı, en uzun seri,
-oynanan gün), düellolar (oynanan, galibiyet, beraberlik, mağlubiyet), her sıralamadaki en iyi sonuç ve sıra ve son
-10 yarış turu. Düello kartlarına dokununca alttan açılan sayfada o sonuçtaki düellolar listelenir (son 100): rakip, mod
+resmi, ad, hesap türü (Google / Misafir) ve ilk oyun tarihi; altında tur özeti (tur, başarı oranı, en uzun seri,
+oynanan gün), düellolar (oynanan, galibiyet, beraberlik, mağlubiyet), her moddaki en iyi sonuç ve son
+10 tur. Düello kartlarına dokununca alttan açılan sayfada o sonuçtaki düellolar listelenir (son 100): rakip, mod
 ve kural, tarih, skor; hükmen biten düello işaretlenir. Misafir hesapta verinin çıkışta ya da cihaz
-değişince kaybolacağı yazar. Antrenman kaydedilmediği için profilde yoktur; oda turları yarış turu sayılır. Veri tek bir
+değişince kaybolacağı yazar. Antrenman kaydedilmediği için profilde yoktur; oda turları dahildir. Veri tek bir
 sunucu fonksiyonundan gelir (`my_profile`). Alttan açılan sayfa sıralamayla ortaktır (`BottomSheet.tsx`).
 
 ### İlçeler (Haritayı tamamla)
@@ -236,15 +371,15 @@ betik il sınırlarını %1 sadeleştirip kartların silüet dosyasını da yaza
 ### Rozetler
 
 17 rozet var (`lib/badges.ts`): gün serisi (3, 7, 30 gün), ilk günlük meydan okuma, tam gün (aynı gün beş meydan
-okuma), Türkiye / Plaka / Dünya / Bayrak / Başkent'te 10/10, Şimşek (45 saniyenin altında 10/10), 81 il ve 100 ülke (yarışlarda
-en az bir kez doğru bilinen farklı yerler), ilk ve 10. düello galibiyeti, Kürsü (bir sıralamada ilk üç) ve Zirve (bir
-sıralamada birinci). Hangisinin kazanıldığını ve ilerlemeyi sunucu mevcut veriden hesaplar (`my_badges`); kazanılan rozet
+okuma), Türkiye / Plaka / Dünya / Bayrak / Başkent'te 10/10, Şimşek (günün meydan okumasında 45 saniyenin altında 10/10), 81 il ve 100 ülke (turlarda
+en az bir kez doğru bilinen farklı yerler), ilk ve 10. düello galibiyeti, Kürsü (günün meydan okumasında ilk üç) ve Zirve (günün
+meydan okumasında birinci; o gün o modu en az 3 oyuncu bitirmiş olmalı, günlerden en iyi sıra sayılır). Hangisinin kazanıldığını ve ilerlemeyi sunucu mevcut veriden hesaplar (`my_badges`); kazanılan rozet
 `player_badges` tablosuna yazılır ve kaybolmaz (sıralamada geçilse de Kürsü kalır). Geçmişte hak edilmiş rozetler ilk
 çağrıda verilir.
 
-Profilde rozetler gruplarıyla (gün serisi, günlük meydan okuma, kusursuz tur, harita ustalığı, düello, sıralama) ve her
+Profilde rozetler gruplarıyla (gün serisi, günlük meydan okuma, kusursuz tur, harita ustalığı, düello, günün sıralaması) ve her
 grupta kademe sırasıyla dizilir (3 → 7 → 30 gün); telefonda tek sütun, geniş ekranda gruplar iki sütunda. Her rozet bir
-satırdır: kazanılanlar renkli ve tarihli, kazanılmamışlar soluk; nasıl kazanılacağı ve ilerlemesi (ör. "54/81") yazar. Yarış, günlük meydan okuma ve düello sonuç ekranında yeni kazanılan rozetler kısa bir kutlamayla çıkar (en fazla
+satırdır: kazanılanlar renkli ve tarihli, kazanılmamışlar soluk; nasıl kazanılacağı ve ilerlemesi (ör. "54/81") yazar. Oyna, günlük meydan okuma ve düello sonuç ekranında yeni kazanılan rozetler kısa bir kutlamayla çıkar (en fazla
 üçü tek tek, fazlası "+2 rozet daha"); profile bağlantı verir.
 
 ### Harita
@@ -264,7 +399,7 @@ Dikey telefonda oyunun üst barı iki satırdır: üstte çıkış / bitir, doğ
 genişlikte soru şeridi (ad, büyük bayrak ya da plaka; cevaptan sonra seri ve sonraki soruya geri sayım). Düellodaki
 şeritle aynı düzendir. Üst bar koyu deniz renginde bir oyun göstergesidir; soru beyaz, altı kalın kenarlı bir kartta
 durur. Son 10 saniyede her saniye kısa bir tık sesi gelir. İki doğrudan itibaren puanın yanında 🔥 seri rozeti durur (3'te turuncu, 5'te kırmızı).
-Yarışta, günün meydan okumasında ve oda turunda üst barda iki akış satırı alt alta durur. Soru akışı: turun soruları
+Oyna'da, günün meydan okumasında ve oda turunda üst barda iki akış satırı alt alta durur. Soru akışı: turun soruları
 kadar bölüm (cevaplananlar yeşil ya da kırmızı, beklenen soru beyaz ve hafifçe parlar, gelecekler soluk), solunda o ana
 kadarki doğru ve sorulan soru sayısı ("1/2"; tur 0/0 ile başlar). Süre akışı: kalan süre yazısı ve eriyen çubuk; çubuk
 yeşilden sarıya, son 10 saniyede kırmızıya döner ve yanıp söner. İki satırın yazıları eşit genişlikte, çubukları aynı
@@ -278,7 +413,7 @@ Web Audio ile o an üretilir. Tarayıcılar sesi ancak dokunuşla açılan bir s
 açılır. Hesap menüsünden kapatılır, seçim tarayıcıda hatırlanır. Sonuç ekranının başında puan oranına göre 0–3 yıldız
 (kusursuz 3, %70 2, %40 1) ve övgü durur; en az 5 soruluk kusursuz turda fanfar ve konfeti (`RoundCelebration.tsx`).
 
-**Yön.** Tüm ekranlar ve oyunlar (antrenman, yarış, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
+**Yön.** Tüm ekranlar ve oyunlar (Oyna, antrenman, düello, oda turu) dikeyde de oynanır; telefonu yan çevirmek
 zorunlu değildir. Harita dikeyde yaklaşık yarı boyuta indiği için haritanın sol altında kapatılabilir bir "Yan
 çevirirsen harita büyür" ipucu durur. Mobil uygulamada ipucunun yerinde **Yatay moda geç** tuşu vardır (aşağıda).
 
@@ -295,8 +430,8 @@ Hareket azaltma açıksa animasyonların son karesi durağan gösterilir.
 - **Arka plana alma:** Turun saati duvar saatidir (`Date.now`); telefon kilitlenip açılınca ya da uygulamadan çıkıp
   dönülünce süre kaldığı yerden doğru işler ve kaydedilen süre sunucunun ölçtüğüyle uyuşur. Düello ve odada uygulamaya
   dönülünce ya da bağlantı gelince durum sıradaki yoklamayı beklemeden hemen sorulur.
-- **Bağlantı kopması:** Bağlantı yokken ekranın altında bir uyarı durur (`ConnectionBanner`). Antrenman bağlantısız da
-  oynanır; yarış, düello ve oda tuşları "Bağlantı yok" diyerek kapanır. Yarış skoru kaydedilemezse sonuç ekranında
+- **Bağlantı kopması:** Bağlantı yokken ekranın altında bir uyarı durur (`ConnectionBanner`). Oyna ve Antrenman bağlantısız
+  da oynanır (skor kaydedilmez); düello ve oda tuşları "Bağlantı yok" diyerek kapanır. Giriş yapmış oyuncunun skoru kaydedilemezse sonuç ekranında
   **Tekrar dene** çıkar ve bağlantı gelince kendiliğinden yeniden denenir. Tur başlarken sunucuda açılamadıysa skor
   sonradan kaydedilemez; sonuç ekranı bunu söyler.
 - **Klavye:** Dokunmatik cihazda bir yazı alanına odaklanılınca klavye açıldıktan sonra alan ekranın ortasına kaydırılır
@@ -332,8 +467,8 @@ yazı tipiyle bilgisayardaki Chrome'da üretilir; logo ya da tanıtım cümlesi 
 node scripts/generate-og-image.mjs
 ```
 
-Yarış sonucundaki **Skorumu paylaş** (antrenman skoru karşılaştırılabilir olmadığı için orada yok) telefonda sistemin paylaşma menüsünü açar ("Harita Avcısı'nda Dünya
-yarışında 9/10 yaptım, süre 00:47. Sıralamada 3. sıradayım. Sen kaç yaparsın?" ve site bağlantısı); menü yoksa
+Oyna sonucundaki **Skorumu paylaş** (antrenman skoru karşılaştırılabilir olmadığı için orada yok) telefonda sistemin paylaşma menüsünü açar ("Harita Avcısı'nda Dünya
+turunda 9/10 yaptım, süre 00:47. Sen kaç yaparsın?" ve site bağlantısı); menü yoksa
 (masaüstü tarayıcı, Android uygulaması) aynı metni panoya kopyalar.
 
 ### Uygulama olarak yükleme
@@ -371,7 +506,7 @@ telefonun yön kilidi açık olsa bile döner); oyun haritası kapanınca kilit 
 
 Uygulamaya özgü davranışlar:
 
-- **Android geri tuşu** (`NativeBackButton`, `lib/hooks/useBackHandler.ts`): önce açık pencere (giriş, sıralama,
+- **Android geri tuşu** (`NativeBackButton`, `lib/hooks/useBackHandler.ts`): önce açık pencere (giriş, günün meydan okuması,
   tanıtım, hesap silme) kapanır; oyundan ve sonuçtan ana menüye, giriş adımından ayarlara dönülür; düello ve oda
   turunda çıkış onayı sorulur. Bunlar yoksa geçmişte geri gidilir (ayar ekranından oyun seçimine), geçmiş de yoksa
   uygulamadan çıkılır.
@@ -403,7 +538,7 @@ npm install
 npm run dev
 ```
 
-Uygulama `http://localhost:3000` adresinde çalışır. Antrenman Supabase olmadan da oynanabilir; yarış turları için aşağıdaki Supabase kurulumu gerekir.
+Uygulama `http://localhost:3000` adresinde çalışır. Oyna ve Antrenman Supabase olmadan da oynanabilir (bir şey kaydedilmez); turların kaydı, günün meydan okuması, düello ve oda için aşağıdaki Supabase kurulumu gerekir.
 
 ### Testler
 
@@ -432,19 +567,22 @@ app/
   globals.css           Tailwind, harita SVG'si için stiller ve açılış animasyonu
   components/
     IntroScreen.tsx     Giriş ekranı: oyun seçimi (adım 1) ve ayarlar (adım 2), açılış animasyonu
-    intro/              Giriş ekranının parçaları: iki grup kartı ve kod alanı (ModeGrid), ortak adım 2 düzeni
-                        (SetupParts), Yarış/Antrenman, Düello ve Oda ayarları, oyunların ve grupların renk ve
-                        simgeleri (games.tsx)
+    intro/              Giriş ekranının parçaları: ana ekran (ModeGrid), ortak adım 2 düzeni (SetupParts), Oyna/Antrenman
+                        ayarı (SoloSetup: soru biçimi seçicisi StylePicker + gruplanmış mod listesi ModeList), Düello ve Oda
+                        ayarları (ModeTiles karoları), oyunların ve grupların renk ve simgeleri (games.tsx)
     MapDemo.tsx         Haritada soru-cevap döngüsü: adım 2'deki canlı önizleme ve tanıtımın harita demosu
-    AuthPanel.tsx       Yarış öncesi giriş adımı (Google / misafir)
+    AuthPanel.tsx       Günün meydan okumasından önceki giriş adımı (Google / misafir)
     GameTopBar.tsx      Oyun sırasındaki üst bar (soru, bayrak, puan, süre)
-    GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları
-    ResultScreen.tsx    Tam ekran sonuç: skor ve yanında seri / süre, tekrar oyna + paylaş, başka tur seç, en çok yanlış yapılanlar, sıralama; antrenman özeti
+    GameMap.tsx         Tıklanabilir harita, yakınlaştırma tuşları; şıklı soruda (isMarking) işaretli yeri boyar ve oraya odaklanır
+    AnswerChoices.tsx   Şıklı sorunun dört şıkkı (ad, bayrak, başkent ya da plaka), cevaptan sonra yeşil/kırmızı
+    ResultScreen.tsx    Tam ekran sonuç: skor ve yanında seri / süre, tekrar oyna + paylaş, başka tur seç, girişsiz oyuncuya giriş daveti, geri planda en çok yanlış yapılanlar; günlük sonucu günün sıralamasıyla; antrenman özeti
+    SessionReview.tsx   Oyna ve antrenman sonucunda bu turun dökümü: yanlışlar önde ve vurgulu, doğrular altta kompakt
+    RoundReview.tsx     Soru kareleri (RoundSquares) ve açılır döküm (günlük sonuçta kullanılır)
     Logo.tsx            Nişangah rozetli oyun adı (ana ekranın ve yasal sayfaların başlığı)
     HomeButton.tsx      Lobi ve profilde ana menüye dönen ev tuşu
-    MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi
-    Leaderboard.tsx     Sekmeli sıralama listesi
-    LeaderboardPanel.tsx Giriş ekranından açılan sıralama katmanı
+    MostMissed.tsx      Sonuç ekranındaki "En çok yanlış yapılanlar" listesi (herkesin)
+    WeakSpots.tsx       Sonuç ekranındaki "Senin zayıf yerlerin" listesi ve "Bunları çalış" tuşu (oyuncunun kendisinin)
+    Leaderboard.tsx     Sekmeli sıralama listesi (günün meydan okumasının sıralaması)
     RoundControls.tsx   Oyun sırasında turu yeniden başlatma / tur değiştirme
     PlayButton.tsx      Rozetli oyna tuşu; ekranın asıl tuşunun (basılabilir yeşil) sınıfı
     RoundCelebration.tsx  Sonuç ekranındaki yıldızlar, övgü, bitiş sesi ve konfeti
@@ -459,15 +597,18 @@ lib/
   hooks/
     usePlayer.ts        Supabase oturumu
     useMapMarkup.ts     SVG haritayı indirip önbelleğe alır ve tıklanabilir yapar
-    useMapZoom.ts       viewBox tabanlı yakınlaştırma, kaydırma ve açılış görünümü
+    useMapZoom.ts       viewBox tabanlı yakınlaştırma, kaydırma ve açılış görünümü; focusOn: şıklı soruda işaretli yere odaklanma
     useMostMissed.ts    location_stats view'inden o modda en çok yanlış yapılan yerleri çeker
-    useLeaderboard.ts   Yarış turunu sunucuda açar ve sorularını alır (start_ranked_round), sonucu tur başına bir kez kaydeder
-                        (finish_round), sıralamaları çeker, realtime abonelik.
-                        useLeaderboards ise kayıt yapmadan yalnızca okur (giriş ekranındaki panel)
+    useWeakSpots.ts     my_weak_spots ile giriş yapmış oyuncunun o moddaki zayıf yerlerini çeker
+    useRoundSave.ts     Giriş yapmış oyuncunun turunu sunucuda açar ve sorularını alır (start_ranked_round), sonucu tur başına
+                        bir kez kaydeder (finish_round); girişsizde hiçbir şey yazmaz. Sıralama çekmez, abonelik kurmaz
   turkish-plates.ts     81 il + plaka kodu
   world-capitals.ts     Başkent turunda sorulan 174 ülkenin Türkçe başkent adları
   world-countries.ts    179 ülke + ISO kodu; eski "normal" düellolarının havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
   shuffle.ts            Fisher-Yates karıştırma
+  choices.ts            Şıklı soru için dört şık: doğru cevap ve aynı bölge/kıtadan üç yanlış
+  neighbors.ts          neighborIds / areNeighbors: bir ilin komşuları; neighborSubject / neighborOptions: komşuluk sorusunun konusu ve şıkları (yalnızca Türkiye)
+  turkish-neighbors.ts  81 ilin komşuluk tablosu (scripts/build-neighbors.mjs üretir, elle düzenlenmez)
   supabase.ts           Supabase istemcisi (env yoksa null döner)
   auth.ts               Google ve misafir girişi (ana sayfa ve düello ortak kullanır)
   duel.ts               Düello tipleri, kurallar, modlar ve yer kimliğinden soruya geçiş
@@ -477,6 +618,7 @@ lib/
   hooks/useRoom.ts      Odaya katılır, durumu yoklar, odayı ve turları başlatır
 scripts/
   generate-duel-pools.mjs  Soru havuzlarını world-countries.ts ve world-capitals.ts'ten schema.sql'e yazar
+  build-neighbors.mjs      İl haritasından lib/turkish-neighbors.ts komşuluk tablosunu üretir (npm run maps:neighbors)
 tests/                  Birim ve sunucu testleri (npm test)
 public/maps/            turkey.svg, world.svg
 public/flags/           179 ülkenin 4:3 bayrakları (<iso>.svg)
@@ -523,7 +665,7 @@ satırını siler; skorlar, turlar, cevaplar, düellolar ve odalar `on delete ca
 
 ### Veri modeli
 
-Yarış sonuçları `game_results` tablosunda tutulur; antrenman sonuçları hiç kaydedilmez. Her satır `game_mode` (`turkey` / `world`) ve `variant` ile bir sıralamaya bağlanır:
+Giriş yapmış oyuncunun Oyna turları, günün meydan okuması ve oda turları `game_results` tablosunda tutulur; antrenman ve girişsiz oyuncunun turları hiç kaydedilmez. Her satır `game_mode` (`turkey` / `world`) ve `variant` ile bir moda bağlanır:
 
 | Sıralama | `game_mode` | `variant` |
 | --- | --- | --- |
@@ -538,10 +680,12 @@ Dünyanın 58 tanınmış ülkelik `normal` türü oyundan kaldırıldı: arayü
 skorlar tabloda durur. Sunucu bu türü güncellenmemiş uygulamalardan gelebilecek istekler için kabul etmeye devam eder;
 eski `normal` düello ve odalar "Dünya · Tanınmış ülkeler" diye görünür, rövanşları 179 ülkelik modla kurulur.
 
-RLS politikaları sıralamayı herkese açar: giriş yapmamış ziyaretçi de sıralamayı okuyabilir. Tarayıcının
+RLS politikaları sonuçları herkese açık okutur (günün sıralaması giriş yapmadan da görünür); `leaderboard` view'i
+(her oyuncunun her moddaki en iyi sonucu) artık yalnızca profildeki en iyi sonuçlar ve henüz güncellenmemiş uygulama
+sürümleri içindir, yeni uygulama genel sıralama göstermez. Tarayıcının
 tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki fonksiyonlarla kaydedilir:
 
-- `start_ranked_round(game_mode, variant)`: yarış turu başlarken `game_rounds` tablosunda bir tur açar, 10 sorusunu
+- `start_ranked_round(game_mode, variant)`: Oyna turu (giriş yapmış oyuncu için) başlarken `game_rounds` tablosunda bir tur açar, 10 sorusunu
   sunucuda seçer (düello ve odayla aynı havuzdan, `duel_pool`) ve turla birlikte saklar; tur kimliğini ve soruları
   sırayla döndürür. Tur tarayıcıda ancak sorular gelince başlar (arada "Tur hazırlanıyor" katmanı); süre sorular gelince
   işlemeye başlar. Sunucuya ulaşılamazsa tur yerel sorularla oynanır ve sonucu kaydedilemez.
@@ -554,18 +698,22 @@ tabloya yazma izni yoktur; sonuçlar yalnızca sunucudaki fonksiyonlarla kaydedi
   oyuncuya ait olduğunu, daha önce kaydedilmediğini ve sürenin mümkün olduğunu denetleyip sonucu yazar. Turun soruları
   sunucuda seçildiyse cevapların sırayla tam o sorulara verildiğini de doğrular; tarayıcı kendi seçtiği sorularla
   uydurulmuş bir sonuç gönderemez.
-  Soruların bitmediği tur ancak 120 saniye dolduysa kabul edilir; 10 soruluk tur en az 30 saniye sürer
-  (9 × 3 saniyelik gösterim + soru başına 0,3 saniye). Kaydedilen süre, sunucunun ölçtüğünden belirgin
+  Soruların bitmediği tur ancak 120 saniye dolduysa kabul edilir. 10 soruluk tur günün meydan okumasında ve oda turunda en
+  az 30 saniye sürer (9 × 3 saniyelik gösterim + soru başına 0,3 saniye); serbest turda (Oyna, Antrenman) cevaptan sonra
+  gösterim atlanabildiği için yalnızca soru başına 0,3 saniye (10 soru için 3 saniye) beklenir. Sunucu hangi uygulama
+  sürümünün çağırdığını bilmez; türü `game_rounds.daily_day` ve `room_id` ayırır. Kaydedilen süre, sunucunun ölçtüğünden belirgin
   biçimde kısa olamaz. Oyuncunun adı ve fotoğrafı tarayıcıdan değil oturumdan alınır.
 
 Her cevap `round_answers` tablosuna da yazılır (sorulan yer, tıklanan yer, doğru mu). Bu tablo tarayıcıya kapalıdır;
 `location_stats` view'i her sıralamada her yerin kaç kez sorulduğunu, kaç kez yanlış cevaplandığını ve en çok hangi
 yerle karıştırıldığını herkese açık olarak toplar. Türkiye'de yerler başında sıfır olmadan plakayla (`6`, `34`),
-dünyada ISO koduyla (`tr`) tutulur.
+dünyada ISO koduyla (`tr`) tutulur. Oyuncunun kendi zayıf yerleri `my_weak_spots(game_mode, variant, limit)` ile okunur: fonksiyon
+yalnızca `auth.uid()` satırlarını toplar (tablo tarayıcıya kapalıdır), girişsiz çağrıyı ve geçersiz modu reddeder, `limit`
+en az 1 ve en çok 50'dir. Eski cevaplar yarım ağırlıkla sayılır (30 günden eski).
 
 Doğru cevap sorudan belli olduğu için (sorulan ülkenin kodu, tıklanacak alanın kodudur) bu denetimler
 cevapları otomatik veren bir betiği engelleyemez; engelledikleri, hiç oynanmamış bir turun ya da imkânsız
-bir sürenin kaydedilmesidir. Sıralama, oyuncu, mod ve `variant` başına en iyi sonucu döndüren `leaderboard` view'inden okunur ve `supabase_realtime` publication'ı sayesinde yeni sonuçlar anında yansır.
+bir sürenin kaydedilmesidir. Günün sıralaması `daily_leaderboard` view'inden okunur. İstemci artık `game_results` için gerçek zamanlı abonelik kurmaz; `supabase_realtime` yayını ve `replica identity full` yalnızca henüz güncellenmemiş uygulama sürümleri için durur, onlar kalkınca kaldırılabilir.
 
 ### Düello
 
@@ -595,7 +743,7 @@ Soruları sunucu seçtiği için soru havuzları `duel_pool` fonksiyonunda durur
 
 `rooms` (ayarlar, başlama ve bitiş anı), `room_players` ve `room_questions` (her turun 10 sorusu) tabloları tarayıcıya
 kapalıdır. Odadaki bir tur, `game_rounds` ve `game_results` tablolarında `room_id` / `room_round` ile işaretli normal bir
-yarış turudur; bu yüzden `finish_round`'un bütün denetimlerinden geçer ve genel sıralamaya da yazılır. Oda turunda
+turdur; bu yüzden `finish_round`'un bütün denetimlerinden geçer ve profile de yazılır. Oda turunda
 `finish_round` ayrıca cevapların sırayla o turun sorularına verildiğini doğrular.
 
 | Fonksiyon | İş |

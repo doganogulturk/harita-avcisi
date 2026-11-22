@@ -42,8 +42,31 @@ type GameMapProps = {
   celebration?: string | null;
   /** Cevaptan sonra haritanın üst ortasında duran geri sayım, ör. "Sonraki soru · 2 sn". */
   countdown?: string | null;
+  /** Verilirse cevaptan sonra haritaya dokunmak sonraki soruya geçirir (kısa gösterim: Oyna, Antrenman). */
+  onContinue?: () => void;
+  /**
+   * Şıklı soru: doğru yer haritada işaretlenir (map-marked) ve oraya odaklanılır (küçükse yakınlaşılır); harita seçim
+   * almaz, cevap şıklardan gelir. Cevaptan sonra olağan doğru/yanlış renkleri görünür.
+   */
+  isMarking?: boolean;
+  /**
+   * Şıklı soruda işaretlenecek yer. Verilmezse sorunun doğru yeridir; komşuluk sorusunda işaretlenen il konudur ve doğru cevap
+   * (haritada yeşil boyanan) komşusudur, ayrı bir yerdir.
+   */
+  markedLocation?: string | null;
   /** Yanlış cevapta oyuncunun tıkladığı yerin adı, ör. "Kayseri" (wrongPickNotice). */
   wrongPick?: string | null;
+  /**
+   * Doğru yerin komşuları (yer kimlikleri; lib/neighbors.ts). Verilirse yanlış cevaptan sonra haritada kesik çizgili açık yeşille
+   * işaretlenir, adları yazılır ve oyuncunun tıkladığı yer bir komşuysa "Komşu il" rozeti çıkar. Yalnızca Türkiye illerinde var.
+   */
+  neighborIds?: readonly string[] | null;
+  /**
+   * Komşuluk sorusunda komşular (konunun komşuları) cevap doğru da olsa yanlış da olsa gösterilir: bütün komşuları görmek öğrenmenin
+   * kendisidir. Olağan turlarda yalnızca yanlış cevaptan sonra gösterilir. `neighborsLabel` o yazının başlığıdır ("Kayseri · komşuları").
+   */
+  alwaysShowNeighbors?: boolean;
+  neighborsLabel?: string | null;
   /** Bildirimler (seri, geri sayım) dikey telefonda üst barda gösteriliyorsa (GameTopBar) haritanın üstünde dar ekranda gizlenir. */
   areNoticesInHeaderWhenNarrow?: boolean;
   onSelect: (locationId: string) => void;
@@ -71,10 +94,16 @@ function locationNear(container: HTMLElement, mode: GameMode, clientX: number, c
 /** Seri bu sayıya ulaşınca her doğru cevapta haritanın üstünde kısa bir kutlama belirir. */
 const STREAK_CELEBRATION_FROM = 3;
 
-/** Cevaptan sonraki geri sayım; son soruda sonuç ekranına geçişi söyler. Cevap yokken gösterilmez. */
-export function nextQuestionCountdown(answerState: AnswerState, seconds: number, isLastQuestion: boolean): string | null {
+/**
+ * Cevaptan sonraki geri sayım; son soruda sonuç ekranına geçişi söyler. Cevap yokken gösterilmez. Kısa gösterimde
+ * (`isQuick`) doğru cevaptan sonra 1 saniyelik bir geri sayım gürültü olur, gösterilmez; yanlış cevapta dokunarak
+ * geçilebildiği söylenir.
+ */
+export function nextQuestionCountdown(answerState: AnswerState, seconds: number, isLastQuestion: boolean, isQuick = false): string | null {
   const { game, common } = messages();
-  return answerState ? `${isLastQuestion ? game.results : game.nextQuestion} · ${common.seconds(seconds)}` : null;
+  if (!answerState) return null;
+  if (isQuick) return answerState === "correct" ? null : `${game.tapToContinue} · ${common.seconds(seconds)}`;
+  return `${isLastQuestion ? game.results : game.nextQuestion} · ${common.seconds(seconds)}`;
 }
 
 /**
@@ -156,7 +185,13 @@ export function GameMap({
   celebration = null,
   countdown = null,
   wrongPick = null,
+  neighborIds = null,
+  alwaysShowNeighbors = false,
+  neighborsLabel = null,
   areNoticesInHeaderWhenNarrow = false,
+  onContinue,
+  isMarking = false,
+  markedLocation = null,
   onSelect,
 }: GameMapProps) {
   // Mobil uygulamada ipucuyla konan yatay kilit oyun boyunca sürer; harita kaldırılınca (oyun bitince) kalkar.
@@ -174,7 +209,7 @@ export function GameMap({
   useEffect(() => {
     primeSound();
   }, []);
-  const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, wasDragged, panHandlers } = useMapZoom(
+  const { zoom, isAtHome, canZoomIn, canZoomOut, zoomIn, zoomOut, reset, ensureVisible, restoreAfterReveal, focusOn, wasDragged, panHandlers } = useMapZoom(
     containerRef,
     mapMarkup,
     homeView,
@@ -188,23 +223,35 @@ export function GameMap({
       const locationId = locationIdOf(location, mode);
       const isInactive = activeLocationIds !== null && (locationId === undefined || !activeLocationIds.has(locationId));
       location.classList.toggle("map-inactive", isInactive);
-      location.setAttribute("tabindex", isInactive ? "-1" : "0");
+      // Şıklı soruda yerler seçilmez; klavyeyle 180 yerin arasında gezilmesin.
+      location.setAttribute("tabindex", isInactive || isMarking ? "-1" : "0");
     });
-  }, [activeLocationIds, mapMarkup, mode]);
+  }, [activeLocationIds, isMarking, mapMarkup, mode]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !question) return;
     const correctLocation = correctLocationId(question);
-    // Yeni soruya geçildi: doğru cevap için kaydırılan görünüm oyuncunun bıraktığı yere döner.
-    if (answerState === null) restoreAfterReveal();
+    // Yeni soruya geçildi: doğru cevap için kaydırılan görünüm oyuncunun bıraktığı yere döner. Şıklı soruda bunu focusOn yapar:
+    // iki ayrı adım olsaydı yakınlaştırma, geri dönüş animasyonunun ortasındaki görünümü "önceki" diye kaydederdi.
+    if (answerState === null && !isMarking) restoreAfterReveal();
     container.querySelectorAll<SVGGraphicsElement>(LOCATION_SELECTOR[mode]).forEach((location) => {
       const locationId = locationIdOf(location, mode);
       const isCorrect = isSameLocation(mode, locationId, correctLocation);
+      // Komşuluk sorusunda işaretli il (konu) cevaptan sonra da işaretli kalır: komşular onun çevresinde gösterilir. Olağan şıklı
+      // soruda işaretli yer cevabın kendisidir ve cevaptan sonra yeşile döner.
+      const isMarked = isMarking && (answerState === null || markedLocation !== null) && isSameLocation(mode, locationId, markedLocation ?? correctLocation);
+      location.classList.toggle("map-marked", isMarked);
       location.classList.toggle("map-correct", answerState !== null && isCorrect);
       location.classList.toggle("map-incorrect", answerState === "incorrect" && isSameLocation(mode, locationId, selectedLocation));
       location.classList.toggle("map-pending", answerState === null && isSameLocation(mode, locationId, pendingLocation));
       location.classList.toggle("map-opponent", isSameLocation(mode, locationId, opponentLocation));
+      if (isMarked) {
+        // İşaretli yer komşularının altında kalmasın; zaten sondaysa dokunulmaz (taşımak animasyonu baştan başlatır).
+        if (location.parentNode && location.parentNode.lastElementChild !== location) location.parentNode.appendChild(location);
+        // Odaklanma yalnızca yeni soruda; cevaptan sonra harita doğru yere kayabilir (ensureVisible), konuya geri sıçramasın.
+        if (answerState === null) focusOn(location);
+      }
       if (answerState !== null && isCorrect) {
         // Büyüme animasyonu komşu yerlerin altında kalmasın: SVG'de sonra çizilen üstte durur. Zaten sondaysa
         // dokunulmaz; taşımak animasyonu baştan başlatır.
@@ -214,7 +261,20 @@ export function GameMap({
         ensureVisible(location, { zoomIfSmall: answerState === "incorrect" });
       }
     });
-  }, [answerState, ensureVisible, mapMarkup, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
+  }, [answerState, ensureVisible, focusOn, isMarking, mapMarkup, markedLocation, mode, opponentLocation, pendingLocation, question, restoreAfterReveal, selectedLocation]);
+
+  // Yanlış cevaptan sonra doğru yerin komşuları: ayrı bir efekt, çünkü cevap efekti her değişimde görünümü yeniden oynatır.
+  const neighborKey = neighborIds?.join(",") ?? "";
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const isShown = answerState === "incorrect" || (alwaysShowNeighbors && answerState !== null);
+    const wanted = isShown && neighborKey ? new Set(neighborKey.split(",").map(Number)) : null;
+    container.querySelectorAll<SVGGraphicsElement>(LOCATION_SELECTOR[mode]).forEach((location) => {
+      const locationId = locationIdOf(location, mode);
+      location.classList.toggle("map-neighbor", wanted !== null && locationId !== undefined && wanted.has(Number(locationId)));
+    });
+  }, [alwaysShowNeighbors, answerState, mapMarkup, mode, neighborKey, question]);
 
   // Oyuncu cevap verdiği anda kısa bir titreşim ve ses; doğruysa dokunduğu yerden "+1" uçar. Düelloda oyuncu
   // cevaplamadan biten soruda tepki yok.
@@ -256,11 +316,16 @@ export function GameMap({
   return (
     <div className="map-sea relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
       <div
-        className={`map ${isInteractive ? "map-interactive" : "pointer-events-none opacity-70"}`}
+        className={`map ${isInteractive ? "map-interactive" : "pointer-events-none opacity-70"} ${isMarking ? "map-marking" : ""}`}
         dangerouslySetInnerHTML={{ __html: mapMarkup }}
         id="game-map"
         onClick={(event) => {
           if (wasDragged()) return;
+          // Kısa gösterimde cevaptan sonra haritanın her yerine dokunmak sonraki soruya geçirir; cevap ve haritadaki
+          // yer seçimi bu sırada zaten kilitlidir.
+          if (answerState && onContinue) return onContinue();
+          // Şıklı soruda cevap şıklardan gelir; harita yalnızca gezilir (kaydırma, yakınlaştırma).
+          if (isMarking) return;
           const bounds = containerRef.current?.parentElement?.getBoundingClientRect();
           // "+1" ekranın kenarında kırpılmasın: kenara yakın dokunuşta biraz içeriden uçar.
           lastTapPoint.current =
@@ -274,6 +339,11 @@ export function GameMap({
         }}
         onKeyDown={(event) => {
           if (event.key !== "Enter" && event.key !== " ") return;
+          if (answerState && onContinue) {
+            event.preventDefault();
+            return onContinue();
+          }
+          if (isMarking) return;
           const locationId = selectFromEvent(event.target);
           if (locationId) {
             event.preventDefault();
@@ -315,8 +385,19 @@ export function GameMap({
 
       {/* Yanlış cevap: oyuncunun dokunduğu yerin adı sorudan ayrı, haritanın altında kırmızı bir etikette ve çarpıyla;
           haritada kırmızı yanan yerle eşleşir. Dikey telefonda yön ipucunun üstünde durur. */}
-      {wrongPick && (
-        <div aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center px-16 portrait-phone:bottom-14 lg:bottom-6">
+      {(wrongPick || (alwaysShowNeighbors && answerState)) && (
+        <div aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex flex-col items-center gap-2 px-16 portrait-phone:bottom-14 lg:bottom-6">
+          {/* Doğru yerin komşuları: oyuncu yanlış bildiği yerin çevresini de öğrensin. Kimlikler ad sırasına göre dizilir. */}
+          {neighborIds && neighborIds.length > 0 && (
+            <p className="line-clamp-2 max-w-md rounded-xl border border-emerald-300 bg-white/95 px-3 py-1 text-center text-xs font-semibold text-emerald-900 shadow-md lg:text-sm">
+              <span className="font-bold">{neighborsLabel ?? messages().game.neighborsOf}:</span>{" "}
+              {[...neighborIds]
+                .map((id) => locationName(mode, id))
+                .sort((a, b) => a.localeCompare(b, "tr"))
+                .join(" · ")}
+            </p>
+          )}
+          {wrongPick && (
           <p className="badge-pop flex max-w-full min-w-0 items-center gap-2 rounded-2xl border-2 border-rose-300 bg-rose-500 py-1.5 pr-4 pl-1.5 text-white shadow-lg shadow-rose-900/25 lg:gap-3 lg:py-2 lg:pr-5 lg:pl-2">
             <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white text-rose-600 lg:h-9 lg:w-9">
               <svg className="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={3.5} viewBox="0 0 24 24">
@@ -324,10 +405,16 @@ export function GameMap({
               </svg>
             </span>
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-[10px] font-bold tracking-[0.12em] text-rose-100 uppercase lg:text-xs">{messages().game.yourPick}</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-rose-100 uppercase lg:text-xs">
+                {messages().game.yourPick}
+                {neighborIds && selectedLocation && neighborIds.some((id) => isSameLocation(mode, id, selectedLocation)) && (
+                  <span className="rounded-full bg-emerald-200 px-1.5 py-px tracking-normal text-emerald-900 normal-case">{messages().game.neighborBadge}</span>
+                )}
+              </span>
               <span className="truncate font-display text-lg font-bold lg:text-2xl">{wrongPick}</span>
             </span>
           </p>
+          )}
         </div>
       )}
 

@@ -140,6 +140,44 @@ body {
   pointer-events: none;
 }
 
+/* Şıklı soru: haritada işaretli yer. Doğru (yeşil) ve yanlış (kırmızı) renklerinden ayrışsın diye sarı; hafifçe nabız gibi
+   atar. Cevaptan sonra yerini olağan doğru/yanlış renkleri alır. */
+@keyframes map-mark-pulse {
+  0%,
+  100% {
+    fill-opacity: 1;
+  }
+  50% {
+    fill-opacity: 0.6;
+  }
+}
+
+.map g.map-marked path,
+.map .map-marked {
+  fill: #fbbf24 !important;
+  stroke: #b45309 !important;
+  stroke-width: 2.5 !important;
+  animation: map-mark-pulse 1.1s ease-in-out infinite;
+}
+
+/* Şıklı soruda yerler seçilmez: üzerine gelince parlamaz, imleç tıklanabilir göstermez. Harita yine kaydırılıp
+   yakınlaştırılabilir (olaylar kapsayıcıya düşer). */
+.map-marking [data-country-code],
+.map-marking g[data-plakakodu],
+.map-marking g[data-plakakodu] path {
+  pointer-events: none;
+}
+
+/* Yanlış cevaptan sonra doğru yerin komşuları (lib/neighbors.ts): kesik çizgili açık yeşil. Doğru ve yanlış renkleri üstün gelir:
+   tıklanan yer bir komşuysa kırmızı kalır. Hareket yok; hareket azaltmayla ilgisi bulunmuyor. */
+.map g.map-neighbor:not(.map-correct):not(.map-incorrect) path,
+.map .map-neighbor:not(.map-correct):not(.map-incorrect) {
+  fill: #bbf7d0 !important;
+  stroke: #15803d !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 6 4;
+}
+
 .map g.map-correct path,
 .map .map-correct {
   fill: #34d399 !important;
@@ -256,6 +294,8 @@ body {
   /* Seri rozeti hareketsiz durur; cevap gösterimi bitince kendiliğinden kalkar. */
   .map .map-correct,
   .map .map-incorrect,
+  .map g.map-marked path,
+  .map .map-marked,
   .score-bump,
   .streak-pop,
   .sheet-up {
@@ -924,6 +964,38 @@ body {
   animation: play-breathe 2.4s ease-in-out infinite;
 }
 
+/* Günün meydan okuması girişi: oynanmamış mod varken Oyna'dan daha yumuşak (daha küçük büyüme) ve yarım tur geç (1,2 sn gecikme)
+   nefes alır, yani ikisi sırayla atar. Alt şerit büyümez, yalnızca parlaklığı değişir (kenarlardan taşmasın). */
+@keyframes daily-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.015);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes daily-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.14);
+  }
+}
+
+.daily-breathe:not(:active) {
+  animation: daily-breathe 2.4s ease-in-out 1.2s infinite;
+}
+
+.daily-glow {
+  animation: daily-glow 2.4s ease-in-out 1.2s infinite;
+}
+
 /* Son 10 saniye: süre çubuğu yanıp söner. */
 @keyframes time-pulse {
   50% {
@@ -998,6 +1070,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .play-breathe:not(:active),
+  .daily-breathe:not(:active),
+  .daily-glow,
   .time-pulse,
   .point-float,
   .star-in {

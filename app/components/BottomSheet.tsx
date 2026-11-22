@@ -9,6 +9,8 @@ type BottomSheetProps = {
   /** Başlığın altındaki kısa açıklama. */
   description?: string;
   onClose: () => void;
+  /** Arka planı belirgin biçimde bulanıklaştırıp karartır: odak sayfada olsun (günün meydan okuması). */
+  isFocused?: boolean;
   children: React.ReactNode;
 };
 
@@ -17,7 +19,7 @@ type BottomSheetProps = {
  * Arka plana dokunmak, ✕, Esc ve Android geri tuşu kapatır. İçerik kalan yüksekliği doldurur; uzun liste kendi içinde
  * kayabilsin diye içerik `flex min-h-0 flex-1 flex-col` bir kaba yerleşir (sıralama, profildeki düello listesi).
  */
-export function BottomSheet({ title, description, onClose, children }: BottomSheetProps) {
+export function BottomSheet({ title, description, onClose, isFocused = false, children }: BottomSheetProps) {
   const titleId = useId();
   useBackHandler(onClose, BACK_PRIORITY.dialog);
 
@@ -31,7 +33,13 @@ export function BottomSheet({ title, description, onClose, children }: BottomShe
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:px-4 sm:pt-[max(1rem,env(safe-area-inset-top))] sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <button aria-label={messages().common.close} className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} tabIndex={-1} type="button" />
+      <button
+        aria-label={messages().common.close}
+        className={`absolute inset-0 ${isFocused ? "bg-slate-950/55 backdrop-blur-md" : "bg-slate-900/25 backdrop-blur-[2px]"}`}
+        onClick={onClose}
+        tabIndex={-1}
+        type="button"
+      />
 
       <div
         aria-labelledby={titleId}

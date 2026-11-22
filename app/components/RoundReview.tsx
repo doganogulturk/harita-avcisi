@@ -11,7 +11,7 @@ import { capitalOf } from "@/lib/world-capitals";
 const LIST_MAX_HEIGHT = "max-h-72";
 
 /** Sorulan yer: bayrak turunda bayrak, plaka turunda plaka, başkent turunda başkent; adı her zaman yanında. */
-function AskedLocation({ choice, location }: { choice: PlayChoice; location: string }) {
+export function AskedLocation({ choice, location }: { choice: PlayChoice; location: string }) {
   const capital = isCapitalChoice(choice) ? capitalOf(location) : undefined;
   const name = capital ? `${capital} · ${locationName(choice.mode, location)}` : locationName(choice.mode, location);
   return (
@@ -25,10 +25,29 @@ function AskedLocation({ choice, location }: { choice: PlayChoice; location: str
   );
 }
 
+/** Soru başına küçük bir kare: yeşil doğru, kırmızı yanlış. Turun özeti; dar yerde yer kaplamaz. */
+export function RoundSquares({ answers }: { answers: AnswerRecord[] }) {
+  if (answers.length === 0) return null;
+  return (
+    <div aria-hidden="true" className="flex flex-wrap gap-1">
+      {answers.map((answer, index) => (
+        <span
+          className={`flex h-6 min-w-6 items-center justify-center rounded-md px-1 text-[11px] font-bold tabular-nums ${
+            answer.location === answer.selected ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"
+          }`}
+          key={index}
+        >
+          {index + 1}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /**
- * Turun soru soru dökümü. Kapalıyken skorun altında soru başına küçük bir kare durur (yeşil doğru, kırmızı yanlış);
- * dar ekranda yer kaplamadan turun özetini verir. "Soruları gör" ile her soru bir satır olur: sorulan yer ve yanlışsa
- * oyuncunun tıkladığı yer.
+ * Turun soru soru dökümü (günlük sonuç ekranı). Kapalıyken skorun altında kareler durur; "Soruları gör" ile her soru bir
+ * satır olur: sorulan yer ve yanlışsa oyuncunun tıkladığı yer. Oyna ve antrenman sonuçları bunun yerine SessionReview'u
+ * kullanır: döküm orada her zaman açıktır.
  */
 export function RoundReview({ choice, answers }: { choice: PlayChoice; answers: AnswerRecord[] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,18 +55,7 @@ export function RoundReview({ choice, answers }: { choice: PlayChoice; answers: 
 
   return (
     <div>
-      <div aria-hidden="true" className="flex flex-wrap gap-1">
-        {answers.map((answer, index) => (
-          <span
-            className={`flex h-6 min-w-6 items-center justify-center rounded-md px-1 text-[11px] font-bold tabular-nums ${
-              answer.location === answer.selected ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"
-            }`}
-            key={index}
-          >
-            {index + 1}
-          </span>
-        ))}
-      </div>
+      <RoundSquares answers={answers} />
 
       <button
         aria-expanded={isOpen}

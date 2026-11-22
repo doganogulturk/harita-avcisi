@@ -32,6 +32,7 @@ export const SERVER_MESSAGES_EN: Readonly<Record<string, string>> = {
   "Odayı yalnızca oda sahibi başlatabilir.": "Only the room owner can start the room.",
   "Profil için giriş gerekir.": "You need to sign in to see your profile.",
   "Rozetler için giriş gerekir.": "You need to sign in to see badges.",
+  "Zayıf yerler için giriş gerekir.": "You need to sign in to see your weak spots.",
   "Sonuç kaydetmek için giriş gerekir.": "You need to sign in to save results.",
   "Tur başlatmak için giriş gerekir.": "You need to sign in to start a round.",
   "Tur bitmeden sonuç kaydedilemez.": "A result can't be saved before the round ends.",
@@ -47,6 +48,7 @@ export const SERVER_MESSAGES_EN: Readonly<Record<string, string>> = {
 const PATTERNS_EN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Aynı anda en fazla (\d+) açık odan olabilir\.$/, (match) => `You can have at most ${match[1]} open rooms at a time.`],
   [/^Geçersiz meydan okuma: /, () => "Invalid challenge."],
+  [/^Geçersiz mod: /, () => "Invalid mode."],
   [/^Geçersiz tur: /, () => "Invalid round."],
 ];
 

@@ -17,7 +17,9 @@ export type LeaderboardEntry = {
 };
 
 /**
- * "ranked": 10 soruluk, süreli, sıralamaya kaydedilen tur; giriş gerektirir.
+ * "ranked": 10 soruluk, 120 saniyelik Oyna turu (eski adıyla yarış; kimlik eski kayıtlarla uyumlu kalsın diye aynı).
+ * Giriş gerekmez; giriş yapmış oyuncunun turu sunucuda açılıp kaydedilir (profil, rozetler, en çok yanlış yapılanlar),
+ * girişsizin hiçbir şey kaydedilmez. Genel sıralama yoktur; yalnızca günün meydan okumasının sıralaması vardır.
  * "practice": girişsiz, süresiz, oyuncu bitirene kadar süren ve kaydedilmeyen antrenman.
  */
 export type PlayKind = "ranked" | "practice";
@@ -34,9 +36,33 @@ export type TurkeyPrompt = Extract<QuestionPrompt, "name" | "plate">;
  * Oyuncunun giriş ekranında seçtiği tur. Giriş gerekiyorsa giriş bitene kadar saklanır.
  * `continent` yalnızca dünya antrenmanında kullanılır; o kıtanın tüm ülkeleri sorulur.
  * `prompt` verilmezse soru ülke/il adıyla sorulur. `daily`: günün meydan okuması (lib/daily.ts); sıralamalı bir turdur,
- * soruları gün boyu herkes için aynıdır.
+ * soruları gün boyu herkes için aynıdır. `focusIds`: yalnızca antrenmanda; doluysa havuz bu yerlerle (oyuncunun zayıf
+ * yerleri) sınırlanır ve tur o yerlerle kurulur (app/page.tsx poolFor). `choices`: şıklı soru biçimi; haritada soru yerine
+ * işaretli bir yer gösterilir ve dört şıktan biri seçilir (lib/choices.ts). Cevap yine bir yer kimliğidir, sunucu aynı
+ * doğrulamayı yapar; günlük meydan okuma, düello ve odada kullanılmaz. `neighbors`: komşuluk sorusu (yalnızca Türkiye illerinde
+ * ve antrenmanda): harita bir ili işaretler, "X ile komşu olan hangisi?" diye sorulur ve dört il şık olur (lib/neighbors.ts).
+ * Soru havuzundaki il cevaptır, işaretlenen il konudur. Sunucuya kaydedilmediği için yalnızca antrenmanda vardır.
  */
-export type PlayChoice = { kind: PlayKind; mode: GameMode; difficulty: WorldDifficulty; continent?: Continent; prompt?: QuestionPrompt; daily?: boolean };
+export type PlayChoice = {
+  kind: PlayKind;
+  mode: GameMode;
+  difficulty: WorldDifficulty;
+  continent?: Continent;
+  prompt?: QuestionPrompt;
+  daily?: boolean;
+  focusIds?: readonly string[];
+  choices?: boolean;
+  neighbors?: boolean;
+};
+
+/**
+ * Bu tur sunucuda açılıp kaydedilir mi? Oyna (giriş yapmış oyuncuda) ve günlük meydan okuma kaydedilir; antrenman ve komşuluk turu
+ * kaydedilmez. Komşuluk turunda sunucu yalnızca cevap olan ili görür, sorunun konusunu bilmez; kayıt "Kayseri bilindi" gibi okunur ve
+ * 81 il rozetini ile zayıf yer listesini bozar. Giriş yapmamış oyuncunun turu bu karardan bağımsız olarak hiç kaydedilmez.
+ */
+export function isSavedChoice(choice: PlayChoice): boolean {
+  return choice.kind === "ranked" && !choice.neighbors;
+}
 
 export function isFlagChoice(choice: PlayChoice): boolean {
   return choice.mode === "world" && choice.prompt === "flag";
@@ -58,7 +84,14 @@ function promptLabel(choice: PlayChoice): string | undefined {
   if (isPlateChoice(choice)) return boards.plates;
 }
 
+/** Şıklı soru biçimindeki turun etiketi, olağan etiketin sonuna "· Şıklı" ekler (sonuç ekranı, paylaşım). */
 export function choiceLabel(choice: PlayChoice): string {
+  const label = baseChoiceLabel(choice);
+  if (choice.neighbors) return `${label} · ${messages().choice.neighbors}`;
+  return choice.choices ? `${label} · ${messages().choice.choices}` : label;
+}
+
+function baseChoiceLabel(choice: PlayChoice): string {
   const { kind, mode, difficulty, continent } = choice;
   const { boards, choice: text } = messages();
   const prompt = promptLabel(choice);
@@ -66,6 +99,8 @@ export function choiceLabel(choice: PlayChoice): string {
   if (kind === "ranked" && prompt) return prompt;
   const map = mode === "turkey" ? boards.turkey : continent ? continentInfo(continent).label : difficulty === "hard" ? boards.world : boards.legacyWorld;
   const label = prompt ? `${map} · ${prompt}` : map;
+  // Zayıf yerlerle antrenman ("Bunları çalış"): kıta yerine "Zayıf yerlerin" yazar.
+  if (kind === "practice" && choice.focusIds) return text.practice(`${prompt ? `${mode === "turkey" ? boards.turkey : boards.world} · ${prompt}` : mode === "turkey" ? boards.turkey : boards.world} · ${text.weak}`);
   return kind === "practice" ? text.practice(label) : label;
 }
 
@@ -111,6 +146,9 @@ export const BOARDS: { id: BoardId; readonly label: string; mode: GameMode; vari
   { id: "world-flags", get label() { return messages().boards.flags; }, mode: "world", variant: "flags" },
   { id: "world-capitals", get label() { return messages().boards.capitals; }, mode: "world", variant: "capitals" },
 ];
+
+/** Her sıralamanın girişleri; günün meydan okumasının sıralamaları (lib/daily.ts) bu biçimi kullanır. */
+export type Leaderboards = Record<BoardId, LeaderboardEntry[]>;
 
 /** Her sıralama için boş liste; sıralamalar yüklenemediğinde ya da henüz yüklenmediğinde. */
 export function emptyLeaderboards(): Record<BoardId, LeaderboardEntry[]> {
@@ -193,6 +231,20 @@ export type LocationStat = {
 };
 
 export const MOST_MISSED_LIMIT = 5;
+
+/** my_weak_spots fonksiyonunun bir satırı: oyuncunun kendi cevaplarından, bir modda en çok yanlış yaptığı yer. */
+export type WeakSpot = {
+  location_id: string;
+  asked: number;
+  wrong: number;
+  most_confused_with: string;
+  last_at: string;
+};
+
+/** Sonuç ekranında ve profilde gösterilen zayıf yer sayısı; "Bunları çalış" antrenmanı en çok bu kadar yerle kurulur. */
+export const WEAK_SPOTS_LIMIT = 10;
+/** Antrenman en az bu kadar yerle kurulur; daha azında tur çok kısa olur ve aynı yerler hemen tekrar eder. */
+export const WEAK_SPOTS_MIN_PRACTICE = 3;
 
 /**
  * Türkiye haritasında plaka "06" diye yazılır, soruda ise 6'dır. Sunucuya ve istatistiğe her yer
