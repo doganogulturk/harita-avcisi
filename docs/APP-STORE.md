@@ -197,8 +197,10 @@ yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına
 
 Oyna (girişsiz; Yarış ve genel sıralama kalktı), Şıklı ve Komşuluk soru biçimleri, zayıf yerler, günün meydan
 okuması ana ekranın altında. Ekran görüntüleri değiştirilmedi (1.4.0'dakiler). Sürüm sayfasında açıklama
-(Türkçe ve İngilizce) bu belgedeki yeni metinle değiştirilir; App Review Notes'a yukarıdaki inceleme notu girilir.
-Yayın otomatik.
+(Türkçe ve İngilizce) bu belgedeki yeni metinle değiştirildi. App Review Notes'un 2. ve 3. bölümleri 1.5.0'a göre
+yeniden yazıldı (Oyna → cevap biçimi → mod, Antrenman tuşu, zayıf yerler, alttaki günlük şeridi; not 4000 karakter
+sınırı için kısaltıldı, 3992). Yayın otomatik. Yapı 6, Xcode Organizer'dan yüklendi ve **22 Kasım 2026'da incelemeye
+gönderildi** (Waiting for Review). İlk "Add for Review" denemesi "unexpected error" verdi, sayfa yenilenince geçti.
 
 Türkçe:
 
