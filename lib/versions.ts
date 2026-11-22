@@ -14,6 +14,24 @@ export type Version = {
  */
 export const VERSIONS: Version[] = [
   {
+    version: "1.5.0",
+    date: { tr: "Kasım 2026", en: "November 2026" },
+    notes: {
+      tr: [
+        "Oyna için giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir.",
+        "Yeni soru biçimleri: Şıklı (işaretli yeri dört şıktan bul) ve Komşuluk (işaretli ille komşu olanı bul).",
+        "Zayıf yerlerin: en çok yanlış yaptığın yerler sonuç ekranında; tek dokunuşla onlarla antrenman yap.",
+        "Günün meydan okuması ana ekranın altında; herkese açık sıralama artık yalnızca günlük.",
+      ],
+      en: [
+        "Play needs no sign-in; sign in and your rounds add up in your profile and badges.",
+        "New question styles: Multiple choice (find the marked place among four options) and Neighbours (find the one that borders the marked province).",
+        "Your weak spots: the places you miss most on the result screen; practise them with one tap.",
+        "The daily challenge sits at the bottom of the home screen; the only public leaderboard is now the daily one.",
+      ],
+    },
+  },
+  {
     version: "1.4.0",
     date: { tr: "Kasım 2026", en: "November 2026" },
     notes: {

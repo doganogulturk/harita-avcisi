@@ -56,6 +56,16 @@ Giriş yapan oyuncunun turunun soruları sunucuda seçilir, skor ve süre sunucu
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.5.0)**
+
+```
+• Oyna için giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir
+• Yeni soru biçimleri: Şıklı — haritada işaretli yeri dört şıktan bul; Komşuluk — işaretli ille komşu olan ili bul
+• Zayıf yerlerin: en çok yanlış yaptığın yerler sonuç ekranında, tek dokunuşla onlarla antrenman yap
+• Günün meydan okuması ana ekranın altında; herkese açık sıralama artık yalnızca günlük
+• Kürsü, zirve ve şimşek rozetleri günün meydan okumasından kazanılır
+```
+
 **Sürüm notları (1.4.0)**
 
 ```
@@ -155,6 +165,16 @@ For signed-in players, round questions are picked on the server, and scores and 
 • Play in portrait or landscape; in landscape the map is twice as big
 • Sign in with Google or as a guest; Play and Practice need no account
 • No ads, no tracking
+```
+
+**Release notes (1.5.0)**
+
+```
+• Play needs no sign-in; sign in and your rounds add up in your profile and badges
+• New question styles: Multiple choice — find the marked place among four options; Neighbours — find the province bordering the marked one
+• Your weak spots: the places you miss most on the result screen; practise them with one tap
+• The daily challenge sits at the bottom of the home screen; the only public leaderboard is now the daily one
+• Podium, summit and lightning badges are earned in the daily challenge
 ```
 
 **Release notes (1.4.0)**

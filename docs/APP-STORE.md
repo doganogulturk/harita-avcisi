@@ -193,6 +193,33 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
+## Sürüm 1.5.0 (yapı 6)
+
+Oyna (girişsiz; Yarış ve genel sıralama kalktı), Şıklı ve Komşuluk soru biçimleri, zayıf yerler, günün meydan
+okuması ana ekranın altında. Ekran görüntüleri değiştirilmedi (1.4.0'dakiler). Sürüm sayfasında açıklama
+(Türkçe ve İngilizce) bu belgedeki yeni metinle değiştirilir; App Review Notes'a yukarıdaki inceleme notu girilir.
+Yayın otomatik.
+
+Türkçe:
+
+```
+• Oyna için giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir
+• Yeni soru biçimleri: Şıklı — haritada işaretli yeri dört şıktan bul; Komşuluk — işaretli ille komşu olan ili bul
+• Zayıf yerlerin: en çok yanlış yaptığın yerler sonuç ekranında, tek dokunuşla onlarla antrenman yap
+• Günün meydan okuması ana ekranın altında; herkese açık sıralama artık yalnızca günlük
+• Kürsü, zirve ve şimşek rozetleri günün meydan okumasından kazanılır
+```
+
+İngilizce (U.K.):
+
+```
+• Play needs no sign-in; sign in and your rounds add up in your profile and badges
+• New question styles: Multiple choice — find the marked place among four options; Neighbours — find the province bordering the marked one
+• Your weak spots: the places you miss most on the result screen; practise them with one tap
+• The daily challenge sits at the bottom of the home screen; the only public leaderboard is now the daily one
+• Podium, summit and lightning badges are earned in the daily challenge
+```
+
 ## Sürüm 1.4.0 (yapı 5)
 
 Ülkeler ve İller ("Haritayı tamamla"), OYNA'da Yarış / Antrenman anahtarı, Arkadaşlarla (Düello, Oda, kodla katılma),
