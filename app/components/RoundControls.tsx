@@ -83,8 +83,9 @@ export function RoundControls({ choice, onPlay, isCompact = false }: RoundContro
                 key={board.id}
                 onClick={() => {
                   setIsOpen(false);
-                  // Başka moda geçerken soru biçimi (şıklı ya da haritaya dokunma) korunur.
-                  onPlay(choice.choices ? { ...choiceForBoard(board), choices: true } : choiceForBoard(board));
+                  // Başka moda geçerken soru biçimi (haritaya dokunma, şıklı ya da komşuluk) korunur; komşuluk beş modda da var.
+                  const next = choiceForBoard(board);
+                  onPlay(choice.neighbors ? { ...next, choices: true, neighbors: true } : choice.choices ? { ...next, choices: true } : next);
                 }}
                 role="menuitem"
                 type="button"

@@ -10,8 +10,9 @@ import {
   useNeighborsStyleSeen,
   type AnswerStyle,
 } from "@/lib/intro-preferences";
+import { StyleDemo } from "./StyleDemo";
 
-type StyleOption = { id: AnswerStyle; label: string; hint: string };
+type StyleOption = { id: AnswerStyle; label: string };
 
 /** Her kartın küçük çizimi: dokunma, şıklar, komşular. Çizimler küçük ve durağandır; kartın anlamını bir bakışta verir. */
 function StyleGlyph({ id }: { id: AnswerStyle }) {
@@ -51,7 +52,7 @@ function StyleGlyph({ id }: { id: AnswerStyle }) {
 
 /**
  * Oyna ve Antrenman ayar ekranının en üstündeki soru biçimi seçicisi: üç büyük kart (Haritaya dokun, Şıklı, Komşuluk). Eskiden
- * küçük bir pil satırıydı ve ayar olduğu anlaşılmıyordu. Kartlar bir simge, başlık ve tek satır açıklama taşır; seçili olan oyunun
+ * küçük bir pil satırıydı ve ayar olduğu anlaşılmıyordu. Kartlar yalnızca simge ve başlık taşır (biçimin ne olduğunu altındaki StyleDemo gösterir); seçili olan oyunun
  * renginde doldurulur. Şıklı ve Komşuluk'ta, oyuncu o biçimi bir kez seçene kadar "YENİ" rozeti görünür (yalnızca cihazda bir bayrak).
  * Seçim hatırlanır (useAnswerStyle) ve bundan sonraki turlara taşınır.
  */
@@ -62,10 +63,12 @@ export function StylePicker({ selectedClass, isSaved }: { selectedClass: string;
   const isNeighborsSeen = useNeighborsStyleSeen();
 
   const options: StyleOption[] = [
-    { id: "tap", label: setup.styleTap, hint: setup.styleTapShort },
-    { id: "choose", label: setup.styleChoose, hint: setup.styleChooseShort },
-    { id: "neighbors", label: setup.styleNeighbors, hint: setup.styleNeighborsShort },
+    { id: "tap", label: setup.styleTap },
+    { id: "choose", label: setup.styleChoose },
+    { id: "neighbors", label: setup.styleNeighbors },
   ];
+
+  const hint = style === "neighbors" ? (isSaved ? setup.styleNeighborsRankedHint : setup.styleNeighborsHint) : style === "choose" ? setup.styleChooseHint : setup.styleTapHint;
 
   const pick = (id: AnswerStyle) => {
     setAnswerStyle(id);
@@ -103,17 +106,16 @@ export function StylePicker({ selectedClass, isSaved }: { selectedClass: string;
               <StyleGlyph id={option.id} />
               {/* Başlık kırpılmaz, gerekirse iki satıra iner ("Haritaya dokun"); kartlar aynı satırda eşit yükseklikte kalır. */}
               <span className="max-w-full font-display text-sm leading-tight font-bold break-words max-[22.5rem]:text-xs lg:text-xl">{option.label}</span>
-              {/* Açıklama yalnızca yeterli yer varsa: dar telefonda başlık ve simge yeter, alçak ekranda tek satır. */}
-              <span className="hidden max-w-full text-xs leading-snug opacity-80 min-[26rem]:block short:hidden lg:text-sm">{option.hint}</span>
             </button>
           );
         })}
       </div>
-      {/* Kartlardaki kısa açıklama dar ekranda gizlidir; seçili biçimin açıklaması bu satırda görünür. Oyna'da komşuluk seçiliyken bu satır
-          her ekranda durur: o turun kaydedilmediğini söyler (Oyna'nın öbür turları kaydedilir). */}
-      <p className={`mt-2 text-xs text-cyan-100/70 lg:text-sm ${style === "neighbors" && isSaved ? "" : "min-[26rem]:hidden"}`}>
-        {style === "neighbors" ? (isSaved ? setup.styleNeighborsRankedHint : setup.styleNeighborsHint) : style === "choose" ? setup.styleChooseHint : setup.styleTapHint}
-      </p>
+      {/* Seçili biçimin kısa animasyonu ve açıklaması (StyleDemo); biçim değişince baştan oynar. Alçak ekranda (yatay telefon) yer
+          olmadığı için animasyon gizlenir, açıklama tek satır olarak kalır. Oyna'da komşulukta açıklama turun kaydedilmediğini de söyler. */}
+      <div className="mt-2 short:hidden lg:mt-3">
+        <StyleDemo hint={hint} key={style} style={style} />
+      </div>
+      <p className="mt-1.5 hidden text-xs text-cyan-100/70 short:block">{hint}</p>
     </section>
   );
 }

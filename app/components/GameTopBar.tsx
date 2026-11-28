@@ -12,6 +12,7 @@ import {
   isCapitalChoice,
   isFlagChoice,
   isPlateChoice,
+  locationName,
   questionName,
   type AnswerState,
   type PlayChoice,
@@ -19,14 +20,15 @@ import {
   type Question,
 } from "@/lib/game";
 import { messages } from "@/lib/i18n";
+import { type NeighborAsk } from "@/lib/neighbors";
 import { capitalOf } from "@/lib/world-capitals";
 
 type GameTopBarProps = {
   player: Player | null;
   choice: PlayChoice;
   question: Question | undefined;
-  /** Komşuluk sorusunun konusu olan ilin adı ("X ile komşu olan hangisi?"); yalnızca choice.neighbors iken. */
-  subjectName?: string | null;
+  /** Komşuluk sorusunun konusu ve biçimi ("X ile komşu olan / olmayan hangisi?"); yalnızca choice.neighbors iken. */
+  neighborAsk?: NeighborAsk | null;
   answerState: AnswerState;
   answers: AnswerState[];
   questionCount: number;
@@ -117,29 +119,88 @@ function markedPromptText(choice: PlayChoice): string {
   return choice.mode === "turkey" ? prompts.turkey : prompts.world;
 }
 
+/**
+ * Olumsuz komşuluk sorusu, kalıptan: "{subject}" konunun yerine, *…* arası vurgulu ("{subject} ile komşu *olmayan* hangisi?").
+ * Kalıp dile göre sözcük sırasını belirler (İngilizcede konu sondadır).
+ */
+function NegativeQuestion({ template, subject }: { template: string; subject: React.ReactNode }) {
+  return (
+    <>
+      {template.split(/(\{subject\}|\*[^*]+\*)/).map((part, index) => {
+        if (part === "{subject}") return <span key={index}>{subject}</span>;
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return (
+            <span className="text-rose-600 underline decoration-rose-400 decoration-[3px] underline-offset-4" key={index}>
+              {part.slice(1, -1)}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
+/** Komşuluk sorusunun metni, şıkların gösterimine göre: il/ülke adı, plaka, bayrak ya da başkent. */
+function neighborQuestionKind(choice: PlayChoice): "turkey" | "plate" | "world" | "flag" | "capital" {
+  if (isPlateChoice(choice)) return "plate";
+  if (isFlagChoice(choice)) return "flag";
+  if (isCapitalChoice(choice)) return "capital";
+  return choice.mode;
+}
+
 /** Sorulan şey: ülke / il adı, bayrak, başkent ya da plaka; bayrak, başkent ve plakada cevaptan sonra yanında adı. */
 function QuestionPrompt({
   choice,
   question,
   answerState,
-  subjectName = null,
+  neighborAsk = null,
   isNarrow = false,
 }: {
   choice: PlayChoice;
   question: Question | undefined;
   answerState: AnswerState;
-  subjectName?: string | null;
+  neighborAsk?: NeighborAsk | null;
   isNarrow?: boolean;
 }) {
   const answerName = `truncate font-bold text-cyan-700 ${isNarrow ? "text-base" : "text-base lg:text-2xl"}`;
-  // Komşuluk sorusu: konunun adı sorunun kendisidir ("Kayseri ile komşu olan hangisi?"); cevap şıklarda aranır, haritada konu işaretlidir.
-  if (question && choice.neighbors && subjectName) {
+  // Komşuluk sorusu: konu sorunun kendisidir ("Kayseri ile komşu olan hangisi?"); cevap şıklarda aranır, haritada konu işaretlidir.
+  // Konu modun kendi gösterimiyle yazılır: plaka turunda plaka, bayrak turunda bayrak, diğerlerinde adı. Olumsuz soruda "olmayan"
+  // kırmızı ve altı çizili yazılır: süreli turda en sık hata olumsuzluğu okumamaktır.
+  if (question && choice.neighbors && neighborAsk) {
+    const subjectId = neighborAsk.subject;
+    const subjectName = locationName(choice.mode, subjectId);
+    const subject = isPlateChoice(choice) ? (
+      <span className="mx-0.5 inline-flex align-middle">
+        <PlateBadge plate={Number(subjectId)} size="sm" />
+      </span>
+    ) : isFlagChoice(choice) ? (
+      <Image
+        alt={subjectName}
+        className={`mx-0.5 inline w-auto rounded-sm border border-slate-200 align-middle shadow-sm ${isNarrow ? "h-7" : "h-6 lg:h-8"}`}
+        height={32}
+        key={subjectId}
+        src={flagUrl(subjectId)}
+        unoptimized
+        width={43}
+      />
+    ) : (
+      subjectName
+    );
     return (
       <>
         <h1
           className={`text-center font-display leading-tight font-bold tracking-tight text-cyan-700 ${isNarrow ? "line-clamp-2 text-2xl" : "line-clamp-1 text-xl lg:text-3xl"}`}
         >
-          {messages().game.neighborQuestion(subjectName)}
+          {neighborAsk.isNegative ? (
+            <NegativeQuestion subject={subject} template={messages().game.neighborQuestionNot[neighborQuestionKind(choice)]} />
+          ) : (
+            <>
+              {messages().game.neighborQuestion[neighborQuestionKind(choice)].before}
+              {subject}
+              {messages().game.neighborQuestion[neighborQuestionKind(choice)].after}
+            </>
+          )}
         </h1>
         {answerState && <span className={`shrink-0 ${answerName} text-slate-500`}>· {questionName(question)}</span>}
       </>
@@ -336,7 +397,7 @@ const QUESTION_CARD = "rounded-2xl border-b-4 border-slate-300 bg-white text-sla
  * (gizlenen ekran okuyucuya da görünmez).
  */
 export function GameTopBar({
-  subjectName = null,
+  neighborAsk = null,
   player,
   choice,
   onPlay,
@@ -355,6 +416,8 @@ export function GameTopBar({
   countdown = null,
 }: GameTopBarProps) {
   const isPractice = choice.kind === "practice";
+  // Olumsuz komşuluk sorusunda soru kartının alt kenarı kırmızıdır; soru tipinin değiştiği ilk bakışta görünsün.
+  const questionCard = neighborAsk?.isNegative ? QUESTION_CARD.replace("border-slate-300", "border-rose-400") : QUESTION_CARD;
   const streak = currentStreak(answers);
 
   // Son on saniyede her saniye kısa bir tık; süre baskısı hissedilsin.
@@ -426,9 +489,9 @@ export function GameTopBar({
           </div>
         )}
 
-        <div className={`mt-2 flex min-h-14 flex-col items-center justify-center px-3 py-1.5 ${QUESTION_CARD}`}>
+        <div className={`mt-2 flex min-h-14 flex-col items-center justify-center px-3 py-1.5 ${questionCard}`}>
           <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} subjectName={subjectName} />
+            <QuestionPrompt answerState={answerState} choice={choice} isNarrow question={question} neighborAsk={neighborAsk} />
           </div>
           <div aria-live="polite" className="mt-1 flex flex-wrap items-center justify-center gap-1.5 empty:mt-0">
             {celebration && (
@@ -451,8 +514,8 @@ export function GameTopBar({
           </div>
         </div>
 
-        <div className={`flex min-w-0 items-center justify-center gap-2 px-4 py-1 lg:gap-3 lg:px-6 lg:py-1.5 ${QUESTION_CARD}`}>
-          <QuestionPrompt answerState={answerState} choice={choice} question={question} subjectName={subjectName} />
+        <div className={`flex min-w-0 items-center justify-center gap-2 px-4 py-1 lg:gap-3 lg:px-6 lg:py-1.5 ${questionCard}`}>
+          <QuestionPrompt answerState={answerState} choice={choice} question={question} neighborAsk={neighborAsk} />
         </div>
 
         {isPractice ? (

@@ -14,6 +14,24 @@ export type Version = {
  */
 export const VERSIONS: Version[] = [
   {
+    version: "1.6.0",
+    date: { tr: "Kasım 2026", en: "November 2026" },
+    notes: {
+      tr: [
+        "Komşuluk artık beş modda: İller, Plakalar, Ülkeler, Bayraklar ve Başkentler.",
+        "Yeni soru: \"komşu olmayan hangisi?\" Olumlu ve olumsuz sorular karışık gelir.",
+        "Dünya turlarında yanlış cevaptan sonra doğru ülkenin komşuları da gösterilir.",
+        "Soru biçimi seçiminde, biçimin nasıl oynandığını gösteren kısa bir animasyon.",
+      ],
+      en: [
+        "Neighbours now works in all five modes: Provinces, Plates, Countries, Flags and Capitals.",
+        "New question: \"which one doesn't border it?\" Positive and negative questions come mixed.",
+        "In world rounds, a wrong answer now also shows the right country's neighbours.",
+        "A short animation shows how the chosen question style is played.",
+      ],
+    },
+  },
+  {
     version: "1.5.0",
     date: { tr: "Kasım 2026", en: "November 2026" },
     notes: {

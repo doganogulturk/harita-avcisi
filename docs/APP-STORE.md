@@ -193,6 +193,30 @@ Derlenmiş site (out/) yerelde sunularak Chrome'da (puppeteer-core) çekildi. S�
 yanıtlandı; gerçek oyuncuların adı ve fotoğrafı yok, canlı veritabanına bir şey yazılmadı. App Store Connect'te
 "iPhone" ve "iPad 13" display" bölümlerine, Türkçe ve İngilizce sayfalara ayrı ayrı yüklenir.
 
+## Sürüm 1.6.0 (yapı 7)
+
+Komşuluk beş modda (ülke komşuluk tablosu dünya haritasından), olumsuz komşuluk soruları, soru biçimi animasyonu.
+Ekran görüntüleri, açıklama ve inceleme notu değiştirilmedi; yayın otomatik. Yapı 7 komut satırından yüklendi
+(`xcodebuild -exportArchive`, bu kez Xcode hesabını gördü) ve **28 Kasım 2026'da incelemeye gönderildi**.
+
+Türkçe:
+
+```
+• Komşuluk artık beş modda: İller, Plakalar, Ülkeler, Bayraklar ve Başkentler
+• Yeni soru: "komşu olmayan hangisi?" Olumlu ve olumsuz sorular karışık gelir
+• Dünya turlarında yanlış cevaptan sonra doğru ülkenin komşuları da gösterilir
+• Soru biçimi seçiminde, biçimin nasıl oynandığını gösteren kısa bir animasyon
+```
+
+İngilizce (U.K.):
+
+```
+• Neighbours now works in all five modes: Provinces, Plates, Countries, Flags and Capitals
+• New question: "which one doesn't border it?" Positive and negative questions come mixed
+• In world rounds, a wrong answer now also shows the right country's neighbours
+• A short animation shows how the chosen question style is played
+```
+
 ## Sürüm 1.5.0 (yapı 6)
 
 Oyna (girişsiz; Yarış ve genel sıralama kalktı), Şıklı ve Komşuluk soru biçimleri, zayıf yerler, günün meydan

@@ -65,7 +65,7 @@ export const tr = {
       title: "Oyna",
       description: (questions: number, seconds: number) =>
         `${questions} soru, ${seconds} saniye. Giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir.`,
-      facts: (questions: number, seconds: number) => [`${questions} soru`, `${seconds} sn`, "Giriş gerekmez"],
+      facts: (questions: number, seconds: number) => [`${questions} soru`, `${seconds} sn`],
       action: "Başla",
     },
     practice: {
@@ -176,14 +176,11 @@ export const tr = {
     styleChoose: "Şıklı",
     styleTapHint: "Yerin adını okursun, haritada bulursun.",
     styleChooseHint: "Haritada işaretli yeri dört şıktan bulursun.",
-    styleTapShort: "Adı oku, haritada bul",
-    styleChooseShort: "İşaretli yeri şıklardan bul",
-    styleNeighborsShort: "Komşusu olanı bul",
     styleNew: "Yeni",
     start: "Başla",
     styleNeighbors: "Komşuluk",
-    styleNeighborsRankedHint: "Haritada işaretli ille komşu olan ili dört şıktan bulursun. Yalnızca Türkiye illerinde; bu tur kaydedilmez.",
-    styleNeighborsHint: "Haritada işaretli ille komşu olan ili dört şıktan bulursun. Yalnızca Türkiye illerinde.",
+    styleNeighborsRankedHint: "Haritada işaretli yerle komşu olanı dört şıktan bulursun. Bu tur kaydedilmez.",
+    styleNeighborsHint: "Haritada işaretli yerle komşu olanı dört şıktan bulursun. Kara komşusu olmayan adalar sorulmaz.",
     pickModeFor: "Mod",
     worldScope: "Dünya kapsamı",
     creating: "Kuruluyor…",
@@ -216,6 +213,7 @@ export const tr = {
     whichProvince: "hangi il?",
     whichCountry: "hangi ülke?",
     capitalWhich: (capital: string) => `${capital} hangi ülke?`,
+    neighborQuestion: (name: string) => `Hangisi ${name} ile komşudur?`,
   },
   auth: {
     back: "← Geri",
@@ -246,14 +244,32 @@ export const tr = {
     restart: "Yeniden başlat",
     progress: "Soru ilerlemesi",
     yourPick: "Senin cevabın",
-    neighborBadge: "Komşu il",
+    neighborBadge: { turkey: "Komşu il", world: "Komşu ülke" },
     neighborsOf: "Komşuları",
     timeLeft: "Kalan süre",
     flagAlt: "Sorulan ülkenin bayrağı",
     flagQuestion: "Bu bayrak hangi ülkenin?",
     choicesAria: "Şıklar",
     neighborsOfSubject: (name: string) => `${name} · komşuları`,
-    neighborQuestion: (name: string) => `${name} ile komşu olan hangisi?`,
+    /**
+     * Komşuluk sorusu, konunun öncesi ve sonrası: konu (il ya da ülke adı, plaka, bayrak) arada çizilir. Şıklar modun kendi
+     * gösterimiyle gelir, soru da onu söyler ("06 ile komşu ilin plakası hangisi?").
+     */
+    neighborQuestion: {
+      turkey: { before: "", after: " ile komşu olan hangisi?" },
+      plate: { before: "", after: " ile komşu ilin plakası hangisi?" },
+      world: { before: "", after: " ile komşu olan hangisi?" },
+      flag: { before: "", after: " ile komşu ülkenin bayrağı hangisi?" },
+      capital: { before: "", after: " ile komşu ülkenin başkenti hangisi?" },
+    },
+    /** Olumsuz komşuluk sorusu: {subject} konunun yeri, *…* vurgulanan sözcük (kırmızı, altı çizili). */
+    neighborQuestionNot: {
+      turkey: "{subject} ile komşu *olmayan* hangisi?",
+      plate: "{subject} ile komşu *olmayan* ilin plakası hangisi?",
+      world: "{subject} ile komşu *olmayan* hangisi?",
+      flag: "{subject} ile komşu *olmayan* ülkenin bayrağı hangisi?",
+      capital: "{subject} ile komşu *olmayan* ülkenin başkenti hangisi?",
+    },
     markedPrompt: {
       turkey: "Bu hangi il?",
       world: "Bu hangi ülke?",
@@ -406,6 +422,7 @@ export const tr = {
     picked: (name: string) => `Tıkladığın: ${name}`,
     you: (name: string) => `Sen: ${name}`,
     neighborOf: (name: string) => `${name} ile komşu:`,
+    notNeighborOf: (name: string) => `${name} ile komşu değil:`,
     wrong: (count: number) => `Yanlış cevapladıkların · ${count}`,
     right: (count: number) => `Doğru cevapladıkların · ${count}`,
     perfect: "Hepsini doğru bildin, yanlışın yok.",

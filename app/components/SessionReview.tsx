@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { type NeighborAsk } from "@/lib/neighbors";
 import { AskedLocation } from "./RoundReview";
 import { formatPlate, isPlateChoice, locationName, type AnswerRecord, type PlayChoice } from "@/lib/game";
 import { messages } from "@/lib/i18n";
@@ -32,18 +33,25 @@ function Chevron({ isOpen }: { isOpen: boolean }) {
  * antrenmanda ilk birkaçı görünür, gerisi "Hepsini göster" ile açılır. Hiç yanlış yoksa hiçbir şey çizilmez
  * (kusursuz tur zaten kutlanır; bkz. RoundCelebration).
  */
-/** Komşuluk turunda sorunun konusunu cevabın önüne yazar ("Kayseri ile komşu: Sivas"); diğer turlarda yalnızca cevabı. */
-function Asked({ choice, location, subject }: { choice: PlayChoice; location: string; subject?: string | null }) {
-  if (!subject) return <AskedLocation choice={choice} location={location} />;
+/**
+ * Komşuluk turunda sorunun konusunu cevabın önüne yazar: olumlu soruda "Kayseri ile komşu: Sivas", olumsuz soruda "Kayseri ile komşu
+ * değil: Malatya"; diğer turlarda yalnızca cevabı.
+ */
+function Asked({ choice, location, ask }: { choice: PlayChoice; location: string; ask?: NeighborAsk | null }) {
+  if (!ask) return <AskedLocation choice={choice} location={location} />;
+  const review = messages().review;
+  const subjectName = locationName(choice.mode, ask.subject);
   return (
     <span className="flex min-w-0 items-baseline gap-1.5">
-      <span className="shrink-0 text-xs font-semibold text-slate-500">{messages().review.neighborOf(locationName(choice.mode, subject))}</span>
+      <span className={`shrink-0 text-xs font-semibold ${ask.isNegative ? "text-rose-600" : "text-slate-500"}`}>
+        {ask.isNegative ? review.notNeighborOf(subjectName) : review.neighborOf(subjectName)}
+      </span>
       <AskedLocation choice={choice} location={location} />
     </span>
   );
 }
 
-export function WrongAnswers({ choice, answers, subjects = null }: { choice: PlayChoice; answers: AnswerRecord[]; subjects?: string[] | null }) {
+export function WrongAnswers({ choice, answers, subjects = null }: { choice: PlayChoice; answers: AnswerRecord[]; subjects?: NeighborAsk[] | null }) {
   const text = messages().review;
   const { wrong } = numberAnswers(answers);
   const [showAll, setShowAll] = useState(false);
@@ -61,7 +69,7 @@ export function WrongAnswers({ choice, answers, subjects = null }: { choice: Pla
             <li className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-2.5 py-1.5" key={number}>
               <span className="w-4 shrink-0 text-xs font-bold text-rose-400 tabular-nums">{number}</span>
               <span className="min-w-0 flex-1 text-sm">
-                <Asked choice={choice} location={answer.location} subject={subjects?.[number - 1]} />
+                <Asked choice={choice} location={answer.location} ask={subjects?.[number - 1]} />
               </span>
               <span className="max-w-[48%] shrink-0 truncate text-xs font-semibold text-rose-700" title={text.you(pickedLabel)}>
                 {text.you(pickedLabel)}
@@ -96,7 +104,7 @@ export function RightAnswers({
 }: {
   choice: PlayChoice;
   answers: AnswerRecord[];
-  subjects?: string[] | null;
+  subjects?: NeighborAsk[] | null;
   className?: string;
   /** Sağ sütunda başka bir şey yoksa (komşuluk turu) doğrular açık başlar. */
   isOpenByDefault?: boolean;
@@ -122,7 +130,7 @@ export function RightAnswers({
           {right.map(({ answer, number }) => (
             <li className="flex items-center gap-1.5 rounded-full bg-emerald-50 py-1 pr-3 pl-2 text-sm ring-1 ring-emerald-100" key={number}>
               <span className="text-[11px] font-bold text-emerald-500 tabular-nums">{number}</span>
-              <Asked choice={choice} location={answer.location} subject={subjects?.[number - 1]} />
+              <Asked choice={choice} location={answer.location} ask={subjects?.[number - 1]} />
             </li>
           ))}
         </ul>

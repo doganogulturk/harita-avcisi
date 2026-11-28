@@ -269,10 +269,11 @@ export function GameMap({
     const container = containerRef.current;
     if (!container) return;
     const isShown = answerState === "incorrect" || (alwaysShowNeighbors && answerState !== null);
-    const wanted = isShown && neighborKey ? new Set(neighborKey.split(",").map(Number)) : null;
+    // Kimlikler tek biçimde karşılaştırılır: haritada plaka "06", komşu listesinde "6"; dünyada ISO kodu.
+    const wanted = isShown && neighborKey ? new Set(neighborKey.split(",").map((id) => normalizeLocationId(mode, id))) : null;
     container.querySelectorAll<SVGGraphicsElement>(LOCATION_SELECTOR[mode]).forEach((location) => {
       const locationId = locationIdOf(location, mode);
-      location.classList.toggle("map-neighbor", wanted !== null && locationId !== undefined && wanted.has(Number(locationId)));
+      location.classList.toggle("map-neighbor", wanted !== null && locationId !== undefined && wanted.has(normalizeLocationId(mode, locationId)));
     });
   }, [alwaysShowNeighbors, answerState, mapMarkup, mode, neighborKey, question]);
 
@@ -408,7 +409,7 @@ export function GameMap({
               <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-rose-100 uppercase lg:text-xs">
                 {messages().game.yourPick}
                 {neighborIds && selectedLocation && neighborIds.some((id) => isSameLocation(mode, id, selectedLocation)) && (
-                  <span className="rounded-full bg-emerald-200 px-1.5 py-px tracking-normal text-emerald-900 normal-case">{messages().game.neighborBadge}</span>
+                  <span className="rounded-full bg-emerald-200 px-1.5 py-px tracking-normal text-emerald-900 normal-case">{messages().game.neighborBadge[mode]}</span>
                 )}
               </span>
               <span className="truncate font-display text-lg font-bold lg:text-2xl">{wrongPick}</span>

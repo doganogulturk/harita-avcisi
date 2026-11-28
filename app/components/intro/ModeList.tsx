@@ -66,7 +66,7 @@ function RowVisual({ id }: { id: BoardId }) {
 
 type ModeListProps = {
   map: GameMode;
-  /** Gösterilecek modlar, sırayla; verilmeyen mod hiç çizilmez (ör. komşuluk seçiliyken Plakalar). */
+  /** Gösterilecek modlar, sırayla; verilmeyen mod hiç çizilmez. */
   ids: BoardId[];
   /** Kaç yerden sorulduğu (satırın alt satırı). */
   countFor?: (id: BoardId) => number;

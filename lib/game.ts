@@ -39,9 +39,9 @@ export type TurkeyPrompt = Extract<QuestionPrompt, "name" | "plate">;
  * soruları gün boyu herkes için aynıdır. `focusIds`: yalnızca antrenmanda; doluysa havuz bu yerlerle (oyuncunun zayıf
  * yerleri) sınırlanır ve tur o yerlerle kurulur (app/page.tsx poolFor). `choices`: şıklı soru biçimi; haritada soru yerine
  * işaretli bir yer gösterilir ve dört şıktan biri seçilir (lib/choices.ts). Cevap yine bir yer kimliğidir, sunucu aynı
- * doğrulamayı yapar; günlük meydan okuma, düello ve odada kullanılmaz. `neighbors`: komşuluk sorusu (yalnızca Türkiye illerinde
- * ve antrenmanda): harita bir ili işaretler, "X ile komşu olan hangisi?" diye sorulur ve dört il şık olur (lib/neighbors.ts).
- * Soru havuzundaki il cevaptır, işaretlenen il konudur. Sunucuya kaydedilmediği için yalnızca antrenmanda vardır.
+ * doğrulamayı yapar; günlük meydan okuma, düello ve odada kullanılmaz. `neighbors`: komşuluk sorusu (beş modda, Oyna'da ve
+ * antrenmanda): harita bir yeri işaretler, "X ile komşu olan hangisi?" diye sorulur ve modun gösterimiyle (ad, plaka, bayrak,
+ * başkent) dört şık çıkar (lib/neighbors.ts). Soru havuzundaki yer cevaptır, işaretlenen yer konudur. Hiçbir zaman kaydedilmez.
  */
 export type PlayChoice = {
   kind: PlayKind;

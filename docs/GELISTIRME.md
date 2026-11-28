@@ -61,21 +61,27 @@ küçük karolarla (`intro/ModeTiles.tsx`) gösterir.
 **Oyna ve Antrenman** (`intro/SoloSetup.tsx`): üstte **←** tuşu ve oyunun adı; altında **"Nasıl oynamak istersin?"** soru biçimi
 seçicisi (`intro/StylePicker.tsx`); altında **Türkiye** ve **Dünya** listeleri.
 
-- **Soru biçimi seçicisi** üç büyük karttır (simge, başlık, tek satır açıklama): **Haritaya dokun**, **Şıklı**, **Komşuluk**. Seçili kart
+- **Soru biçimi seçicisi** üç büyük karttır (simge ve başlık; açıklamayı altındaki animasyon verir): **Haritaya dokun**, **Şıklı**, **Komşuluk**. Seçili kart
   oyunun renginde dolar. Şıklı ve Komşuluk'ta, oyuncu o biçimi bir kez seçene kadar **YENİ** rozeti görünür; bu yalnızca cihazda bir
   bayraktır (`harita-avcisi:style-choose-seen`, `style-neighbors-seen`), sunucuya ya da analitiğe bir şey gitmez. Kartlar rem tabanlı otomatik ızgarada durur (`repeat(auto-fit, minmax(5.5rem, 1fr))`): normal yazıda üç sütun, telefonda büyük yazı ayarı
   açıkken iki ya da bir sütun; böylece başlık ("Haritaya dokun") kelime ortasından bölünmez ve kırpılmaz, dar ekranda gerekirse iki satıra iner.
-  Kartlardaki kısa açıklama 416 pikselin altında ve alçak ekranda gizlenir; seçili biçimin açıklaması kartların altında tek satır olarak görünür. Seçici bir
-  mod değil bir biçimdir ve beş modun hepsine uygulanır; Komşuluk bunun tek istisnasıdır (aşağıda).
+- **Biçim animasyonu** (`intro/StyleDemo.tsx`): kartların altında seçili biçimin kısa bir sahnesi ve açıklaması durur. Tanıtımdaki harita
+  döngüsüyle aynı görsel dil (beyaz kart, oyun haritasının renkleri, soru çipi); sahneler Türkiye illeriyle kurulur ve harita sahnenin
+  illerine yakınlaşır. **Haritaya dokun:** "Ankara nerede?", parmak Ankara'ya kayıp dokunur, Ankara yeşil yanar. **Şıklı:** Konya işaretlenir,
+  dört şıktan Konya seçilir. **Komşuluk:** Kayseri işaretlenir, "Kayseri ile komşu olan hangisi?", Sivas seçilir, ardından Kayseri'nin bütün
+  komşuları kesik çizgiyle belirir. Biçim değişince sahne baştan oynar, üç kez döndükten sonra son karede durur; hareket azaltma açıksa
+  doğrudan son kare gösterilir. Animasyon ekran okuyucudan gizlidir, açıklama metni okunur (Oyna'da komşulukta "bu tur kaydedilmez" de).
+  Alçak ekranda (yatay telefon) yer olmadığı için animasyon gizlenir, açıklama tek satır kalır. Biçim seçimine bağlıdır, moda bağlı değildir:
+  oyuncunun anlamadığı şey modlar değil biçimdir. Seçici bir
+  mod değil bir biçimdir ve beş modun hepsine uygulanır (Komşuluk dahil).
 - **Mod listeleri** iPhone Ayarlar gibi tek bir kapta, ince çizgilerle ayrılmış satırlardır. Her satırda solda modun görseli
   (Türk bayrağı, plaka, dünya, bayrak destesi, başkent binası), ortada adı ve kaç yerden sorulduğu, sağda **Başla** tuşu durur;
   satırın tamamı da dokunmayla başlatır (küçük tuş tek hedef olsaydı dokunma alanı daralırdı). **Renk tektir**: Türkiye kırmızı, Dünya
   mavi; eskiden beş modun beş ayrı rengi göz yoruyordu, artık modlar renkle değil görselleriyle ayrışır. Dikey telefonda bölümler alt alta,
   alçak ve geniş ekranda yan yana durur (Dünya daha geniş sütunda). Dar ekranda (≤360 piksel) **Başla** yazısı gizlenir, yalnızca oynat
   simgesi kalır. Harita henüz yüklenmediyse satır "hazırlanıyor" der ve kapalıdır.
-- **Komşuluk seçiliyken** yalnızca **İller** satırı kalır: Plakalar satırı ve bütün Dünya bölümü gizlenir (kapalı gri satır yerine, liste
-  dağınık görünmesin ve "neden kapalı" sorusu doğmasın) ve İller listesi en çok 42rem genişliğinde durur. Ülkeler ve Bayraklar için
-  komşuluk eklenirse bu satırlar listede kalır.
+- **Komşuluk seçiliyken** beş mod da listede kalır; Dünya satırlarının sayısı yalnızca kara komşusu olan ülkeleri sayar (ada ülkeleri
+  komşuluk sorusunda sorulmaz).
 - Giriş gerekmez, bağlantı yokken de oynanır. Antrenmanda Dünya bölümünün başlığının **bir alt satırında** kıta seçimi durur (Tümü, Afrika,
   Amerika, Asya, Avrupa); yan yana olunca dar ekranda taşıp yatay kayıyordu, şimdi sarmalanır ve hiçbir seçenek gizlenmez (360-412 pikselde tek
   satır, 320'de iki satır). Ülkeler ve Bayraklar'ın sayısı seçilen kıtaya göre değişir.
@@ -199,8 +205,7 @@ yazılmaz: `npm run maps:neighbors` (`scripts/build-neighbors.mjs`) `public/maps
 bütün iller aynı sınır noktalarını paylaştığı için iki il en az 2 ortak köşede buluşuyorsa komşudur (tek köşede değen iller, yani
 dörtlü kavşaklar komşu sayılmaz). Üretilen dosyanın başında kaynağın özeti (sha256) yazar; `tests/neighbors.test.ts` il haritası
 değişmişse (özet tutmuyorsa) tablonun yeniden üretilmesi gerektiğini söyler. Elle düzeltme gerekirse betikteki `CORRECTIONS`'a nedeniyle
-yazılır; şu an boştur. Yalnızca Türkiye vardır: `world.svg`'de ülkeler arasında boşluk bulunduğu için aynı yöntem dünyada çalışmaz
-(Fransa–Almanya gibi çiftlerde ortak köşe sıfır çıkar) ve ülkeler için dış bir veri kaynağı ve lisans kararı gerekir.
+yazılır; şu an boştur. Bu yöntem dünyada çalışmaz (`world.svg`'de ülkeler arasında boşluk var); ülkeler için aşağıya bakın.
 
 **Doğrulama (2026-11).** Harita çıktısı iki bağımsız kaynakla karşılaştırıldı. Wikidata'nın "ortak sınır" ilişkisiyle 197 çift
 uyuştu, 3 çift ayrıştı; ayrışanlar OpenStreetMap il sınırlarında ortak sınır çizgisi (way) aranarak çözüldü ve harita üçünde de doğru
@@ -210,23 +215,64 @@ olarak yalnızca yukarıdaki iki kaynak sayılır. `tests/neighbors.test.ts` do�
 denetler. Sınır: bu karşılaştırma yalnızca kara sınırını ölçer; deniz ya da boğaz karşısında kalan iller komşu sayılmaz. Üç kaynağın
 haberleşmediği (hepsinin aynı hatayı yaptığı) bir çift olabilir; 199 çiftin her biri tek tek elle sınanmadı.
 
+### Komşuluk (dünya)
+
+**Tablo.** `lib/world-neighbors.ts` haritadaki 179 ülkenin kara sınırı komşularını tutar (299 çift; 149 ülkenin kara komşusu var, 30 ülke
+adadır ve listesi boştur). `npm run maps:world-neighbors` (`scripts/build-world-neighbors.mjs`) `public/maps/world.svg` içinden üretir; dış
+veri ya da lisans gerekmez. Haritada ülkeler sınır noktalarını paylaşmadığı için yakınlık ölçülür: bir ülkenin sınırında öbür ülkeye 1
+birimden (~0,45 derece) yakın kalan uzunluk iki yönde ölçülür, küçüğü 0,5 birimi geçiyorsa komşudur. Haritada olmayan küçük ülkeler
+(Andorra, Vatikan, Lihtenştayn…) sayılmaz. `tests/neighbors.test.ts` harita değişince (özet tutmazsa) yeniden üretmeyi söyler.
+
+**Doğrulama (2026-11).** Haritanın çıktısı Wikidata'nın "ortak sınır" (P47) ilişkisiyle karşılaştırıldı; Wikidata deniz sınırlarını da
+saydığı için ondan gelen fazlalar (İran–BAE, Japonya–Kore…) alınmadı, iki yöndeki farklar ve 308 aday çiftin tamamı elle gözden geçirildi.
+Betikteki `CORRECTIONS` 15 düzeltme içerir, her biri nedeniyle:
+
+- **Çıkarılan, deniz ya da boğaz karşısı:** Danimarka–İsveç, Cibuti–Yemen, Eritre–Yemen, Mısır–Ürdün, Mısır–Suudi Arabistan,
+  Malezya–Singapur, BAE–Katar. Pakistan–Tacikistan da çıkarıldı (Vahan koridoru haritada çok ince).
+- **Eklenen:** Afganistan–Çin (Vahan), Azerbaycan–Türkiye (Nahçıvan haritada yok), Cibuti–Somali (Somaliland haritada ayrı ve
+  sorulmayan bir parça).
+- **Bilerek çıkarılan:** Fransa–Brezilya ve Fransa–Surinam (Fransız Guyanası; gerçek ama oyunda yanıltıcı), Fas–Moritanya (Batı Sahra
+  haritada Fas'a katılmış), Arnavutluk–Sırbistan (Kosova haritada Sırbistan'a katılmış). İspanya–Fas (Seuta, Melilla) ve Birleşik
+  Krallık–İspanya (Cebelitarık) haritada zaten çıkmaz.
+
+Bir düzeltme gereksiz hale gelirse (harita değişip çift kendiliğinden doğru çıkarsa) betik hata verir.
+
 **Oyundaki kullanımı.** İller ve Plakalar'da, Oyna, Antrenman ve günlük meydan okumada, yanlış cevaptan sonra doğru ilin komşuları
 haritada kesik çizgili açık yeşille (`map-neighbor`) işaretlenir ve adları haritanın altında yazar ("Komşuları: Adıyaman · Diyarbakır ·
 …"). Oyuncunun tıkladığı yer doğru ilin komşusuysa kırmızı kalır ve "Senin cevabın" etiketine **Komşu il** rozeti eklenir. Doğru cevapta
-hiçbir şey gösterilmez; dünya haritasında yoktur. Düello ve odada kapalıdır (`GameMap.neighborIds` verilmez).
+hiçbir şey gösterilmez. Dünya turlarında da aynısı olur ("Komşu ülke" rozeti); kıta antrenmanında yalnızca kıtadaki komşular yazılır.
+Düello ve odada kapalıdır (`GameMap.neighborIds` verilmez).
 
-### Komşuluk sorusu (Oyna ve Antrenman, yalnızca İller, kaydedilmez)
+### Komşuluk sorusu (Oyna ve Antrenman, beş modda, kaydedilmez)
 
-Oyna ve Antrenman ayar ekranlarındaki **Soru biçimi** seçicisinin üçüncü seçeneği **Komşuluk**'tur. Seçilince yalnızca **İller** karosu açık
-kalır; Plakalar ve Dünya bölümü listeden çıkar (komşuluk yalnızca Türkiye illerinde vardır). Oyna'da tur 10 soru ve 120 saniyedir, Antrenman'da süresiz
-sürer. Soru "Kayseri ile komşu olan hangisi?" biçimindedir:
+Oyna ve Antrenman ayar ekranlarındaki **Soru biçimi** seçicisinin üçüncü seçeneği **Komşuluk**'tur ve beş modda da oynanır. Oyna'da tur 10 soru ve 120 saniyedir, Antrenman'da süresiz
+sürer. Soru ve şıklar modun gösterimiyle gelir:
+
+| Mod | Soru | Şıklar |
+| --- | --- | --- |
+| İller | Kayseri ile komşu olan hangisi? | il adları |
+| Plakalar | [38] ile komşu ilin plakası hangisi? | plakalar |
+| Ülkeler | Fransa ile komşu olan hangisi? | ülke adları |
+| Bayraklar | [bayrak] ile komşu ülkenin bayrağı hangisi? | bayraklar |
+| Başkentler | Fransa ile komşu ülkenin başkenti hangisi? | başkentler |
+
+Dünyada yalnızca turun kapsamında (kıta antrenmanında o kıta, başkent turunda başkenti listede olan ülkeler; `neighborUniverse`) kara
+komşusu olan ülkeler sorulur (`neighborPool`); konu ve şıklar da bu kapsamdan seçilir, böylece işaretli ülke hiç soluk kalmaz ve başkent
+şıkkı hep vardır. Oyun içi mod menüsü komşuluk biçimini korur.
 
 - **Konu ve cevap.** Soru havuzundaki il cevaptır; haritada işaretlenen (turuncu çerçeveli, sarı) il **konu**dur ve cevabın komşularından
-  biridir. Konu, tur numarası ve sorunun sırasından türetilir (`neighborSubject`, `lib/neighbors.ts`): aynı soruda hep aynıdır, sonuç ekranı
+  biridir. Konu, tur numarası ve sorunun sırasından türetilir (`neighborAsk`, `lib/neighbors.ts`): aynı soruda hep aynıdır, sonuç ekranı
   soru başına konuyu yeniden kurar, ayrıca bir yerde saklanmaz.
-- **Şıklar** (`neighborOptions`): cevap ve konuyla komşu olmayan üç il. Yanlış şıklar önce "komşunun komşusu" illerden seçilir (konuya yakın
-  ama komşu değil), yetmezse kalan illerden tamamlanır; konunun kendisi şık olmaz. Şıklardan yalnızca biri konunun komşusudur; bu, 81 ilin
-  hepsi ve bütün komşuları için `tests/neighbors.test.ts`'te denetlenir.
+- **Olumlu ve olumsuz sorular karışık gelir** (`neighborAsk`): soruların yaklaşık üçte biri "Kayseri ile komşu **olmayan** hangisi?" biçimindedir.
+  Hangi sorunun olumsuz olacağı da tur ve sıradan türetilir. İki biçimde de soru havuzundaki yer doğru cevaptır (tur, cevap denetimi ve
+  sonuç ekranı değişmez): olumsuz soruda konu, cevabın "komşusunun komşusu" halkasından seçilir (cevapla komşu değil, ortak bir komşuları
+  var; uzak bir yer soruyu bedavaya çevirirdi) ve evrende en az üç komşusu olmalıdır, şıklar cevap ve konunun üç komşusudur. Böyle bir konu
+  yoksa soru olumlu sorulur. Olumsuzluk gözden kaçmasın diye "olmayan" kırmızı ve altı çizili yazılır, soru kartının alt kenarı kırmızıdır;
+  sonuç dökümünde satır "Kayseri ile komşu değil: Malatya" der. Metin kalıbı dile göre sözcük sırasını belirler (`neighborQuestionNot`,
+  `{subject}` konunun yeri, `*…*` vurgu). Biçim animasyonu yalnızca olumlu soruyu gösterir.
+- **Şıklar** (`neighborOptions`): olumlu soruda cevap ve konuyla komşu olmayan üç yer. Yanlış şıklar önce "komşunun komşusu" illerden seçilir (konuya yakın
+  ama komşu değil), yetmezse kapsamın geri kalanından tamamlanır; konunun kendisi şık olmaz. Şıklardan yalnızca biri konunun komşusudur; bu,
+  81 ilin hepsi ve dünyada her kapsamda kara komşusu olan her ülke için `tests/neighbors.test.ts`'te denetlenir.
 - **Cevaptan sonra**, doğru da yanlış da olsa: konunun bütün komşuları haritada kesik çizgili açık yeşille işaretlenir ve adları yazılır
   ("Erzincan · komşuları: Bayburt · Bingöl · …"); doğru cevap düz yeşil, yanlış seçilen kırmızı, konu işaretli kalır. Olağan turlarda
   komşular yalnızca yanlış cevaptan sonra gösterilir (`GameMap.alwaysShowNeighbors`).
@@ -607,7 +653,8 @@ lib/
   world-countries.ts    179 ülke + ISO kodu; eski "normal" düellolarının havuzu ("common"), kıta listeleri, kıta görünümleri ve kapsamlar (WorldScope)
   shuffle.ts            Fisher-Yates karıştırma
   choices.ts            Şıklı soru için dört şık: doğru cevap ve aynı bölge/kıtadan üç yanlış
-  neighbors.ts          neighborIds / areNeighbors: bir ilin komşuları; neighborSubject / neighborOptions: komşuluk sorusunun konusu ve şıkları (yalnızca Türkiye)
+  neighbors.ts          neighborIds / areNeighbors: bir yerin komşuları; neighborPool / neighborUniverse / neighborAsk / neighborOptions: komşuluk sorusu (il ve ülke)
+  world-neighbors.ts    ülke komşuluk tablosu (scripts/build-world-neighbors.mjs üretir)
   turkish-neighbors.ts  81 ilin komşuluk tablosu (scripts/build-neighbors.mjs üretir, elle düzenlenmez)
   supabase.ts           Supabase istemcisi (env yoksa null döner)
   auth.ts               Google ve misafir girişi (ana sayfa ve düello ortak kullanır)

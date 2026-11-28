@@ -2,8 +2,13 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isSavedChoice, turkeyChoice, worldChoice } from "@/lib/game";
-import { areNeighbors as neighborsInMode, neighborIds, neighborOptions, neighborSubject } from "@/lib/neighbors";
+import { areNeighbors as neighborsInMode, neighborAsk, neighborIds, neighborOptions, type NeighborAsk } from "@/lib/neighbors";
+import { type GameMode } from "@/lib/game";
+import { neighborPool, neighborUniverse } from "@/lib/neighbors";
 import { NEIGHBORS, NEIGHBORS_SOURCE_HASH } from "@/lib/turkish-neighbors";
+import { capitalOf } from "@/lib/world-capitals";
+import { countries, countriesIn } from "@/lib/world-countries";
+import { WORLD_NEIGHBORS, WORLD_NEIGHBORS_SOURCE_HASH } from "@/lib/world-neighbors";
 import { provinces } from "@/lib/turkish-plates";
 
 const plate = (city: string) => provinces.find((province) => province.city === city)!.plate;
@@ -72,9 +77,11 @@ describe("lib/neighbors: oyundaki kullanım", () => {
     expect(neighborIds("turkey", "06")).toEqual(neighborIds("turkey", "6"));
   });
 
-  it("dünya için komşu yoktur (harita ülkeler arasında boşluklu); bilinmeyen kimlik boş döner", () => {
-    expect(neighborIds("world", "fr")).toEqual([]);
-    expect(neighborsInMode("world", "fr", "de")).toBe(false);
+  it("dünyada ISO koduyla komşuları verir; ada ülkelerinin ve bilinmeyen kimliğin listesi boştur", () => {
+    expect(neighborIds("world", "fr")).toContain("de");
+    expect(neighborsInMode("world", "fr", "de")).toBe(true);
+    expect(neighborIds("world", "jp")).toEqual([]);
+    expect(neighborIds("world", "zz")).toEqual([]);
     expect(neighborIds("turkey", "999")).toEqual([]);
   });
 
@@ -85,30 +92,76 @@ describe("lib/neighbors: oyundaki kullanım", () => {
     expect(neighborsInMode("turkey", "34", "22")).toBe(false);
   });
 });
+/**
+ * Bir komşuluk sorusunun kuralları: dört benzersiz şık, cevap içinde, konu şık değil. Olumlu soruda konu cevabın komşusudur ve şıklardan
+ * yalnızca cevap konuyla komşudur; olumsuz soruda cevap konuyla komşu değildir ve öbür üç şıkkın hepsi konunun komşusudur.
+ */
+function checkAsk(mode: GameMode, answer: string, ask: NeighborAsk, options: string[]) {
+  const label = `${ask.isNegative ? "olumsuz" : "olumlu"}: konu ${ask.subject}, cevap ${answer}`;
+  const borders = (id: string) => neighborsInMode(mode, ask.subject, id);
+  expect(options, label).toHaveLength(4);
+  expect(new Set(options).size, label).toBe(4);
+  expect(options, label).toContain(answer);
+  expect(options, label).not.toContain(ask.subject);
+  if (ask.isNegative) {
+    expect(borders(answer), label).toBe(false);
+    expect(options.filter((id) => !borders(id)), label).toEqual([answer]);
+  } else {
+    expect(borders(answer), label).toBe(true);
+    expect(options.filter(borders), label).toEqual([answer]);
+  }
+}
+
 describe("komşuluk sorusu: konu ve şıklar", () => {
   const plates = provinces.map((province) => province.plate);
 
-  it("konu her zaman cevabın komşusudur ve aynı turda aynı soru için hep aynıdır", () => {
+  it("81 ilin her biri, olumlu ve olumsuz sorularda: konu kurala uyar, şıklarda soruya yalnızca cevap uyar, aynı soru hep aynıdır", () => {
     for (const answer of plates) {
-      for (const [roundKey, index] of [[0, 0], [3, 7], [41, 19]] as const) {
-        const subject = neighborSubject(String(answer), roundKey, index);
-        expect(NEIGHBORS[answer], `${answer} → ${subject}`).toContain(Number(subject));
-        expect(neighborSubject(String(answer), roundKey, index)).toBe(subject);
+      for (let index = 0; index < 12; index += 1) {
+        const ask = neighborAsk("turkey", String(answer), 5, index);
+        expect(neighborAsk("turkey", String(answer), 5, index)).toEqual(ask);
+        for (let run = 0; run < 2; run += 1) checkAsk("turkey", String(answer), ask, neighborOptions("turkey", ask.subject, String(answer), undefined, ask.isNegative));
       }
     }
   });
 
   it("konu, tur ve sıraya göre değişir (her soruda aynı komşu çıkmaz)", () => {
     const seen = new Set<string>();
-    for (let index = 0; index < 60; index += 1) seen.add(neighborSubject("6", 2, index)); // Ankara'nın 7 komşusu var
+    for (let index = 0; index < 60; index += 1) seen.add(neighborAsk("turkey", "6", 2, index).subject);
     expect(seen.size).toBeGreaterThan(3);
+  });
+
+  it("soruların yaklaşık üçte biri olumsuzdur; bir tur hem olumlu hem olumsuz soru içerir", () => {
+    let negatives = 0;
+    let total = 0;
+    for (const answer of plates) {
+      for (let roundKey = 0; roundKey < 20; roundKey += 1) {
+        for (let index = 0; index < 10; index += 1) {
+          total += 1;
+          if (neighborAsk("turkey", String(answer), roundKey, index).isNegative) negatives += 1;
+        }
+      }
+    }
+    expect(negatives / total).toBeGreaterThan(0.25);
+    expect(negatives / total).toBeLessThan(0.4);
+  });
+
+  it("olumsuz soruda cevap konuya yakındır: ortak bir komşuları vardır", () => {
+    for (const answer of plates) {
+      for (let index = 0; index < 30; index += 1) {
+        const ask = neighborAsk("turkey", String(answer), 3, index);
+        if (!ask.isNegative) continue;
+        const shared = NEIGHBORS[answer].filter((id) => NEIGHBORS[Number(ask.subject)].includes(id));
+        expect(shared.length, `konu ${ask.subject}, cevap ${answer}`).toBeGreaterThan(0);
+      }
+    }
   });
 
   it("81 ilin her biri için: dört benzersiz şık, cevap içinde, konu şık değil ve konunun komşusu yalnızca cevap", () => {
     for (const answer of plates) {
       for (const subject of NEIGHBORS[answer]) {
         for (let run = 0; run < 4; run += 1) {
-          const options = neighborOptions(String(subject), String(answer));
+          const options = neighborOptions("turkey", String(subject), String(answer));
           const label = `konu ${subject}, cevap ${answer}`;
           expect(options, label).toHaveLength(4);
           expect(new Set(options).size, label).toBe(4);
@@ -128,16 +181,102 @@ describe("komşuluk sorusu: konu ve şıklar", () => {
     const secondRing = new Set<number>();
     for (const neighbor of direct) for (const other of NEIGHBORS[neighbor]) if (other !== Number(subject) && !direct.has(other)) secondRing.add(other);
     for (let run = 0; run < 30; run += 1) {
-      const wrong = neighborOptions(subject, String(plate("Sivas"))).filter((id) => id !== String(plate("Sivas")));
+      const wrong = neighborOptions("turkey", subject, String(plate("Sivas"))).filter((id) => id !== String(plate("Sivas")));
       for (const id of wrong) expect(secondRing.has(Number(id)), `yanlış şık ${id}`).toBe(true);
     }
   });
 
   it("kimlikler sunucunun kalıbına uyar (başında sıfır yok)", () => {
-    for (const id of neighborOptions("1", "31")) expect(id).toMatch(/^([1-9]|[1-7][0-9]|8[01])$/);
-    expect(neighborOptions("01", "031")).toContain("31");
+    for (const id of neighborOptions("turkey", "1", "31")) expect(id).toMatch(/^([1-9]|[1-7][0-9]|8[01])$/);
+    expect(neighborOptions("turkey", "01", "031")).toContain("31");
   });
 });
+describe("ülke komşuluk tablosu", () => {
+  const borders = (a: string, b: string) => WORLD_NEIGHBORS[a].includes(b);
+
+  it("179 ülkenin hepsi var, simetrik, tekrar ve kendisiyle komşuluk yok", () => {
+    expect(Object.keys(WORLD_NEIGHBORS).sort()).toEqual(countries.map((country) => country.code).sort());
+    for (const [code, list] of Object.entries(WORLD_NEIGHBORS)) {
+      expect(list, code).not.toContain(code);
+      expect(new Set(list).size, `${code} tekrar`).toBe(list.length);
+      for (const other of list) expect(WORLD_NEIGHBORS[other], `${code} → ${other}`).toContain(code);
+    }
+  });
+
+  it("tablo, üretildiği dünya haritasıyla güncel (harita değişirse scripts/build-world-neighbors.mjs yeniden çalıştırılır)", () => {
+    const svg = readFileSync(new URL("../public/maps/world.svg", import.meta.url), "utf8");
+    expect(createHash("sha256").update(svg).digest("hex").slice(0, 16)).toBe(WORLD_NEIGHBORS_SOURCE_HASH);
+  });
+
+  /**
+   * Bağımsız doğrulama (2026-11): haritadan çıkan çiftler Wikidata'nın "ortak sınır" ilişkisiyle karşılaştırıldı ve tam liste
+   * elle gözden geçirildi (docs/GELISTIRME.md, "Komşuluk (dünya)"). Elle düzeltilen çiftler burada kalıcı olarak denetlenir.
+   */
+  it("komşu sayıları bilinen ülkeler", () => {
+    expect([...WORLD_NEIGHBORS.tr]).toEqual(["am", "az", "bg", "ge", "gr", "iq", "ir", "sy"]);
+    expect(WORLD_NEIGHBORS.ru).toHaveLength(14);
+    expect(WORLD_NEIGHBORS.cn).toHaveLength(14);
+    expect([...WORLD_NEIGHBORS.de]).toEqual(["at", "be", "ch", "cz", "dk", "fr", "lu", "nl", "pl"]);
+  });
+
+  it("elle eklenen kara sınırları: Vahan, Nahçıvan, Cibuti–Somali", () => {
+    for (const [a, b] of [["af", "cn"], ["az", "tr"], ["dj", "so"]]) expect(borders(a, b), `${a} – ${b}`).toBe(true);
+  });
+
+  it("deniz karşısı, denizaşırı toprak ve haritada ayrı çizilmeyen bölgeler komşu sayılmaz", () => {
+    const strangers = [
+      ["dk", "se"], ["dj", "ye"], ["er", "ye"], ["eg", "jo"], ["eg", "sa"], ["my", "sg"], ["ae", "qa"], ["pk", "tj"],
+      ["fr", "br"], ["fr", "sr"], ["ma", "mr"], ["al", "rs"], ["es", "ma"], ["gb", "fr"], ["it", "tn"],
+    ];
+    for (const [a, b] of strangers) expect(borders(a, b), `${a} – ${b}`).toBe(false);
+  });
+
+  it("ada ülkelerinin kara komşusu yoktur; Haiti–Dominik, İrlanda–Birleşik Krallık, Endonezya–Papua Yeni Gine vardır", () => {
+    for (const code of ["jp", "au", "nz", "is", "lk", "mg", "cu", "ph", "tw", "sg"]) expect(WORLD_NEIGHBORS[code], code).toEqual([]);
+    for (const [a, b] of [["do", "ht"], ["gb", "ie"], ["id", "pg"], ["bn", "my"]]) expect(borders(a, b), `${a} – ${b}`).toBe(true);
+  });
+});
+
+describe("komşuluk sorusu: dünya", () => {
+  it("havuzdan kara komşusu olmayan ülkeler çıkar; kıta havuzunda komşu kıta içinden olmalı", () => {
+    const all = neighborPool("world", countries).map((country) => country.code);
+    expect(all).toContain("fr");
+    expect(all).not.toContain("jp");
+    expect(all.length).toBe(Object.values(WORLD_NEIGHBORS).filter((list) => list.length > 0).length);
+    // Avrupa'da Kıbrıs adadır; Türkiye ise Avrupa'da da sorulur ve komşuları Avrupa'dadır
+    const europe = neighborPool("world", countriesIn("europe")).map((country) => country.code);
+    expect(europe).not.toContain("cy");
+    expect(europe).toContain("tr");
+  });
+
+  it("konu evrenin içinden seçilir; şıklarda yalnızca cevap konunun komşusudur", () => {
+    for (const scope of ["all", "europe", "africa", "asia", "america"] as const) {
+      const pool = scope === "all" ? countries : countriesIn(scope);
+      const universe = neighborUniverse("world", pool);
+      for (const country of neighborPool("world", pool)) {
+        for (const index of [0, 1, 2, 3, 4, 5]) {
+          const ask = neighborAsk("world", country.code, 7, index, universe);
+          const options = neighborOptions("world", ask.subject, country.code, universe, ask.isNegative);
+          expect(universe.has(ask.subject), `${scope}: konu ${ask.subject}`).toBe(true);
+          for (const id of options) expect(universe.has(id), `${scope}: şık ${id}`).toBe(true);
+          checkAsk("world", country.code, ask, options);
+        }
+      }
+    }
+  });
+
+  it("başkent turunda şıkların hepsinin başkenti vardır", () => {
+    const pool = countries.filter((country) => capitalOf(country.code));
+    const universe = neighborUniverse("world", pool);
+    for (const country of neighborPool("world", pool)) {
+      for (const index of [0, 1, 2]) {
+        const ask = neighborAsk("world", country.code, 1, index, universe);
+        for (const id of neighborOptions("world", ask.subject, country.code, universe, ask.isNegative)) expect(capitalOf(id), id).toBeTruthy();
+      }
+    }
+  });
+});
+
 describe("hangi turlar kaydedilir", () => {
   it("Oyna ve günlük kaydedilir; antrenman ve komşuluk turu (Oyna'da bile) kaydedilmez", () => {
     expect(isSavedChoice(turkeyChoice("ranked", "name"))).toBe(true);

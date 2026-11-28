@@ -9,7 +9,7 @@ import { IntroScreen } from "./components/IntroScreen";
 import { PlayTips } from "./components/PlayTips";
 import { ResultScreen } from "./components/ResultScreen";
 import { choiceOptions } from "@/lib/choices";
-import { neighborIds, neighborOptions, neighborSubject } from "@/lib/neighbors";
+import { neighborIds, neighborAsk, neighborOptions, neighborPool, neighborUniverse } from "@/lib/neighbors";
 import { startRankedRound, useRoundSave } from "@/lib/hooks/useRoundSave";
 import { useMostMissed } from "@/lib/hooks/useMostMissed";
 import { useWeakSpots } from "@/lib/hooks/useWeakSpots";
@@ -70,10 +70,17 @@ function writePendingChoice(choice: PlayChoice | null) {
   }
 }
 
-function poolFor(choice: PlayChoice): Question[] {
+/** Turun kapsamı: Türkiye'de 81 il, dünyada seçilen kıta ya da bütün ülkeler; başkent turunda yalnızca başkenti listede olanlar. */
+function scopePoolFor(choice: PlayChoice): Question[] {
   const pool: Question[] = choice.mode === "turkey" ? provinces : choice.continent ? countriesIn(choice.continent) : countries;
   // Başkent turunda başkenti listede olmayan ülkeler (tartışmalılar, bağlı topraklar) sorulmaz.
-  const asked = choice.mode === "world" && isCapitalChoice(choice) ? pool.filter((question) => capitalOf(correctLocationId(question))) : pool;
+  return choice.mode === "world" && isCapitalChoice(choice) ? pool.filter((question) => capitalOf(correctLocationId(question))) : pool;
+}
+
+function poolFor(choice: PlayChoice): Question[] {
+  const scope = scopePoolFor(choice);
+  // Komşuluk turunda yalnızca kapsamda komşusu olan yerler sorulur (ada ülkeleri sorulmaz).
+  const asked = choice.neighbors ? neighborPool(choice.mode, scope) : scope;
   // "Bunları çalış": oyuncunun zayıf yerleri. Havuz yalnızca bu yerlerle kurulur; sunucudan eski bir yer kodu gelirse sorulmaz.
   if (!choice.focusIds) return asked;
   const focus = new Set(choice.focusIds);
@@ -111,24 +118,28 @@ export default function Home() {
   const phase: GamePhase = round.status === "idle" ? "ready" : round.status;
   const roundId = round.roundKey;
   // Şıklı soru: dört şık soru başına bir kez üretilir (aynı soru antrenmanda yeniden gelince şıklar da yenilenir).
-  // Komşuluk sorusunda haritada işaretlenen il konudur ("X ile komşu olan hangisi?"), soru havuzundaki il cevaptır. Konu, tur ve
-  // sorunun sırasından türetilir (lib/neighbors.ts): aynı soruda hep aynıdır, sonuç ekranı yeniden kurabilir.
-  const subjectId = useMemo(
-    () => (choice.neighbors && currentQuestion ? neighborSubject(correctLocationId(currentQuestion), roundId, questionIndex) : null),
-    [choice.neighbors, currentQuestion, questionIndex, roundId],
+  // Komşuluk sorusunda haritada işaretlenen yer konudur ("X ile komşu olan / olmayan hangisi?"), soru havuzundaki yer cevaptır.
+  // Konu ve sorunun olumlu mu olumsuz mu olduğu, tur ve sorunun sırasından türetilir (lib/neighbors.ts): aynı soruda hep aynıdır,
+  // sonuç ekranı yeniden kurabilir.
+  // Konu ve şıklar turun kapsamından seçilir (kıta antrenmanında o kıta, başkent turunda başkenti olan ülkeler).
+  const universe = useMemo(() => (choice.neighbors ? neighborUniverse(choice.mode, scopePoolFor(choice)) : undefined), [choice]);
+  const ask = useMemo(
+    () => (choice.neighbors && currentQuestion ? neighborAsk(choice.mode, correctLocationId(currentQuestion), roundId, questionIndex, universe) : null),
+    [choice.mode, choice.neighbors, currentQuestion, questionIndex, roundId, universe],
   );
-  // Sonuç ekranı için cevaplanan her sorunun konusu (komşuluk turunda). Konu, tur ve sıradan türetildiği için yeniden kurulur.
-  const subjects = useMemo(
-    () => (choice.neighbors ? answerRecords.map((answer, index) => neighborSubject(answer.location, roundId, index)) : null),
-    [answerRecords, choice.neighbors, roundId],
+  const subjectId = ask?.subject ?? null;
+  // Sonuç ekranı için cevaplanan her sorunun konusu ve biçimi (komşuluk turunda); tur ve sıradan türetildiği için yeniden kurulur.
+  const asks = useMemo(
+    () => (choice.neighbors ? answerRecords.map((answer, index) => neighborAsk(choice.mode, answer.location, roundId, index, universe)) : null),
+    [answerRecords, choice.mode, choice.neighbors, roundId, universe],
   );
   const options = useMemo(() => {
     if (!choice.choices || !currentQuestion) return null;
-    if (subjectId) return neighborOptions(subjectId, correctLocationId(currentQuestion));
+    if (ask) return neighborOptions(choice.mode, ask.subject, correctLocationId(currentQuestion), universe, ask.isNegative);
     return choiceOptions(choice, currentQuestion, poolFor({ ...choice, focusIds: undefined }));
     // questionIndex değerde kullanılmaz, yalnızca tetikleyicidir: aynı yer antrenmanda yeniden sorulunca şıklar yenilensin.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [choice, currentQuestion, questionIndex, subjectId]);
+  }, [ask, choice, currentQuestion, questionIndex, universe]);
   const [serverRound, setServerRound] = useState<Promise<string | null> | null>(null);
 
   const [pendingChoice, setPendingChoice] = useState<PlayChoice | null>(null);
@@ -349,12 +360,13 @@ export default function Home() {
   // Cevaptan sonraki bildirimler: yatayda haritanın üstünde, dikey telefonda üst barın ikinci satırında.
   const celebration = streakCelebration(answerState, round.streak);
   const wrongPick = wrongPickNotice(choice, answerState, round.selectedLocation);
-  // Yanlış cevaptan sonra gösterilecek komşular: yalnızca Türkiye illerinde (lib/neighbors.ts).
-  // Komşuluk turunda ise konunun komşuları gösterilir (cevap bunlardan biridir).
-  const correctNeighbors = useMemo(
-    () => (currentQuestion ? neighborIds(choice.mode, subjectId ?? correctLocationId(currentQuestion)) : null),
-    [choice.mode, currentQuestion, subjectId],
-  );
+  // Yanlış cevaptan sonra gösterilecek komşular (lib/neighbors.ts); komşuluk turunda ise konunun komşuları (cevap bunlardan biridir).
+  // Kıta antrenmanında kıta dışındaki komşular haritada soluk olduğu için gösterilmez.
+  const correctNeighbors = useMemo(() => {
+    if (!currentQuestion) return null;
+    const ids = neighborIds(choice.mode, subjectId ?? correctLocationId(currentQuestion));
+    return continent ? ids.filter((id) => continentLocationIds(continent).has(id)) : ids;
+  }, [choice.mode, continent, currentQuestion, subjectId]);
   const countdown = nextQuestionCountdown(
     answerState,
     round.remainingQuestionSeconds,
@@ -385,7 +397,7 @@ export default function Home() {
         ) : phase === "finished" ? (
           <ResultScreen
             answerRecords={answerRecords}
-            subjects={subjects}
+            subjects={asks}
             answeredCount={answers.length}
             bestStreak={bestStreak}
             choice={choice}
@@ -418,7 +430,7 @@ export default function Home() {
               question={currentQuestion}
               questionCount={questions.length}
               remainingGameSeconds={round.remainingGameSeconds}
-              subjectName={subjectId ? locationName(choice.mode, subjectId) : null}
+              neighborAsk={ask}
               score={score}
             />
             <GameMap

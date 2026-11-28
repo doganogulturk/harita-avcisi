@@ -11,7 +11,10 @@ const answers: AnswerRecord[] = [
   { location: "38", selected: "65" },
   { location: "35", selected: "35" },
 ];
-const subjects = ["58", "9"];
+const subjects = [
+  { subject: "58", isNegative: false },
+  { subject: "9", isNegative: false },
+];
 
 describe("komşuluk sorusu: etiket ve sonuç dökümü", () => {
   it("etiket 'Komşuluk' der; olağan etiketler değişmez", () => {
@@ -35,6 +38,15 @@ describe("komşuluk sorusu: etiket ve sonuç dökümü", () => {
     const open = flat(renderToStaticMarkup(createElement(RightAnswers, { answers, choice: neighborChoice, subjects, isOpenByDefault: true })));
     expect(open).toContain("Aydın ile komşu:");
     expect(open).toContain("İzmir");
+  });
+
+  it("olumsuz soru satırı 'ile komşu değil' der", () => {
+    // Malatya (44) Kayseri (38) ile komşu değil; oyuncu Sivas (58) dedi.
+    const negative = [{ subject: "38", isNegative: true }];
+    const text = flat(renderToStaticMarkup(createElement(WrongAnswers, { answers: [{ location: "44", selected: "58" }], choice: neighborChoice, subjects: negative })));
+    expect(text).toContain("Kayseri ile komşu değil:");
+    expect(text).toContain("Malatya");
+    expect(text).toContain("Sen: Sivas");
   });
 
   it("konu verilmezse (olağan tur) döküm eskisi gibi, 'ile komşu' yazmaz", () => {

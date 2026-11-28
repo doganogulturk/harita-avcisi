@@ -56,6 +56,16 @@ Giriş yapan oyuncunun turunun soruları sunucuda seçilir, skor ve süre sunucu
 • Reklam yok, izleme yok
 ```
 
+**Sürüm notları (1.6.0)** — 1.5.0 Play'e yüklenmedi; bu notlar 1.4.0'dan bu yana gelenleri toplar (sınır 500 karakter). 9 (1.6.0) 28 Kasım 2026'da kapalı test Alpha'ya yüklendi (%100) ve incelemeye gönderildi.
+
+```
+• Oyna için giriş gerekmez; giriş yaparsan turların profilinde ve rozetlerinde birikir
+• Yeni soru biçimleri: Şıklı ve Komşuluk
+• Komşuluk beş modda: iller, plakalar, ülkeler, bayraklar, başkentler; "komşu olmayan hangisi?" soruları da var
+• Zayıf yerlerin: en çok yanlış yaptığın yerlerle tek dokunuşla antrenman
+• Günün meydan okuması ana ekranın altında; herkese açık sıralama artık yalnızca günlük
+```
+
 **Sürüm notları (1.5.0)**
 
 ```
@@ -165,6 +175,16 @@ For signed-in players, round questions are picked on the server, and scores and 
 • Play in portrait or landscape; in landscape the map is twice as big
 • Sign in with Google or as a guest; Play and Practice need no account
 • No ads, no tracking
+```
+
+**Release notes (1.6.0)**
+
+```
+• Play needs no sign-in; sign in and your rounds add up in your profile and badges
+• New question styles: Multiple choice and Neighbours
+• Neighbours in five modes: provinces, plates, countries, flags, capitals; plus "which one doesn't border it?" questions
+• Your weak spots: practise the places you miss most with one tap
+• The daily challenge sits at the bottom of the home screen; the only public leaderboard is now the daily one
 ```
 
 **Release notes (1.5.0)**

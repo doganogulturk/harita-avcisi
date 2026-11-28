@@ -2,18 +2,26 @@
 
 import { turkeyChoice, worldChoice, type BoardId, type GameMode, type PlayChoice, type PlayKind, type WorldPrompt } from "@/lib/game";
 import { messages } from "@/lib/i18n";
-import { setIntroMap, setQuestionPrompt, setTurkeyPrompt, setWorldScope, useAnswerStyle, type AnswerStyle } from "@/lib/intro-preferences";
+import { setIntroMap, setQuestionPrompt, setTurkeyPrompt, setWorldScope, useAnswerStyle } from "@/lib/intro-preferences";
 import { provinces } from "@/lib/turkish-plates";
 import { capitalOf } from "@/lib/world-capitals";
-import { CONTINENTS, scopeCountryCount, scopeLocationIds, type WorldScope } from "@/lib/world-countries";
+import { neighborPool } from "@/lib/neighbors";
+import { CONTINENTS, countries, countriesIn, isContinentScope, scopeCountryCount, scopeLocationIds, type WorldScope } from "@/lib/world-countries";
 import { SectionTitle } from "./SetupParts";
 import { type ModeBoard } from "./ModeTiles";
 import { ModeList } from "./ModeList";
 import { StylePicker } from "./StylePicker";
 import { GameIcon, gameInfo } from "./games";
 
-/** Kapsamda sorulacak ülke sayısı; başkent turunda başkenti listede olmayanlar (tartışmalılar, bağlı topraklar) sayılmaz. */
-function questionCount(scope: WorldScope, prompt: WorldPrompt): number {
+/**
+ * Kapsamda sorulacak ülke sayısı; başkent turunda başkenti listede olmayanlar (tartışmalılar, bağlı topraklar) sayılmaz.
+ * Komşuluk turunda yalnızca kapsamda kara komşusu olan ülkeler sorulur (app/page.tsx poolFor ile aynı kural).
+ */
+function questionCount(scope: WorldScope, prompt: WorldPrompt, isNeighbors: boolean): number {
+  if (isNeighbors) {
+    const pool = (isContinentScope(scope) ? countriesIn(scope) : countries).filter((country) => prompt !== "capital" || capitalOf(country.code));
+    return neighborPool("world", pool).length;
+  }
   return prompt === "capital" ? [...scopeLocationIds(scope)].filter((code) => capitalOf(code)).length : scopeCountryCount(scope);
 }
 
@@ -42,16 +50,15 @@ export function SoloSetup({ kind, scope, readyModes, onBack, onPlay }: SoloSetup
   const isPractice = kind === "practice";
   const style = useAnswerStyle();
 
-  // Komşuluk Oyna'da da Antrenman'da da seçilebilir ve yalnızca İller karosunda açıktır (plaka ve dünya için komşuluk yok).
-  // Oyna'da komşuluk turu 10 soru ve 120 saniyedir ama kaydedilmez (sonuç ekranı söyler): kayıt, sorunun konusunu bilmediği için
-  // 81 il rozetini ve zayıf yer listesini bozardı.
-  const effectiveStyle: AnswerStyle = style;
+  // Komşuluk Oyna'da da Antrenman'da da seçilebilir ve beş modun hepsinde açıktır. Oyna'da komşuluk turu 10 soru ve 120
+  // saniyedir ama kaydedilmez (sonuç ekranı söyler): kayıt, sorunun konusunu bilmediği için rozetleri ve zayıf yer listesini bozardı.
+  const isNeighbors = style === "neighbors";
 
   // Seçilen soru biçimi turun seçimine eklenir; "tekrar oyna", "bunları çalış" ve oyun içi mod değiştirme onu korur.
-  const withStyle = (choice: PlayChoice, board?: ModeBoard): PlayChoice => {
-    // Komşuluk yalnızca İller karosunda açıktır (diğerleri kapalıdır); komşuluk turu aynı zamanda şıklı bir turdur.
-    if (effectiveStyle === "neighbors") return board?.id === "turkey" ? { ...choice, choices: true, neighbors: true } : choice;
-    return effectiveStyle === "choose" ? { ...choice, choices: true } : choice;
+  // Komşuluk turu aynı zamanda şıklı bir turdur.
+  const withStyle = (choice: PlayChoice): PlayChoice => {
+    if (isNeighbors) return { ...choice, choices: true, neighbors: true };
+    return style === "choose" ? { ...choice, choices: true } : choice;
   };
 
   const pick = (board: ModeBoard) => {
@@ -59,23 +66,19 @@ export function SoloSetup({ kind, scope, readyModes, onBack, onPlay }: SoloSetup
     const worldPrompt = WORLD_PROMPT[board.id];
     if (worldPrompt) {
       setQuestionPrompt(worldPrompt);
-      onPlay(withStyle(worldChoice(kind, scope, worldPrompt), board));
+      onPlay(withStyle(worldChoice(kind, scope, worldPrompt)));
     } else {
       const turkeyPrompt = board.id === "turkey-plates" ? "plate" : "name";
       setTurkeyPrompt(turkeyPrompt);
-      onPlay(withStyle(turkeyChoice(kind, turkeyPrompt), board));
+      onPlay(withStyle(turkeyChoice(kind, turkeyPrompt)));
     }
   };
 
   const countFor = (id: BoardId) => {
     const worldPrompt = WORLD_PROMPT[id];
-    return worldPrompt ? questionCount(isPractice ? scope : "all", worldPrompt) : provinces.length;
+    return worldPrompt ? questionCount(isPractice ? scope : "all", worldPrompt, isNeighbors) : provinces.length;
   };
 
-  // Komşuluk seçiliyken yalnızca İller vardır: plaka ve dünya modlarında komşuluk sorusu yok, kapalı satır yerine hiç gösterilmez
-  // (gri satırlar listeyi dağınık yapıyor ve "neden kapalı" sorusu doğuruyordu).
-  const isNeighbors = effectiveStyle === "neighbors";
-  const turkeyIds = isNeighbors ? TURKEY_BOARDS.slice(0, 1) : TURKEY_BOARDS;
   const disabledReasonFor = (id: BoardId) => (readyModes.includes(id.startsWith("turkey") ? "turkey" : "world") ? null : setup.preparing);
 
   return (
@@ -106,48 +109,45 @@ export function SoloSetup({ kind, scope, readyModes, onBack, onPlay }: SoloSetup
       <StylePicker isSaved={!isPractice} selectedClass={game.theme.selected} />
 
       {/* Türkiye ve Dünya, her biri tek renkli (Türkiye kırmızı, Dünya mavi) gruplanmış bir liste: solda modun görseli, ortada adı,
-          sağda Başla. Komşuluk seçiliyken yalnızca İller vardır (plaka ve ülke komşuluğu yok); Dünya bölümü gizlenir ve Türkiye tam
-          genişlikte durur. Alçak ve geniş ekranda iki bölüm yan yana. */}
-      <div className={`grid shrink-0 gap-5 short:gap-4 lg:gap-8 ${isNeighbors ? "max-w-2xl" : "short:grid-cols-[2fr_3fr] lg:grid-cols-[2fr_3fr]"}`}>
+          sağda Başla. Alçak ve geniş ekranda iki bölüm yan yana. */}
+      <div className="grid shrink-0 gap-5 short:gap-4 short:grid-cols-[2fr_3fr] lg:grid-cols-[2fr_3fr] lg:gap-8">
         <ModeList
           countFor={countFor}
           disabledReasonFor={disabledReasonFor}
-          ids={turkeyIds}
+          ids={TURKEY_BOARDS}
           map="turkey"
           onPick={pick}
           title={<SectionTitle map="turkey" />}
         />
 
-        {!isNeighbors && (
-          <ModeList
-            countFor={countFor}
-            disabledReasonFor={disabledReasonFor}
-            belowTitle={
-              isPractice ? (
-                <div aria-label={setup.worldScope} className="flex flex-wrap gap-1.5 lg:gap-2" role="radiogroup">
-                  {[{ id: "all" as WorldScope, label: setup.all }, ...CONTINENTS.map((continent) => ({ id: continent.id as WorldScope, label: continent.label }))].map((option) => (
-                    <button
-                      aria-checked={scope === option.id}
-                      className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none sm:px-3 lg:px-3.5 lg:py-1.5 lg:text-sm ${
-                        scope === option.id ? "border-amber-300 bg-amber-400 text-amber-950" : "border-white/20 text-white/80 hover:border-white/50 hover:text-white"
-                      }`}
-                      key={option.id}
-                      onClick={() => setWorldScope(option.id)}
-                      role="radio"
-                      type="button"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null
-            }
-            ids={WORLD_BOARDS}
-            map="world"
-            onPick={pick}
-            title={<SectionTitle map="world" />}
-          />
-        )}
+        <ModeList
+          countFor={countFor}
+          disabledReasonFor={disabledReasonFor}
+          belowTitle={
+            isPractice ? (
+              <div aria-label={setup.worldScope} className="flex flex-wrap gap-1.5 lg:gap-2" role="radiogroup">
+                {[{ id: "all" as WorldScope, label: setup.all }, ...CONTINENTS.map((continent) => ({ id: continent.id as WorldScope, label: continent.label }))].map((option) => (
+                  <button
+                    aria-checked={scope === option.id}
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none sm:px-3 lg:px-3.5 lg:py-1.5 lg:text-sm ${
+                      scope === option.id ? "border-amber-300 bg-amber-400 text-amber-950" : "border-white/20 text-white/80 hover:border-white/50 hover:text-white"
+                    }`}
+                    key={option.id}
+                    onClick={() => setWorldScope(option.id)}
+                    role="radio"
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            ) : null
+          }
+          ids={WORLD_BOARDS}
+          map="world"
+          onPick={pick}
+          title={<SectionTitle map="world" />}
+        />
       </div>
     </div>
   );

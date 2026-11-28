@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { type NeighborAsk } from "@/lib/neighbors";
 import { Leaderboard } from "./Leaderboard";
 import { MostMissed } from "./MostMissed";
 import { NewBadges } from "./NewBadges";
@@ -48,7 +49,7 @@ type ResultScreenProps = {
   /** Turun cevapları sırayla; soru soru döküm (RoundReview) bunlardan çizilir. */
   answerRecords: AnswerRecord[];
   /** Komşuluk turunda her sorunun konusu ("X ile komşu olan hangisi?"); başka turlarda null. */
-  subjects: string[] | null;
+  subjects: NeighborAsk[] | null;
   onPlay: (choice: PlayChoice) => void;
   /** Oynanan oyunun (Oyna ya da Antrenman) ayar ekranını açar; başka bir tur orada seçilir. */
   onChooseAnother: () => void;
@@ -352,7 +353,7 @@ export function ResultScreen({
 
 type PracticeResultProps = {
   answerRecords: AnswerRecord[];
-  subjects: string[] | null;
+  subjects: NeighborAsk[] | null;
   choice: PlayChoice;
   score: number;
   answeredCount: number;
